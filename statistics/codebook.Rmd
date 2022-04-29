@@ -1,0 +1,89 @@
+---
+title: "Codebook"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    code_folding: 'hide'
+    self_contained: true
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+    latex_engine: xelatex
+---
+
+# Set up
+
+Here, we're just setting a few options.
+
+```{r setup}
+knitr::opts_chunk$set(
+  warning = TRUE, # show warnings during codebook generation
+  message = TRUE, # show messages during codebook generation
+  error = TRUE, # do not interrupt codebook generation in case of errors,
+                # usually better for debugging
+  echo = TRUE  # show R code
+)
+if(!require("pacman")) install.packages("pacman")
+pacman::p_load('tidyverse', 'codebook')
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+Now, we're preparing our data for the codebook.
+
+```{r prepare_codebook}
+# Code book
+codebook_data <- read_tsv("/Users/junyichu/Dropbox (MIT)/2 NOW/2018 Physics/Videos for QI/prephys_split0_videos.tsv")
+
+# Meta data
+metadata(codebook_data)$name <- "Preferential Physics on Lookit dataset"
+metadata(codebook_data)$description <- "The annotated and shareable subset of video, annotation, and participant data"
+metadata(codebook_data)$datePublished <- "2022-01-14"
+metadata(codebook_data)$creator <- list(
+      "@type" = "Person",
+      givenName = "Junyi", familyName = "Chu",
+      email = "jchu@mit.edu", 
+      affiliation = list("@type" = "Organization",
+        name = "MIT"))
+```
+
+## Label variables
+
+```{r}
+var_label(codebook_data) <- list(
+        studyID = "Study version identifier", 
+        childID = "Child identifier",
+        videoID = "Video identifier",
+        n_coders = "Number of human annotations available for the session",
+        videoFileName = "Video file name",
+        codingFile1 = "File name of annotation by primary coder",
+        codingFile2 = "File name of annotation by second coder",
+        codingFile3 = "File name of annotation by third coder",
+        child.ageSessionRounded = "Child age in months (floor of exact age)",
+        child.gender = "Child gender",
+        parent.race.nonwhite = "Whether parent reported a non-white race",
+        video.privacy = "Video sharing and storage permissions",
+        consentnotes = "Any notes from parent consent process",
+        usable = "Any notes from video download process on video quality",
+        video.nTrialsExpected = "Number of trials expected",
+        video.nTrialsFound = "Number of trials in video",
+        video.expectedDuration = "Expected video duration in seconds",
+        video.actualDuration = "Actual video duration in seconds",
+        which.dataset = "Specifies video assignment to training,validation and test sets"
+)
+```
+
+# Codebook
+
+```{r}
+# store data and metadata
+rio::export(codebook_data, "physics-for-qi.rds") # to R data structure file
+```
+
+Now, generating a codebook is as simple as calling codebook from a chunk in an
+rmarkdown document.
+
+```{r}
+codebook(codebook_data)
+```
