@@ -1,4 +1,4 @@
-### Introductionn
+### Introduction
 This repository contains all the code for iCatcher+, a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing original manuscripts results.
 
 ### Installation
