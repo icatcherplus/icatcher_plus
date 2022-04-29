@@ -9,9 +9,9 @@ Use conda with the environment.yml file to create a virtual environment:
 another system requirement is having [ffmpeg](https://ffmpeg.org/download.html) installed.
 
 ### Trained Models
-The tool relies on some neural-network model files to work.
+iCatcher+ relies on some neural-network model files to work (or reproduce experiments).
 
-please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
+Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
 
 
 ### Datasets Access
