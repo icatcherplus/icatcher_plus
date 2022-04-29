@@ -11,7 +11,7 @@ another system requirement is having [ffmpeg](https://ffmpeg.org/download.html) 
 ### Trained Models
 The tool relies on some neural-network model files to work.
 
-please download all files from [here]() and place them in the models directory.
+please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
 
 
 ### Datasets Access
