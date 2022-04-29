@@ -1,18 +1,18 @@
 ### Best Results (test set)
 <table>
         <tr>
-                <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/main/assets/agreement.png"  alt="0" width = 400px height = 300px ></td>
-                <td align="center"><img src="https://github.com/yoterel/icatcher_plus/blob/main/assets/agreement_vs_confidence.png"  alt="0" width = 400px height = 300px ></td>
+                <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement.png"  alt="0" width = 400px height = 300px ></td>
+                <td align="center"><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement_vs_confidence.png"  alt="0" width = 400px height = 300px ></td>
         </tr>
         <tr><td colspan=2>California-BW</td></tr>
         <tr>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/main/assets/cali-bw_bar.png" alt="0" width = 400px height = 300px></td>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/main/assets/cali-bw_conf.png" alt="1" width = 300px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/cali-bw_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/cali-bw_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
         <tr><td colspan=2>Lookit</td></tr>
         <tr>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/main/assets/lookit_bar.png" alt="0" width = 400px height = 300px></td>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/main/assets/lookit_conf.png" alt="1" width = 300px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
 </table>
 
