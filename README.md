@@ -1,4 +1,25 @@
-### Best Results (test set)
+### Introduction
+This repository contains all the code for iCatcher+, a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing original manuscripts results.
+
+### Installation
+Use conda with the environment.yml file to create a virtual environment:
+
+`conda env create --prefix /path/to/virtual/environment -f "/path/to/environment.yml"`
+
+another system requirement is having [ffmpeg](https://ffmpeg.org/download.html) installed.
+
+### Trained Models
+The tool relies on some neural-network model files to work.
+
+please download all files from [here]() and place them in the models directory.
+
+
+### Datasets Access
+
+The public videos from the Lookit dataset, along with human annotations and group-level demographics for all datasets, are available at https://osf.io/ujteb/. Videos from the Lookit dataset with permission granted for scientific use are available at https://osf.io/5u9df/. Requests for access to the remainder of the dataset can be directed to corrosponding author. To protect participant privacy, the participant identifiers for the video and demographic data are not linked to each other. However, this information is also available upon reasonable request to corrosponding author.
+
+
+### Best Results (test sets)
 <table>
         <tr>
                 <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement.png"  alt="0" width = 400px height = 300px ></td>
@@ -15,13 +36,6 @@
                 <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
 </table>
-
-### Installation
-Use conda with the environment.yml file to create a virtual environment:
-
-`conda env create --prefix /path/to/virtual/environment -f "/path/to/environment.yml"`
-
-another system requirement is having [ffmpeg](https://ffmpeg.org/download.html) installed.
 
 ### Project Structure:
 
