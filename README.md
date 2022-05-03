@@ -1,5 +1,5 @@
 ### Introduction
-This repository contains all the code for iCatcher+, a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing original manuscripts results.
+This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing original manuscripts results.
 
 ### Installation
 Use conda with the environment.yml file to create a virtual environment:
@@ -20,6 +20,9 @@ The public videos from the Lookit dataset, along with human annotations and grou
 
 
 ### Best Results (test sets)
+To view all results, see all plots under /plots.
+per session plots (per-video) are sorted from 0 to n, where 0 has the lowest agreement (between iCatcher+ and Human 1) and n the highest.
+
 <table>
         <tr>
                 <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement.png"  alt="0" width = 400px height = 300px ></td>
