@@ -4,6 +4,9 @@ from scipy import stats
 
 def bootstrap(x, confidence=0.95):
     # sample = np.random.choice(x, size=30, replace=False)
+    x = np.array(x)
+    valid_x = ~np.isnan(x)
+    x = x[valid_x]
     bs = np.random.choice(x, (len(x), 1000), replace=True)
     bs_means = bs.mean(axis=0)
     bs_means_mean = bs_means.mean()
@@ -17,6 +20,10 @@ def bootstrap(x, confidence=0.95):
 def t_test(x, y):
     a = np.array(x)
     b = np.array(y)
+    if len(a) == len(b):
+        not_nans = ~np.isnan(a) & ~np.isnan(b)
+        a = a[not_nans]
+        b = b[not_nans]
     t, p = stats.ttest_ind(a, b, equal_var=False, permutations=1000)
 
     # Compute the descriptive statistics of a and b.
@@ -34,6 +41,11 @@ def t_test(x, y):
 
 
 def t_test_paired(x, y):
+    x = np.array(x)
+    y = np.array(y)
+    not_nans = ~np.isnan(x) & ~np.isnan(y)
+    x = x[not_nans]
+    y = y[not_nans]
     t, p = stats.ttest_rel(x, y)
     dof = len(x) - 1
     return t, p, dof

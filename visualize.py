@@ -18,6 +18,7 @@ from options import parse_arguments_for_visualizations
 import parsers
 import preprocess
 from statistics.bootstrap import bootstrap, t_test, t_test_paired
+import warnings
 
 
 def label_to_color(label):
@@ -152,7 +153,7 @@ def frame_to_time_ms(frame, fps=30):
     return int(frame * 1000 / fps)
 
 
-def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_num):
+def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_num, video_id=None, face_folder=None):
     """
     given two codings (single dimensional numpy arrays) and a start and end time,
     calculates various metrics we care about. assumes coding1[i], coding2[i] refer to same time
@@ -162,7 +163,10 @@ def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_
     :param coding2: np array (1 dimensional)
     :param confidence: optional np array (1 dimensional) of confidence scores for one of the coding files
     :param valid_class_num: number of valid classes in dataset
-    :return:
+    :param video_id: if provided (with face_folder), face statistics of this video id will be extracted too
+    :param face_folder: if provided (with video_id), face statistics from this face_folder will be extracted too
+    note: face_folder expected to have structure of pre-processed dataset, with a valid face_labels_fc.npy file.
+    :return: all metrics in interval
     """
     # fix in case one coding ends sooner than end
     assert start >= 0
@@ -177,6 +181,9 @@ def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_
     coding1_interval = coding1[start:end]
     coding2_interval = coding2[start:end]
     mutually_valid_frames = np.logical_and(coding1_interval >= 0, coding2_interval >= 0)
+    face_stats = [None, None, None]
+    if (video_id is not None) and (face_folder is not None):
+        face_stats = get_face_stats(video_id, face_folder, start, end, mutually_valid_frames)
 
     coding1_interval_mut_valid = coding1_interval[mutually_valid_frames]
     coding2_interval_mut_valid = coding2_interval[mutually_valid_frames]
@@ -200,11 +207,11 @@ def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_
     off_screen_2_sum = np.sum(coding2_interval_mut_valid == 0)
 
     if on_screen_1_sum == 0:
-        percent_r_1 = 0
+        percent_r_1 = np.nan
     else:
         percent_r_1 = np.sum(coding1_interval_mut_valid == 2) / on_screen_1_sum
     if on_screen_2_sum == 0:
-        percent_r_2 = 0
+        percent_r_2 = np.nan
     else:
         percent_r_2 = np.sum(coding2_interval_mut_valid == 2) / on_screen_2_sum
 
@@ -215,7 +222,7 @@ def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_
 
     equal_and_non_equal = np.sum(equal[mutually_valid_frames]) + np.sum(np.logical_not(equal[mutually_valid_frames]))
     if equal_and_non_equal == 0:
-        agreement = 0
+        agreement = np.nan
     else:
         agreement = np.sum(equal[mutually_valid_frames]) / equal_and_non_equal
     if valid_class_num == 3:
@@ -240,17 +247,20 @@ def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_
                      "invalid": coding2_invalid}
     raw_coding1 = coding1_interval
     raw_coding2 = coding2_interval
-    if confidence is not None:
-        raw_confidence = confidence[start:end]
-        valid_confidence = raw_confidence[mutually_valid_frames]
-        equal_confidence = raw_confidence[equal & mutually_valid_frames]
-        non_equal_confidence = raw_confidence[~equal & mutually_valid_frames]
-        confidence_metrics = [np.mean(equal_confidence), np.mean(non_equal_confidence)]
-    else:
-        valid_confidence = None
-        confidence_metrics = None
-
-    kappa = cohen_kappa_score(coding1_interval_mut_valid, coding2_interval_mut_valid)
+    # ignore warning for true divide (kappa is nan for completely equal codings)
+    # ignore warning for empty slice mean (we treat nans later)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        kappa = cohen_kappa_score(coding1_interval_mut_valid, coding2_interval_mut_valid)
+        if confidence is not None:
+            raw_confidence = confidence[start:end]
+            valid_confidence = raw_confidence[mutually_valid_frames]
+            equal_confidence = raw_confidence[equal & mutually_valid_frames]
+            non_equal_confidence = raw_confidence[~equal & mutually_valid_frames]
+            confidence_metrics = [np.mean(equal_confidence), np.mean(non_equal_confidence)]
+        else:
+            valid_confidence = None
+            confidence_metrics = None
     # try:
     #     df = pd.DataFrame({"coder1": coding1_interval_mut_valid,
     #                        "coder2": coding2_interval_mut_valid})
@@ -281,11 +291,14 @@ def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_
             "times_coding1": times_coding1,
             "times_coding2": times_coding2,
             "label_count_1": [np.sum(coding1_away), np.sum(coding1_left), np.sum(coding1_right), np.sum(coding1_invalid)],
-            "label_count_2": [np.sum(coding2_away), np.sum(coding2_left), np.sum(coding2_right), np.sum(coding2_invalid)]
+            "label_count_2": [np.sum(coding2_away), np.sum(coding2_left), np.sum(coding2_right), np.sum(coding2_invalid)],
+            "avg_face_pixel_density": face_stats[0],
+            "avg_face_loc": face_stats[1],
+            "avg_face_loc_std": face_stats[2]
             }
 
 
-def compare_uncollapsed_coding_files(coding1, coding2, intervals, confidence=None, valid_class_num=3):
+def compare_uncollapsed_coding_files(coding1, coding2, intervals, confidence=None, valid_class_num=3, video_id=None, face_folder=None):
     """
     computes various metrics between two codings on a set of intervals
     :param coding1: first coding, uncollapsed numpyarray of events
@@ -293,6 +306,8 @@ def compare_uncollapsed_coding_files(coding1, coding2, intervals, confidence=Non
     :param intervals: list of lists where each internal list contains 2 entries indicating start and end time of interval.
     :param confidence: confidence of one of the codings, uncollapsed float np array of confidence (-1 for invalid)
     :param valid_class_num: number of valid classes in dataset
+    :param video_id: if provided (with face_folder), face statistics of this video id will be extracted too
+    :param face_folder: if provided (with video_id), face statistics from this face_folder will be extracted too
     note: intervals are considered as [) i.e. includes start time, but excludes end time.
     :return: array of dictionaries containing various metrics (1 dict per interval)
     """
@@ -300,7 +315,7 @@ def compare_uncollapsed_coding_files(coding1, coding2, intervals, confidence=Non
     for i, interval in enumerate(intervals):
         # logging.info("trial: {} / {}".format(i, len(intervals)))
         t_start, t_end = interval[0], interval[1]
-        results.append(get_stats_in_interval(t_start, t_end, coding1, coding2, confidence, valid_class_num))
+        results.append(get_stats_in_interval(t_start, t_end, coding1, coding2, confidence, valid_class_num, video_id, face_folder))
     if len(results) == 1:
         results = results[0]
     return results
@@ -342,7 +357,8 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
         human2, start2, end2 = parser.parse(human_coding_file2.stem, human_coding_file2)
         if end1 != end2:
             logging.warning("humans don't agree on ending: {}".format(human_coding_file))
-            logging.warning("diff: {}".format(np.abs(end1 - end2)))
+            logging.warning("frame diff: {}".format(np.abs(end1 - end2)))
+            logging.warning("using human1 reported end.")
     if args.human_coding_format == "lookit":
         labels = parser.load_and_sort(human_coding_file)
         trial_times = parser.get_trial_intervals(start1, labels)
@@ -361,26 +377,24 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
     logging.info("trial level stats")
     metrics["human1_vs_machine_trials"] = compare_uncollapsed_coding_files(human1_uncol, machine_uncol, trial_times,
                                                                            confidence=machine_confidence,
-                                                                           valid_class_num=valid_class_num)
+                                                                           valid_class_num=valid_class_num,
+                                                                           video_id=human_coding_file.stem,
+                                                                           face_folder=args.faces_folder)
     if human_coding_file2:
         human2_uncol = parser.uncollapse_labels(human2, start2, end2)
         metrics["human1_vs_human2_trials"] = compare_uncollapsed_coding_files(human1_uncol, human2_uncol, trial_times)
         ICC_looking_time_hvh = calc_ICC(metrics["human1_vs_human2_trials"],
-                                        "looking_time_1", "looking_time_2",
-                                        len(trial_times))
+                                        "looking_time_1", "looking_time_2")
         ICC_percent_r_hvh = calc_ICC(metrics["human1_vs_human2_trials"],
-                                     "percent_r_1", "percent_r_2",
-                                     len(trial_times))
+                                     "percent_r_1", "percent_r_2")
     else:
         ICC_looking_time_hvh = None
         ICC_percent_r_hvh = None
     ICC_looking_time_hvm = calc_ICC(metrics["human1_vs_machine_trials"],
-                                    "looking_time_1", "looking_time_2",
-                                    len(trial_times))
+                                    "looking_time_1", "looking_time_2")
     if not args.raw_dataset_type == "datavyu":
         ICC_percent_r_hvm = calc_ICC(metrics["human1_vs_machine_trials"],
-                                     "percent_r_1", "percent_r_2",
-                                     len(trial_times))
+                                     "percent_r_1", "percent_r_2")
     else:
         ICC_percent_r_hvm = None
 
@@ -406,23 +420,29 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
     return metrics
 
 
-def calc_ICC(metrics, dependant_measure1, dependant_measure2, n_trials):
+def calc_ICC(metrics, dependant_measure1, dependant_measure2):
     """
     calculates ICC3 for single fixesd raters (https://pingouin-stats.org/generated/pingouin.intraclass_corr.html)
     :param metrics: dictionary of results upon trials
     :param dependant_measure1: the measure to calculate ICC over by coder1
     :param dependant_measure2: the measure to calculate ICC over by coder2
-    :param trial_times: number of trials
     :return: ICC3 metric
     """
-    trial_n = np.repeat(np.arange(0, n_trials, 1), 2)
-    coders = np.array([[1, 2] for _ in range(n_trials)]).reshape(-1)
-    ratings = np.array([[x[dependant_measure1], x[dependant_measure2]] for x in metrics]).reshape(-1)
-    df = pd.DataFrame({'trial_n': trial_n,
-                       'coders': coders,
-                       'ratings': ratings})
-    icc = pg.intraclass_corr(data=df, targets='trial_n', raters='coders', ratings='ratings')
-    LT_ICC = icc["ICC"][2]
+    ratings = np.array([[x[dependant_measure1], x[dependant_measure2]] for x in metrics])
+    valid_ratings = np.all(~np.isnan(ratings), axis=1)
+    ratings = ratings[valid_ratings]
+    if len(ratings) >= 5:
+        n_trials = len(ratings)
+        ratings = ratings.reshape(-1)
+        trial_n = np.repeat(np.arange(0, n_trials, 1), 2)
+        coders = np.array([[1, 2] for _ in range(n_trials)]).reshape(-1)
+        df = pd.DataFrame({'trial_n': trial_n,
+                           'coders': coders,
+                           'ratings': ratings})
+        icc = pg.intraclass_corr(data=df, targets='trial_n', raters='coders', ratings='ratings')
+        LT_ICC = icc["ICC"][2]
+    else:
+        LT_ICC = np.nan
     return LT_ICC
 
 
@@ -1251,6 +1271,7 @@ def generate_transitions_plot(sorted_IDs, all_metrics, args, multi_dataset=False
         primary_label = "California-BW"
         secondary_label = "Lookit"
         np.savez("cali-bw_transitions_per_100", transitions_h1, transitions_h2, transitions_h3)
+        return
     else:
         primary_label = "Lookit"
         secondary_label = "California-BW"
@@ -1492,7 +1513,7 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args):
                                   all_metrics[id]["human1_vs_machine_session"]['start'],
                                   all_metrics[id]["human1_vs_machine_session"]['end']) for id in sorted_IDs]
     y = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
-    sns.regplot(x, y, color=color)
+    sns.regplot(x=x, y=y, color=color)
     ax.set_xlabel("Luminance")
     ax.set_ylabel("Percent Agreement")
 
@@ -1513,126 +1534,171 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args):
     # plt.clf()
 
 
-def get_face_pixel_density(id, faces_folder):
+def get_face_stats(id, faces_folder, start=0, end=None, mask=None):
     """
     given a video id, calculates the average face area in pixels using pre-processed crops
     :param ids: video id
     :param faces_folder: the folder containing all crops and their meta data as created by "preprocess.py"
+    :param start: if provided, slices the faces according to this start point
+    :param end: if provided, slices the faces according to this end point
+    :param mask: if provided, slices the faces according to these indices (must be np array of same size)
     :return:
     """
     face_areas = []
+    face_locs = []
     if faces_folder is None:
         return None
     file = Path(faces_folder, id, 'face_labels_fc.npy')
     if file.is_file():
         face_labels = np.load(file)
+        if end is not None:
+            face_labels = face_labels[start:end]
         for i, face_id in enumerate(face_labels):
+            if mask is not None:
+                if not mask[i]:
+                    continue
             if face_id >= 0:
-                box_file = Path(faces_folder, id, "box", "{:05d}_{:01d}.npy".format(i, face_id))
+                box_file = Path(faces_folder, id, "box", "{:05d}_{:01d}.npy".format(i+start, face_id))
                 '{name}/box/{frame_number + i:05d}_{face_label_seg[i]:01d}.npy.format()'
                 box = np.load(box_file, allow_pickle=True).item()
-                face_area = (box['face_box'][1] - box['face_box'][0]) * (box['face_box'][3] - box['face_box'][2])
+                # face box represents (top, bottom, left, right) of bbox respectively (top has lower value than bottom)
+                face_area = (box['face_box'][1] - box['face_box'][0]) * (box['face_box'][3] - box['face_box'][2])  # y * x
+                img_shape = box["img_shape"]  # y, x
+                face_loc = np.array([(box['face_box'][3] + box['face_box'][2]) / 2,
+                                     (box['face_box'][1] + box['face_box'][0]) / 2])  # x, y (y grows downwards)
+                face_loc[0] /= img_shape[1]
+                face_loc[1] /= img_shape[0]
+                face_loc[1] = 1 - face_loc[1]  # flip y to grow upwards
                 face_areas.append(face_area)
-        return np.mean(face_areas)
+                face_locs.append(face_loc)
+        if len(face_areas) > 0:
+            face_areas = np.mean(face_areas)
+        else:
+            face_areas = np.nan
+        if len(face_locs) > 0:
+            face_locs = np.mean(face_locs, axis=0)
+            face_stds = np.mean(np.std(face_locs, axis=0))
+        else:
+            face_locs = np.array([np.nan, np.nan])
+            face_stds = np.nan
+        return face_areas, face_locs, face_stds
     else:
         return None
 
 
-def get_face_location_std(id, faces_folder):
-    """
-    given a video id, calculates the standard deviation of the face location in that video
-    :param ids: video id
-    :param faces_folder: the folder containing all crops and their meta data as created by "preprocess.py"
-    :return:
-    """
-    movements = []
-    if faces_folder is None:
-        return None
-    file = Path(faces_folder, id, 'face_labels_fc.npy')
-    if file.is_file():
-        face_labels = np.load(file)
-        for i, face_id in enumerate(face_labels):
-            if face_id >= 0:
-                box_file = Path(faces_folder, id, "box", "{:05d}_{:01d}.npy".format(i, face_id))
-                '{name}/box/{frame_number + i:05d}_{face_label_seg[i]:01d}.npy.format()'
-                box = np.load(box_file, allow_pickle=True).item()
-                face_loc = np.array([box['face_box'][1] - box['face_box'][0], box['face_box'][3] - box['face_box'][2]])
-                movements.append(face_loc)
-        movements = np.array(movements)
-        stds = np.mean(np.std(movements, axis=0))
-        return stds
-    else:
-        return None
-
-
-def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args):
+def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
-    x = [all_metrics[x]["stats"]["avg_face_pixel_density"] for x in sorted_IDs]
+    plt_name = "agreement_vs_face_density"
+    if trial_level:
+        plt_name += "_trials.pdf"
+        densities = []
+        agreement = []
+        for ID in sorted_ids:
+            densities += [x["avg_face_pixel_density"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+            agreement += [x["agreement"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+        densities = np.array(densities)
+        agreement = np.array(agreement)
+        alpha = 0.3
+    else:
+        plt_name += "_sessions.pdf"
+        densities = [all_metrics[x]["stats"]["avg_face_pixel_density"] for x in sorted_IDs]
+        agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+        alpha = 1
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
-    y = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
-    sns.regplot(x, y, color=color)
+
+    sns.regplot(x=densities, y=agreement, color=color, scatter_kws={"alpha": alpha})
     ax.set_xlabel("Face pixel density")
     ax.set_ylabel("Percent Agreement")
 
     save_path = args.output_folder
-    plt.savefig(str(Path(save_path, "agreement_vs_face_density.pdf")), bbox_inches='tight')
+    plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
     plt.cla()
     plt.clf()
     plt.close(fig)
 
-    # plt.figure(figsize=(8.0, 6.0))
-    # densities = [all_metrics[x]["stats"]["avg_face_pixel_density"] for x in sorted_IDs]
-    # if args.raw_dataset_type == "vcx":
-    #     color = label_to_color("vlgreen")
-    # else:
-    #     color = label_to_color("vlblue")
-    # plt.scatter(densities, [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs],
-    #             color=color)
-    # plt.xlabel("Face pixel density")
-    # plt.ylabel("Percent Agreement")
-    # # plt.title("iCatcher+ accuracy versus average face pixel density per video")
-    # plt.savefig(Path(args.output_folder, 'agreement_vs_face_density.pdf'))
-    # plt.cla()
-    # plt.clf()
 
-
-def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args):
+def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, trial_level=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
-    x = [all_metrics[x]["stats"]["avg_face_loc_std"] for x in sorted_IDs]
+    if use_x:
+        stat = 0
+        x_label = "Face Horizontal Position"
+        plt_name = "agreement_vs_face_locx"
+    else:
+        stat = 1
+        x_label = "Face Vertical Position"
+        plt_name = "agreement_vs_face_locy"
+    if trial_level:
+        plt_name += "_trials.pdf"
+        means = []
+        agreement = []
+        for ID in sorted_ids:
+            means += [x["avg_face_loc"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+            agreement += [x["agreement"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+        # create np array dtype=float64 with nans where original means had nan
+        # means = np.array([np.array([np.nan, np.nan]) if np.any(np.isnan(x)) else x for x in means]).squeeze()
+        means = np.array(means)[:, stat]
+        agreement = np.array(agreement)
+        alpha = 0.3
+    else:
+        plt_name += "_sessions.pdf"
+        means = [all_metrics[x]["stats"]["avg_face_loc"][stat] for x in sorted_IDs]
+        agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+        alpha = 1
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
-    y = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
-    sns.regplot(x, y, color=color)
-    ax.set_xlabel("Face location std in pixels")
+    sns.regplot(x=means, y=agreement, color=color, scatter_kws={"alpha": alpha})
+    ax.set_xlabel(x_label)
     ax.set_ylabel("Percent Agreement")
-
     save_path = args.output_folder
-    plt.savefig(str(Path(save_path, "agreement_vs_face_loc_std.pdf")), bbox_inches='tight')
+    plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
     plt.cla()
     plt.clf()
     plt.close(fig)
 
-    # plt.figure(figsize=(8.0, 6.0))
-    # plt.scatter(x, [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs],
-    #             color=color)
-    # plt.xlabel("Face location std in pixels")
-    # plt.ylabel("Percent Agreement")
-    # # plt.title("iCatcher+ accuracy versus face location pixel std")
-    # plt.savefig(Path(args.output_folder, 'agreement_vs_face_loc_std.pdf'))
-    # plt.cla()
-    # plt.clf()
+
+def plot_face_location_std_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False):
+    plt.rc('font', size=16)
+    fig, ax = plt.subplots()
+    plt_name = "agreement_vs_face_loc_std"
+    if trial_level:
+        plt_name += "_trials.pdf"
+        stds = []
+        agreement = []
+        for ID in sorted_ids:
+            stds += [x["avg_face_loc_std"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+            agreement += [x["agreement"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+        stds = np.array(stds)
+        agreement = np.array(agreement)
+        alpha = 0.3
+    else:
+        plt_name += "_sessions.pdf"
+        stds = [all_metrics[x]["stats"]["avg_face_loc_std"] for x in sorted_IDs]
+        agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+        alpha = 1
+    if args.raw_dataset_type == "vcx":
+        color = label_to_color("vlgreen")
+    else:
+        color = label_to_color("vlblue")
+    sns.regplot(x=stds, y=agreement, color=color, scatter_kws={"alpha": alpha})
+    ax.set_xlabel("Face location std in pixels")
+    ax.set_ylabel("Percent Agreement")
+    save_path = args.output_folder
+    plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
+    plt.cla()
+    plt.clf()
+    plt.close(fig)
 
 
-def create_cache_metrics(args, force_create=False):
+def calc_all_metrics(args, force_create=False):
     """
-    creates cache that can be used instead of parsing the annotation files from scratch each time
+    calculates all relevant metrics and stores result in file metrics.p
     :return:
     """
     metric_save_path = Path(args.output_folder, "metrics.p")
@@ -1702,8 +1768,10 @@ def create_cache_metrics(args, force_create=False):
                 continue
             all_metrics[key] = res
             # other stats
-            all_metrics[key]["stats"]["avg_face_pixel_density"] = get_face_pixel_density(key, args.faces_folder)
-            all_metrics[key]["stats"]["avg_face_loc_std"] = get_face_location_std(key, args.faces_folder)
+            face_stats = get_face_stats(key, args.faces_folder)
+            all_metrics[key]["stats"]["avg_face_pixel_density"] = face_stats[0]
+            all_metrics[key]["stats"]["avg_face_loc"] = face_stats[1]  # x, y
+            all_metrics[key]["stats"]["avg_face_loc_std"] = np.mean(face_stats[2])
         # Store in disk for faster access next time:
         pickle.dump(all_metrics, open(metric_save_path, "wb"))
     return all_metrics
@@ -1937,6 +2005,25 @@ def print_stats(sorted_ids, all_metrics, hvm, args):
             transitions_h2 = np.array(transitions_h2)
             t, p, dof = t_test_paired(transitions_h1, transitions_h2)
             print("t-test (paired) hvm transitions: t={:.2f}, p={:.8f}, dof={}".format(t, p, dof))
+        invalid_no_face = 0
+        invalid_no_infant_face = 0
+        invalid_unable_to_predict = 0
+        invalid_n = 0
+        for ID in sorted_ids:
+            raw2 = all_metrics[ID][choice1]["raw_coding2"]
+            invalids = raw2[raw2 < 0]
+            invalid_no_face += np.count_nonzero(invalids == -1)
+            invalid_no_infant_face += np.count_nonzero(invalids == -2)
+            invalid_unable_to_predict += np.count_nonzero(invalids == -3)
+            invalid_n += len(invalids)
+        invalid_no_face = 100 * invalid_no_face / invalid_n
+        invalid_no_infant_face = 100 * invalid_no_infant_face / invalid_n
+        invalid_unable_to_predict = 100 * invalid_unable_to_predict / invalid_n
+
+        print("breakdown of invalids: NO_FACE: {:.2f}%, NO_INFANT_FACE: {:.2f}%, UNABLE_TO_PREDICT: {:.2f}%".format(
+            invalid_no_face,
+            invalid_no_infant_face,
+            invalid_unable_to_predict))
     else:  # hvh
         if args.raw_dataset_type == "lookit":
             t, p, dof = t_test(cali_hvh, agreement)
@@ -1981,7 +2068,7 @@ if __name__ == "__main__":
         logging.basicConfig(filename=args.log, filemode='w', level=args.verbosity.upper())
     else:
         logging.basicConfig(level=args.verbosity.upper())
-    all_metrics = create_cache_metrics(args, force_create=False)
+    all_metrics = calc_all_metrics(args, force_create=False)
     # sort by percent agreement
     sorted_ids = sorted(list(all_metrics.keys()),
                         key=lambda x: all_metrics[x]["human1_vs_machine_session"]["agreement"])
@@ -1993,7 +2080,13 @@ if __name__ == "__main__":
         generate_collage_plot2(sorted_ids, all_metrics, args.output_folder)
         generate_dataset_plots(sorted_ids, all_metrics, args)
         if args.faces_folder:
+            plot_face_pixel_density_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
             plot_face_pixel_density_vs_accuracy(sorted_ids, all_metrics, args)
+            plot_face_location_std_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
+            plot_face_location_std_vs_accuracy(sorted_ids, all_metrics, args)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False)
             plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
         generate_session_plots(sorted_ids, all_metrics, args)
