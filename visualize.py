@@ -1649,16 +1649,18 @@ def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, tr
         alpha = 0.3
     else:
         plt_name += "_sessions.pdf"
-        means = [all_metrics[x]["stats"]["avg_face_loc"][stat] for x in sorted_IDs]
-        agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+        means = np.array([all_metrics[x]["stats"]["avg_face_loc"][stat] for x in sorted_IDs])
+        agreement = np.array([all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs])
         alpha = 1
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
+    means = means - 0.5  # move from 0:1 to -0.5:0.5
     sns.regplot(x=means, y=agreement, color=color, scatter_kws={"alpha": alpha})
     ax.set_xlabel(x_label)
     ax.set_ylabel("Percent Agreement")
+    ax.set_xlim([-0.5, 0.5])
     save_path = args.output_folder
     plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
     plt.cla()
