@@ -1502,10 +1502,18 @@ def generate_collage_plot(sorted_IDs, all_metrics, save_path):
     plt.close(fig)
 
 
-def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args):
+def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, hvh=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     # plt.figure(figsize=(8.0, 6.0))
+    plt_name = "agreement_vs_luminance"
+    if hvh:
+        session_metric_name = "human1_vs_human2_session"
+        plt_name += "_humans"
+    else:
+        session_metric_name = "human1_vs_machine_session"
+        plt_name += "_machine"
+    plt_name += ".pdf"
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
     else:
@@ -1515,26 +1523,16 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args):
     x = [sample_luminance(id, args,
                                   all_metrics[id]["human1_vs_machine_session"]['start'],
                                   all_metrics[id]["human1_vs_machine_session"]['end']) for id in sorted_IDs]
-    y = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+    y = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
     sns.regplot(x=x, y=y, color=color)
     ax.set_xlabel("Luminance")
     ax.set_ylabel("Percent Agreement")
 
     save_path = args.output_folder
-    plt.savefig(str(Path(save_path, "agreement_vs_luminance.pdf")), bbox_inches='tight')
+    plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
     plt.cla()
     plt.clf()
     plt.close(fig)
-
-    # plt.scatter(x, y, color=color)
-    # plt.xlim([0, 1])
-    # plt.ylim([0, 1])
-    # plt.xlabel("Luminance")
-    # plt.ylabel("Percent Agreement")
-    # # plt.title("iCatcher+ accuracy versus mean video luminance for all doubly coded videos")
-    # plt.savefig(Path(args.output_folder, 'agreement_vs_luminance.pdf'))
-    # plt.cla()
-    # plt.clf()
 
 
 def get_face_stats(id, faces_folder, start=0, end=None, mask=None):
@@ -1589,24 +1587,32 @@ def get_face_stats(id, faces_folder, start=0, end=None, mask=None):
         return None
 
 
-def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False):
+def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False, hvh=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     plt_name = "agreement_vs_face_density"
+    if hvh:
+        trial_metric_name = "human1_vs_human2_trials"
+        session_metric_name = "human1_vs_human2_session"
+        plt_name += "_humans"
+    else:
+        trial_metric_name = "human1_vs_machine_trials"
+        session_metric_name = "human1_vs_machine_session"
+        plt_name += "_machine"
     if trial_level:
         plt_name += "_trials.pdf"
         densities = []
         agreement = []
         for ID in sorted_ids:
             densities += [x["avg_face_pixel_density"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
-            agreement += [x["agreement"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+            agreement += [x["agreement"] for x in all_metrics[ID][trial_metric_name]]
         densities = np.array(densities)
         agreement = np.array(agreement)
         alpha = 0.3
     else:
         plt_name += "_sessions.pdf"
         densities = [all_metrics[x]["stats"]["avg_face_pixel_density"] for x in sorted_IDs]
-        agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+        agreement = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
         alpha = 1
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
@@ -1624,7 +1630,7 @@ def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_lev
     plt.close(fig)
 
 
-def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, trial_level=False):
+def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, trial_level=False, hvh=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     if use_x:
@@ -1635,13 +1641,21 @@ def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, tr
         stat = 1
         x_label = "Face Vertical Position"
         plt_name = "agreement_vs_face_locy"
+    if hvh:
+        trial_metric_name = "human1_vs_human2_trials"
+        session_metric_name = "human1_vs_human2_session"
+        plt_name +="_humans"
+    else:
+        trial_metric_name = "human1_vs_machine_trials"
+        session_metric_name = "human1_vs_machine_session"
+        plt_name += "_machine"
     if trial_level:
         plt_name += "_trials.pdf"
         means = []
         agreement = []
         for ID in sorted_ids:
             means += [x["avg_face_loc"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
-            agreement += [x["agreement"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+            agreement += [x["agreement"] for x in all_metrics[ID][trial_metric_name]]
         # create np array dtype=float64 with nans where original means had nan
         # means = np.array([np.array([np.nan, np.nan]) if np.any(np.isnan(x)) else x for x in means]).squeeze()
         means = np.array(means)[:, stat]
@@ -1650,7 +1664,7 @@ def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, tr
     else:
         plt_name += "_sessions.pdf"
         means = np.array([all_metrics[x]["stats"]["avg_face_loc"][stat] for x in sorted_IDs])
-        agreement = np.array([all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs])
+        agreement = np.array([all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs])
         alpha = 1
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
@@ -1668,24 +1682,32 @@ def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, tr
     plt.close(fig)
 
 
-def plot_face_location_std_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False):
+def plot_face_location_std_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False, hvh=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     plt_name = "agreement_vs_face_loc_std"
+    if hvh:
+        trial_metric_name = "human1_vs_human2_trials"
+        session_metric_name = "human1_vs_human2_session"
+        plt_name += "_humans"
+    else:
+        trial_metric_name = "human1_vs_machine_trials"
+        session_metric_name = "human1_vs_machine_session"
+        plt_name += "_machine"
     if trial_level:
         plt_name += "_trials.pdf"
         stds = []
         agreement = []
         for ID in sorted_ids:
             stds += [x["avg_face_loc_std"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
-            agreement += [x["agreement"] for x in all_metrics[ID]["human1_vs_machine_trials"]]
+            agreement += [x["agreement"] for x in all_metrics[ID][trial_metric_name]]
         stds = np.array(stds)
         agreement = np.array(agreement)
         alpha = 0.3
     else:
         plt_name += "_sessions.pdf"
         stds = [all_metrics[x]["stats"]["avg_face_loc_std"] for x in sorted_IDs]
-        agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] for id in sorted_IDs]
+        agreement = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
         alpha = 1
     if args.raw_dataset_type == "vcx":
         color = label_to_color("vlgreen")
@@ -2085,13 +2107,18 @@ if __name__ == "__main__":
         generate_collage_plot2(sorted_ids, all_metrics, args.output_folder)
         generate_dataset_plots(sorted_ids, all_metrics, args)
         if args.faces_folder:
-            plot_face_pixel_density_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
             plot_face_pixel_density_vs_accuracy(sorted_ids, all_metrics, args)
-            plot_face_location_std_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
+            plot_face_pixel_density_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
+            plot_face_pixel_density_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True, hvh=True)
             plot_face_location_std_vs_accuracy(sorted_ids, all_metrics, args)
-            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
+            plot_face_location_std_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
+            plot_face_location_std_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True, hvh=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args)
-            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True, hvh=True)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True)
+            plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True, hvh=True)
             plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
+            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, hvh=True)
         generate_session_plots(sorted_ids, all_metrics, args)
