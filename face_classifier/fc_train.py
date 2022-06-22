@@ -232,6 +232,6 @@ if __name__ == "__main__":
 
     print("\n[val] Failed images:")
     err_idxs = np.where(np.array(val_labels) != np.array(val_target_labels))[0]
-    visualize.print_data_img_name(dataloaders, 'val', err_idxs)
+    # visualize.print_data_img_name(dataloaders, 'val', err_idxs)
     print()
     print(f'val_loss: {val_loss:.4f}', f'val_top1: {val_top1:.4f}')

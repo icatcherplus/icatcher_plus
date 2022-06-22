@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import pickle
 import itertools
-import csv
 import logging
 from tqdm import tqdm
 import numpy as np
@@ -131,26 +130,6 @@ def plot_learning_curve(train_perfs, val_perfs, save_dir, isLoss=False):
     plt.savefig(os.path.join(save_dir, 'learning_curve_%s.png' % metric_name))
     plt.cla()
     plt.clf()
-
-
-def print_data_img_name(dataloaders, dl_key, selected_idxs=None):
-    dataset = dataloaders[dl_key].dataset
-    fp_prefix = os.path.join(face_data_folder, dl_key)
-    if selected_idxs is None:
-        for fname, lbl in dataset.samples:
-            print(fname.strip(fp_prefix))
-    else:
-        for i, tup in enumerate(dataset.samples):
-            if i in selected_idxs:
-                print(Path(tup[0]).parent.stem, Path(tup[0]).stem)
-
-
-def time_ms_to_frame(time_ms, fps=30):
-    return int(time_ms / 1000.0 * fps)
-
-
-def frame_to_time_ms(frame, fps=30):
-    return int(frame * 1000 / fps)
 
 
 def get_stats_in_interval(start, end, coding1, coding2, confidence, valid_class_num, video_id=None, face_folder=None):
@@ -551,25 +530,34 @@ def select_frames_from_video(ID, video_folder, frames):
     raise IndexError
 
 
-def sample_luminance(ID, args, start, end, num_samples=10):
-    total_luminance = 0
-    sampled = 0
-    for video_file in args.raw_video_folder.glob("*"):
+def sample_luminance(ID, raw_video_folder, start, end, num_samples=100):
+    """
+    extract average luminance from some frames sampled from a video
+    see https://en.wikipedia.org/wiki/Relative_luminance
+    :param ID: ID of video
+    :param args: video folder
+    :param start: frame to start sampling from
+    :param end: frame to end sampling from
+    :param num_samples: how many samples should we use
+    :return: average luminance
+    """
+    lum_means = []
+    for video_file in raw_video_folder.glob("*"):
         if ID in video_file.stem:
             cap = cv2.VideoCapture(str(video_file))
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            frame_no = int(start / 1000 * fps)
-
-            for i in range(num_samples):
-                cap.set(cv2.CAP_PROP_FRAME_COUNT, frame_no - 1)
+            cur_frame = 0
+            frames_ids = np.random.choice(np.arange(start, end//4), size=num_samples, replace=False)
+            while len(lum_means) < len(frames_ids):
                 ret, frame = cap.read()
-                b, g, r = cv2.split(frame)
-
-                total_luminance += 0.2126 * np.sum(r) + 0.7152 * np.sum(g) + 0.0722 * np.sum(b)
-                sampled += 1
-                frame_no += (((end - start) / num_samples) / 1000 * fps)
-
-    return total_luminance / sampled
+                if cur_frame in frames_ids:
+                    b, g, r = cv2.split(frame)
+                    b = (b / 255) ** 2.2
+                    g = (g / 255) ** 2.2
+                    r = (r / 255) ** 2.2
+                    lum_image = 0.2126 * r + 0.7152 * g + 0.0722 * b
+                    lum_means.append(np.mean(lum_image))
+                cur_frame += 1
+    return np.mean(lum_means)
 
 
 def session_frame_by_frame_plot(target_ID, metric, session_path):
@@ -1502,7 +1490,7 @@ def generate_collage_plot(sorted_IDs, all_metrics, save_path):
     plt.close(fig)
 
 
-def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, hvh=False):
+def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, lum=None, hvh=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     # plt.figure(figsize=(8.0, 6.0))
@@ -1518,11 +1506,15 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, hvh=False):
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
-
-
-    x = [sample_luminance(id, args,
-                                  all_metrics[id]["human1_vs_machine_session"]['start'],
-                                  all_metrics[id]["human1_vs_machine_session"]['end']) for id in sorted_IDs]
+    if lum is not None:
+        x = lum
+    else:
+        x = []
+        for i, id in enumerate(sorted_IDs):
+            logging.info("calculating luminance (this may take some time): {} / {}".format(i, len(sorted_IDs)))
+            x.append(sample_luminance(id, args.raw_video_folder,
+                                      all_metrics[id]["human1_vs_machine_session"]['start'],
+                                      all_metrics[id]["human1_vs_machine_session"]['end']))
     y = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
     sns.regplot(x=x, y=y, color=color)
     ax.set_xlabel("Luminance")
@@ -1533,6 +1525,7 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, hvh=False):
     plt.cla()
     plt.clf()
     plt.close(fig)
+    return x
 
 
 def get_face_stats(id, faces_folder, start=0, end=None, mask=None):
@@ -1830,6 +1823,13 @@ def put_text(img, text, loc=None):
 
 
 def put_arrow(img, class_name, face):
+    """
+    inserts an arrow into a frame
+    :param img: the frame
+    :param class_name: this will dictate where the arrow will face
+    :param face: bounding box of face in frame
+    :return: the frame with an arrow
+    """
     arrow_start_x = int(face[0] + 0.5 * face[2])
     arrow_end_x = int(face[0] + 0.1 * face[2] if class_name == "left" else face[0] + 0.9 * face[2])
     arrow_y = int(face[1] + 0.8 * face[3])
@@ -1842,49 +1842,42 @@ def put_arrow(img, class_name, face):
     return img
 
 
-def put_rectangle(popped_frame, face):
+def put_rectangle(frame, rec):
+    """
+    inserts a rectangle in frame
+    :param frame: the frame
+    :param rec: the bounding box of the rectangle
+    :return:
+    """
     color = (0, 255, 0)  # green
     thickness = 2
-    popped_frame = cv2.rectangle(popped_frame,
-                                 (face[0], face[1]), (face[0] + face[2], face[1] + face[3]),
-                                 color,
-                                 thickness)
-    return popped_frame
+    frame = cv2.rectangle(frame,
+                          (rec[0], rec[1]), (rec[0] + rec[2], rec[1] + rec[3]),
+                          color,
+                          thickness)
+    return frame
 
 
-def make_gallery(array, save_path, ncols=3):
+def make_gridview(array, ncols=3, save_path=None):
+    """
+    grid views of a set of images
+    :param array: the images n x H x W x 3 (must have n = x^2 where x is int)
+    :param ncols: the number of columns inthe grid view
+    :param save_path: the path to save the gridview
+    :return: the gridview np array (nrows x ncols x H x W x 3)
+    """
     nindex, height, width, intensity = array.shape
     nrows = nindex//ncols
     assert nindex == nrows*ncols
-    # want result.shape = (height*nrows, width*ncols, intensity)
     result = (array.reshape(nrows, ncols, height, width, intensity)
               .swapaxes(1,2)
               .reshape(height*nrows, width*ncols, intensity))
-    plt.imshow(result)
-    plt.savefig(save_path)
-    plt.cla()
-    plt.clf()
-
-
-def make_gridview(array, ncols=3):
-    nindex, height, width, intensity = array.shape
-    nrows = nindex//ncols
-    assert nindex == nrows*ncols
-    # want result.shape = (height*nrows, width*ncols, intensity)
-    result = (array.reshape(nrows, ncols, height, width, intensity)
-              .swapaxes(1,2)
-              .reshape(height*nrows, width*ncols, intensity))
+    if save_path is not None:
+        plt.imshow(result)
+        plt.savefig(save_path)
+        plt.cla()
+        plt.clf()
     return result
-
-
-def sandbox(metrics):
-    for key in metrics.keys():
-        acc_human = metrics[key]["human1_vs_human2"]["accuracy"]
-        if acc_human >= 100.0:
-            print("{}, human accuracy: {}".format(key.stem + ".mp4", acc_human))
-        acc_machine = metrics[key]["human1_vs_machine"]["accuracy"]
-        if acc_machine <= 60.0:
-            print("{}, model accuracy: {}".format(key.stem + ".mp4", acc_machine))
 
 
 def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None):
@@ -2119,6 +2112,6 @@ if __name__ == "__main__":
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True, hvh=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True, hvh=True)
-            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
-            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, hvh=True)
+            lum = plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
+            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, lum=lum, hvh=True)
         generate_session_plots(sorted_ids, all_metrics, args)

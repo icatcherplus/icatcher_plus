@@ -259,6 +259,4 @@ class MyDataLoader:
             imgs = torch.stack(bins[class_id]).cpu().numpy()
             imgs = (imgs - np.min(imgs, axis=(1, 2, 3), keepdims=True)) / (np.max(imgs, axis=(1, 2, 3), keepdims=True) - np.min(imgs, axis=(1, 2, 3), keepdims=True))
             save_path = Path(self.opt.experiment_path, "{}_collage_{}.png".format(self.opt.phase, classes[class_id]))
-            visualize.make_gallery(imgs, save_path, ncols=int(np.sqrt(collage_size)))
-        # for entry in selected_paths:
-        #     logging.info(entry)
+            visualize.make_gridview(imgs, ncols=int(np.sqrt(collage_size)), save_path=save_path)
