@@ -192,7 +192,8 @@ def predict_from_video(opt):
         else:
             raise NotImplementedError
     else:
-        video_paths = [int(opt.source)]
+        # video_paths = [int(opt.source)]
+        raise NotImplementedError
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
         answers = []

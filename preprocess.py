@@ -234,7 +234,7 @@ def preprocess_raw_lookit_dataset(args):
                 train_set = [x for x in videos if x["child_id"] not in val_children_id and x not in val_set]
                 train_set = np.array(train_set)
             else:
-                train_set = [x for x in videos if x not in val_set]
+                train_set = np.array([x for x in videos if x not in val_set])
         elif args.one_video_per_child_policy == "unique_only":
             video_children_id = [x["child_id"] for x in videos]
             _, indices = np.unique(video_children_id, return_index=True)

@@ -88,9 +88,9 @@ def parse_arguments_for_testing():
     parser.add_argument("--on_off", action="store_true",
                         help="left/right/away annotations will be swapped with on/off (only works with icatcher+)")
     # Set up text output file, using https://osf.io/3n97m/ - PrefLookTimestamp coding standard
-    parser.add_argument("--output_format", type=str, default="PrefLookTimestamp", choices=["PrefLookTimestamp",
-                                                                                           "raw_output",
-                                                                                           "compressed"])
+    parser.add_argument("--output_format", type=str, default="raw_output", choices=["raw_output",
+                                                                                    "compressed",
+                                                                                    "PrefLookTimestamp"])
     parser.add_argument("--output_file_suffix", type=str, default=".txt", help="the output file suffix")
     parser.add_argument("--architecture", type=str, choices=["fc", "icatcher_vanilla", "icatcher+", "rnn"],
                         default="icatcher+",
