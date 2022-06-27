@@ -1,20 +1,70 @@
-### Introduction
+## Introduction
 This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing original manuscripts results.
 
-### Installation
-Use conda with the environment.yml file to create a virtual environment:
+## Installation
+
+### Step 1: Clone this repository to get a copy of the code to run locally
+
+`git clone https://github.com/yoterel/icatcher_plus.git`
+
+### Step 2: Create a conda virtual environment
+
+We recommend installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for this, but you can also [Install Anaconda](https://www.anaconda.com/products/individual/get-started) if needed, then create an environment using the environment.yml file in this repository:
+
+**Note**: conda must be in the PATH envrionment variable for the shell to find it.
+
+`conda env create -n env -f environment.yml`
+
+or
 
 `conda env create --prefix /path/to/virtual/environment -f "/path/to/environment.yml"`
 
-another system requirement is having [ffmpeg](https://ffmpeg.org/download.html) installed.
+Activate the environment
 
-### Trained Models
+`conda activate env`
+
+Navigate to the icatcher_plus folder using a terminal / command prompt:
+
+`cd icatcher_plus`
+
+### Step 3: Download the latest network model & weights file
+
 iCatcher+ relies on some neural-network model files to work (or reproduce experiments).
 
 Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
 
 
-### Datasets Access
+### Step 4: Running iCatcher+
+
+To run icatcher with a video file (if a folder is provided, all videos will be used for prediction):
+
+`python test.py /path/to/my/video.mp4 /path/to/icatcher_model.pth --fc_model /path/to/face_classifier.pth`
+
+You can save a labeled video by adding:
+
+`--output_video_path /path/to/output_folder`
+
+If you want to output annotations to a file, use:
+
+`--output_annotation /path/to/output_annotation_folder`
+
+To show the predictions online in a seperate window, add the option:
+
+`--show_output`
+
+For a full command line option list use:
+
+`python test.py --help`
+
+### Output format
+
+The test.py file currently supports 3 output formats, though further formats can be added upon request.
+
+- raw_output: a file where each row will contain the frame number, the class prediction and the confidence of that prediction seperated by a comma
+- compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
+- PrefLookTimestamp: will save a file in the format described [here](https://osf.io/3n97m/) describing the output of the automated coding.
+
+### Datasets access
 
 The public videos from the Lookit dataset, along with human annotations and group-level demographics for all datasets, are available at https://osf.io/ujteb/. Videos from the Lookit dataset with permission granted for scientific use are available at https://osf.io/5u9df/. Requests for access to the remainder of the dataset can be directed to corrosponding author. To protect participant privacy, the participant identifiers for the video and demographic data are not linked to each other. However, this information is also available upon reasonable request to corrosponding author.
 
