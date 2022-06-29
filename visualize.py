@@ -1076,106 +1076,43 @@ def generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset):
     plt.close(fig)
 
 
-def generate_race_vs_agreement(sorted_IDs, all_metrics, args, video_dataset):
-    x = []
+def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, category_str, indi_points=True):
+    category = []
     y = []
     for id in sorted_IDs:
         agreement = all_metrics[id]["human1_vs_machine_session"]["agreement"] * 100
-        race = video_dataset[id]["child_race"]
-        x.append(race)
+        category.append(video_dataset[id][category_str])
         y.append(agreement)
 
-    labels, inverse = np.unique(x, return_inverse=True)
+    labels, inverse = np.unique(category, return_inverse=True)
     y = np.array(y)
     data = []
     err = []
     for i in range(len(labels)):
-        mean, conf1, conf2 = bootstrap(y[inverse == i])
+        mean, confb, confu = bootstrap(y[inverse == i])
         data.append(mean)
-        err.append((mean - conf1, conf2 - mean))
-    # for i in range(len(labels)):
-    #     data.append(np.mean(y[inverse == i]))
-    #     err.append(np.std(y[inverse == i]))
+        err.append((mean - confb, confu - mean))
     plt.rc('font', size=14)
     fig, ax = plt.subplots(figsize=(6, 8))
-    ax.bar(range(len(labels)), data, yerr=np.array(err).T,
-           color=label_to_color("lblue"), capsize=10, width=0.8)
+    if args.raw_dataset_type == "vcx":
+        color_str = "vlgreen"
+    else:
+        color_str = "vlblue"
+    color = label_to_color(color_str)
+    w = 0.8  # bar width
+    x = [n for n in range(len(labels))]
+    ax.bar(x, data, yerr=np.array(err).T, color=color, capsize=10, width=w)
     ax.set_xticks(range(len(labels)))
     ax.set_xticklabels(labels)
     ax.set_ylim([0, 100])
     ax.set_ylabel("Percent Agreement")
+    if indi_points:
+        for i in range(len(labels)):
+            # distribute scatter randomly across whole width of bar
+            ax.scatter(x[i] + np.random.random(y[inverse == i].size) * w - w / 2, y[inverse == i],
+                       color="black", zorder=2)
     save_path = args.output_folder
-    plt.savefig(str(Path(save_path, "agreement_vs_race.pdf")), bbox_inches='tight')
-    plt.cla()
-    plt.clf()
-    plt.close(fig)
-
-
-def generate_preterm_vs_agreement(sorted_IDs, all_metrics, args, video_dataset):
-    x = []
-    y = []
-    for id in sorted_IDs:
-        agreement = all_metrics[id]["human1_vs_machine_session"]["agreement"] * 100
-        preterm = video_dataset[id]["child_preterm"]
-        x.append(preterm)
-        y.append(agreement)
-
-    labels, inverse = np.unique(x, return_inverse=True)
-    y = np.array(y)
-    data = []
-    err = []
-    for i in range(len(labels)):
-        mean, confb, confu = bootstrap(y[inverse == i])
-        data.append(mean)
-        err.append((mean - confb, confu - mean))
-    # for i in range(len(labels)):
-    #     data.append(np.mean(y[inverse == i]))
-    #     err.append(np.std(y[inverse == i]))
-    plt.rc('font', size=16)
-    fig, ax = plt.subplots(figsize=(6, 8))
-    ax.bar(range(len(labels)), data, yerr=np.array(err).T,
-           color=label_to_color("lblue"), capsize=10, width=0.8)
-    ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels)
-    ax.set_ylim([0, 100])
-    ax.set_ylabel("Percent Agreement")
-    save_path = args.output_folder
-    plt.savefig(str(Path(save_path, "agreement_vs_preterm.pdf")), bbox_inches='tight')
-    plt.cla()
-    plt.clf()
-    plt.close(fig)
-
-
-def generate_gender_vs_agreement(sorted_IDs, all_metrics, args, video_dataset):
-    x = []
-    y = []
-    for id in sorted_IDs:
-        agreement = all_metrics[id]["human1_vs_machine_session"]["agreement"] * 100
-        gender = video_dataset[id]["child_gender"]
-        x.append(gender)
-        y.append(agreement)
-
-    labels, inverse = np.unique(x, return_inverse=True)
-    y = np.array(y)
-    data = []
-    err = []
-    for i in range(len(labels)):
-        mean, confb, confu = bootstrap(y[inverse == i])
-        data.append(mean)
-        err.append((mean - confb, confu - mean))
-    # for i in range(len(labels)):
-    #     data.append(np.mean(y[inverse == i]))
-    #     err.append(np.std(y[inverse == i]))
-    plt.rc('font', size=16)
-    fig, ax = plt.subplots(figsize=(6, 8))
-    ax.bar(range(len(labels)), data, yerr=np.array(err).T,
-           color=label_to_color("lblue"), capsize=10, width=0.8)
-    ax.set_xticks(range(len(labels)))
-    ax.set_xticklabels(labels)
-    ax.set_ylim([0, 100])
-    ax.set_ylabel("Percent Agreement")
-    save_path = args.output_folder
-    plt.savefig(str(Path(save_path, "agreement_vs_gender.pdf")), bbox_inches='tight')
+    plt.savefig(str(Path(save_path, "agreement_vs_{}.pdf".format(category_str))), bbox_inches='tight')
     plt.cla()
     plt.clf()
     plt.close(fig)
@@ -1331,20 +1268,22 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
         generate_agreement_scatter(sorted_IDs, all_metrics, args, True)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, True)
         generate_transitions_plot(sorted_IDs, all_metrics, args, True)
-        csv_file = Path(args.raw_dataset_path / "prephys_split0_videos.tsv")
+        csv_file = Path(args.raw_dataset_path / args.db_file_name)
         video_dataset = preprocess.build_lookit_video_dataset(args.raw_dataset_path, csv_file)
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_eye_color")
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_skin_tone")
     elif args.raw_dataset_type == "vcx":
         generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
         generate_transitions_plot(sorted_IDs, all_metrics, args, False)
-        csv_file = Path(args.raw_dataset_path / "Cal_BW_March_split0_participants.csv")
+        csv_file = Path(args.raw_dataset_path / args.db_file_name)
         video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, csv_file)
-        generate_preterm_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_preterm")
     else:
         raise NotImplementedError
+    generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_race")
+    generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_gender")
     generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
-    generate_race_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
-    generate_gender_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
 
 
 def generate_collage_plot(sorted_IDs, all_metrics, save_path):

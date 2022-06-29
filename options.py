@@ -193,7 +193,7 @@ def parse_arguments_for_visualizations():
 
     if args.raw_dataset_type == "lookit":
         args.raw_video_folder = Path(args.raw_dataset_path, "videos")
-        args.db_file_name = "prephys_split0_videos.tsv"
+        args.db_file_name = "prephys_split0_videos_detailed.tsv"
         assert args.raw_video_folder.is_dir()
     elif args.raw_dataset_type == "vcx":
         args.raw_video_folder = Path(args.raw_dataset_path, "Cal_BW MOV")

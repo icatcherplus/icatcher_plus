@@ -130,11 +130,13 @@ def build_lookit_video_dataset(raw_dataset_path, csv_location):
                                  "has_2coding": False,
                                  "first_coding_file": None,
                                  "second_coding_file": None,
+                                 "camera_moved": None,
                                  "child_id": None,
                                  "child_age": None,
                                  "child_race": None,
                                  "child_gender": None,
                                  "child_skin_tone": None,
+                                 "child_eye_color": None,
                                  "child_preterm": None,
                                  "split": None,
                                  "public": False}
@@ -151,7 +153,10 @@ def build_lookit_video_dataset(raw_dataset_path, csv_location):
     child_age = header.index("child.ageSessionRounded")
     child_race = header.index("parent.race.nonwhite")
     child_gender = header.index("child.gender")
+    child_skin_tone = header.index("child.skinTone")
+    child_eye_color = header.index("child.eyeColor")
     which_dataset = header.index("which.dataset")  # train, val or test video
+    camera_moved = header.index("video.cameraMoved")
     privacy = header.index("video.privacy")
     csv_videos = [row[video_id] for row in rows]
     for entry in video_dataset.values():
@@ -164,6 +169,9 @@ def build_lookit_video_dataset(raw_dataset_path, csv_location):
             entry["child_gender"] = rows[index][child_gender]
             entry["split"] = rows[index][which_dataset]
             entry["public"] = "public" in rows[index][privacy]
+            entry["child_skin_tone"] = rows[index][child_skin_tone]
+            entry["child_eye_color"] = rows[index][child_eye_color]
+            entry["camera_moved"] = rows[index][camera_moved]
     # fill video dataset with information from folders
     first_coding_files = [f for f in Path(raw_dataset_path / "annotations" / 'coder1').glob("*.txt")]
     first_coding_files_video_ids = ["-".join(f.stem.split("_")[2].split("-")[1:]) for f in first_coding_files]
@@ -192,7 +200,7 @@ def preprocess_raw_lookit_dataset(args):
     :return:
     """
     np.random.seed(seed=args.seed)  # seed the random generator
-    csv_file = Path(args.raw_dataset_path / "prephys_split0_videos.tsv")
+    csv_file = Path(args.raw_dataset_path / "prephys_split0_videos_detailed.tsv")
     video_dataset = build_lookit_video_dataset(args.raw_dataset_path, csv_file)
     # print some stats
     with open(csv_file, 'r') as csv_fp:
