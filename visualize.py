@@ -1272,6 +1272,7 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
         video_dataset = preprocess.build_lookit_video_dataset(args.raw_dataset_path, csv_file)
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_eye_color")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_skin_tone")
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "camera_moved")
     elif args.raw_dataset_type == "vcx":
         generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
