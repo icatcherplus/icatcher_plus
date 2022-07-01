@@ -1076,6 +1076,21 @@ def generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset):
     plt.close(fig)
 
 
+def perform_custom_permutation(category_str, unique_labels, inverse):
+    if category_str == "child_skin_tone":
+        perm = np.array([np.where(unique_labels == "light")[0],
+                         np.where(unique_labels == "medium")[0],
+                         np.where(unique_labels == "dark")[0]])
+    else:
+        perm = np.arange(len(unique_labels))
+    perm = perm.squeeze()
+    new_labels = unique_labels[perm]
+    new_inverse = []
+    for i in range(len(inverse)):
+        new_inverse.append(np.where(perm == inverse[i])[0])
+    return new_labels, np.array(new_inverse).squeeze()
+
+
 def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, category_str, indi_points=True):
     category = []
     y = []
@@ -1083,9 +1098,9 @@ def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_datase
         agreement = all_metrics[id]["human1_vs_machine_session"]["agreement"] * 100
         category.append(video_dataset[id][category_str])
         y.append(agreement)
-
-    labels, inverse = np.unique(category, return_inverse=True)
     y = np.array(y)
+    labels, inverse = np.unique(category, return_inverse=True)
+    labels, inverse = perform_custom_permutation(category_str, labels, inverse)
     data = []
     err = []
     for i in range(len(labels)):
