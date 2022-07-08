@@ -98,6 +98,8 @@ class LookItDataset(data.Dataset):
         dataset_folder_path = Path(self.opt.dataset_folder, "faces")
         my_list = []
         logging.info("{}: Collecting paths for dataloader".format(self.opt.phase))
+        humans_disagree_counter = 0
+        total_data_points = 0
         video_counter = 0
         for name in coding_names:
             gaze_labels = np.load(str(Path.joinpath(dataset_folder_path, name, f'gaze_labels.npy')))
@@ -120,6 +122,7 @@ class LookItDataset(data.Dataset):
                                                       cur_video_fd_fail,
                                                       cur_video_total))
             for frame_number in range(gaze_labels.shape[0]):
+                total_data_points += 1
                 gaze_label_seg = gaze_labels[frame_number:frame_number + self.opt.sliding_window_size]
                 face_label_seg = face_labels[frame_number:frame_number + self.opt.sliding_window_size]
                 if len(gaze_label_seg) != self.opt.sliding_window_size:
@@ -137,6 +140,7 @@ class LookItDataset(data.Dataset):
                         gaze_label_second = gaze_labels_second[frame_number + self.opt.sliding_window_size // 2]
                         if class_seg != gaze_label_second:
                             single_fail_counter += 1
+                            humans_disagree_counter += 1
                             continue
                     img_files_seg = []
                     box_files_seg = []
@@ -155,6 +159,10 @@ class LookItDataset(data.Dataset):
                 logging.info("The video {} has no annotations".format(name))
                 continue
             video_counter += 1
+        logging.info("Discarded {:.2f}% of total data due to humans disagreeing".format(
+            100 * (humans_disagree_counter / total_data_points)))
+        logging.info("Discarded {:.2f}% of actual data due to humans disagreeing".format(
+            100 * (humans_disagree_counter / len(my_list))))
         logging.info("Used {} videos, for a total of {} datapoints".format(video_counter, len(my_list)))
         return my_list
 

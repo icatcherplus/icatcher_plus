@@ -1133,6 +1133,67 @@ def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_datase
     plt.close(fig)
 
 
+def generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args):
+    agreement_in = []
+    agreement_between = []
+    for id in sorted_IDs:
+        raw_human = all_metrics[id]["human1_vs_machine_session"]["raw_coding1"]
+        raw_machine = all_metrics[id]["human1_vs_machine_session"]["raw_coding2"]
+        trial_end_times = [x["end"] for x in all_metrics[id]["human1_vs_machine_trials"]]
+        between_trial_mask = np.zeros_like(raw_human).astype(bool)
+        in_trial_mask = np.zeros_like(raw_human).astype(bool)
+        between_indices = np.array([np.arange(x-4, x+5) for x in trial_end_times[:-1]]).reshape(-1)
+        in_indices = np.setdiff1d(np.arange(len(raw_human)), between_indices)
+        in_indices = np.random.choice(in_indices, size=len(between_indices), replace=False)  # sample to make equal amount
+        between_trial_mask[between_indices] = True
+        in_trial_mask[in_indices] = True
+        mutually_valid_mask = np.logical_and(raw_human >= 0, raw_machine >= 0)
+        human_between_trials = raw_human[between_trial_mask & mutually_valid_mask]
+        human_in_trials = raw_human[in_trial_mask & mutually_valid_mask]
+        machine_between_trials = raw_machine[between_trial_mask & mutually_valid_mask]
+        machine_in_trials = raw_machine[in_trial_mask & mutually_valid_mask]
+        agreement_between_trials = np.count_nonzero(machine_between_trials == human_between_trials) / len(machine_between_trials)
+        agreement_between.append(agreement_between_trials)
+        agreement_in_trials = np.count_nonzero(machine_in_trials == human_in_trials) / len(machine_in_trials)
+        agreement_in.append(agreement_in_trials)
+
+    agreement_between = np.array(agreement_between)
+    agreement_in = np.array(agreement_in)
+    in_mean, in_b, in_u = bootstrap(agreement_in)
+    between_mean, between_b, between_u = bootstrap(agreement_between)
+    plt.rc('font', size=16)
+    fig, ax = plt.subplots()
+    x = np.arange(2)
+    y = np.array([agreement_in, agreement_between])
+    primary_label = "Lookit"
+    w = 0.35  # the width of the bars
+    ydata = np.array([in_mean, between_mean])
+    yerr = np.array([(in_b, in_u),
+                     (between_b, between_u)])
+    yerr = np.abs(yerr - ydata[:, None])
+    rects1 = ax.bar(x, ydata,
+                    yerr=yerr.T, width=w,
+                    label=primary_label, align='center', ecolor='black',
+                    color=label_to_color("vlblue"), capsize=10)
+    labels = ['H1-M During Trials', 'H1-M Between Trials']
+    ax.set_xticks(x)
+    ax.set_yticks(np.arange(0, 1.2, step=0.2))
+    ax.set_xticklabels(labels)  # , rotation=-45
+    ax.bar_label(rects1, fmt='%.2f', padding=3, label_type="center")
+    ax.legend(loc='lower right')
+    ax.set_ylabel("Agreement")
+    for i in range(len(labels)):
+        # distribute scatter randomly across whole width of bar
+        ax.scatter(x[i] + np.random.random(y[i].size) * w - w / 2, y[i],
+                   color="black", zorder=2)
+    save_path = args.output_folder
+    name = "agreement_vs_in-trial_between-trial.pdf"
+    plt.savefig(str(Path(save_path, name)), bbox_inches='tight')
+    plt.cla()
+    plt.clf()
+    plt.close(fig)
+
+
 def generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, multi_dataset=False):
     # agreement = [all_metrics[id]["human1_vs_machine_session"]["agreement"] * 100 for id in sorted_IDs]
     confidence_correct = []
@@ -1280,6 +1341,7 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
     generate_barplot(sorted_IDs, all_metrics, save_path)
     generate_confusion_matrices(sorted_IDs, all_metrics, args)
     if args.raw_dataset_type == "lookit":
+        generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args)
         generate_agreement_scatter(sorted_IDs, all_metrics, args, True)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, True)
         generate_transitions_plot(sorted_IDs, all_metrics, args, True)
