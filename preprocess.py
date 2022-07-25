@@ -33,8 +33,8 @@ def create_annotation_split(args, csv_name):
     csv_location = Path(args.raw_dataset_path, csv_name)
     if args.raw_dataset_type == "lookit":
         db = build_lookit_video_dataset(args.raw_dataset_path, csv_location)
-    elif args.raw_dataset_type == "vcx":
-        db = build_marchman_video_dataset(args.raw_dataset_path, csv_location)
+    elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
+        db = build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
     test_subset = [x for x in db.values() if x["in_csv"] and x["has_1coding"] and x["has_2coding"] and x["split"] == "2_test"]
     coding1_files = [(x["video_id"], x["first_coding_file"]) for x in test_subset]
     coding2_files = [(x["video_id"], x["second_coding_file"]) for x in test_subset]
@@ -43,10 +43,22 @@ def create_annotation_split(args, csv_name):
         shutil.copy(Path(coding2_files[i][1]), Path(coding2_location, coding2_files[i][0] + ".txt"))
 
 
-def build_marchman_video_dataset(raw_dataset_path, csv_location):
+def build_marchman_video_dataset(raw_dataset_path, raw_dataset_type):
+    if raw_dataset_type == "cali-bw":
+        csv_location = Path(raw_dataset_path / "Cal_BW_March_split0_participants.csv")
+        raw_video_folder = Path(raw_dataset_path / "Cal_BW MOV")
+        primary_coder_folder = Path(raw_dataset_path, "Cal_BW Original")
+        secondary_coder_folder = Path(raw_dataset_path, "Cal_BW Reliability")
+    elif raw_dataset_type == "senegal":
+        csv_location = Path(raw_dataset_path / "Senegal_Color_March_split0_participants.csv")
+        raw_video_folder = Path(raw_dataset_path / "Senegal_Color_MOV_Trim")
+        primary_coder_folder = Path(raw_dataset_path, "Senegal_Color_VCX_Original")
+        secondary_coder_folder = Path(raw_dataset_path, "Senegal_Color_VCX_Reliability")
+    else:
+        raise NotImplementedError
     video_dataset = {}
     # search for videos
-    for file in Path(raw_dataset_path / "Cal_BW MOV").glob("*"):
+    for file in raw_video_folder.glob("*"):
         if file.is_file():
             video_dataset[file.stem] = {"video_id": file.stem,
                                         "video_path": file,
@@ -75,28 +87,35 @@ def build_marchman_video_dataset(raw_dataset_path, csv_location):
     # fill video dataset with information from csv
     video_id = header.index("videoFileName")
     child_id = header.index("childID")
-    child_age = header.index("age")
-    child_race = header.index("race.ethnic")
     child_gender = header.index("child.gender")
-    child_preterm = header.index("preterm")
     which_dataset = header.index("which.dataset")  # train, val or test video
     start_timestamp = header.index("timestamp.vidstart")  # timestamp of video start
     codingfile1 = header.index("codingFile1")
     codingfile2 = header.index("codingFile2")
+    try:
+        child_age = header.index("age")
+        child_race = header.index("race.ethnic")
+        child_preterm = header.index("preterm")
+        senegal = False
+    except ValueError:
+        child_age = header.index("ageSessionRounded")
+        senegal = True
     csv_videos = [row[video_id] for row in rows]
     for entry in video_dataset.values():
         if entry["video_path"].name in csv_videos:
             entry["in_csv"] = True
             index = csv_videos.index(entry["video_path"].name)
             entry["child_id"] = rows[index][child_id]
-            entry["child_age"] = rows[index][child_age]
-            entry["child_race"] = rows[index][child_race]
             entry["child_gender"] = rows[index][child_gender]
-            entry["child_preterm"] = rows[index][child_preterm]
             entry["split"] = rows[index][which_dataset]
             entry["start_timestamp"] = rows[index][start_timestamp]
-            entry["first_coding_file"] = Path(raw_dataset_path / "Cal_BW Reliability" / rows[index][codingfile1])
-            entry["second_coding_file"] = Path(raw_dataset_path / "Cal_BW Original" / rows[index][codingfile2])
+            # note the "bug" second coding file column is mapped to primary coder...see fix in visualize.py
+            entry["first_coding_file"] = secondary_coder_folder / rows[index][codingfile1]
+            entry["second_coding_file"] = primary_coder_folder / rows[index][codingfile2]
+            entry["child_age"] = rows[index][child_age]
+            if not senegal:
+                entry["child_race"] = rows[index][child_race]
+                entry["child_preterm"] = rows[index][child_preterm]
     # fill video dataset with information from folders
     for entry in video_dataset.values():
         if entry["first_coding_file"]:
@@ -105,7 +124,7 @@ def build_marchman_video_dataset(raw_dataset_path, csv_location):
         if entry["second_coding_file"]:
             if entry["second_coding_file"].is_file():
                 entry["has_2coding"] = True
-        if entry["has_2coding"]:  # just a small sanity check
+        if entry["has_2coding"]:  # sanity: if there is a 2nd coding, a "1st" should exist otherwise the 2nd would be the 1st.
             assert entry["has_1coding"], entry["video_id"]
     return video_dataset
 
@@ -289,9 +308,13 @@ def preprocess_raw_marchman_dataset(args):
     :param args: cmd line arguments
     :return:
     """
-    csv_file = Path(args.raw_dataset_path / "Cal_BW_March_split0_participants.csv")
-    video_dataset = build_marchman_video_dataset(args.raw_dataset_path, csv_file)
-
+    video_dataset = build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
+    if args.raw_dataset_type == "cali-bw":
+        csv_file = Path(args.raw_dataset_path / "Cal_BW_March_split0_participants.csv")
+    elif args.raw_dataset_type == "senegal":
+        csv_file = Path(args.raw_dataset_path / "Senegal_Color_March_split0_participants.csv")
+    else:
+        raise NotImplementedError
     # print some stats
     with open(csv_file, 'r') as csv_fp:
         csv_videos = len(csv_fp.readlines()) - 1
@@ -477,15 +500,15 @@ def process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False
         else:
             logging.info("[process_lkt_legacy] video fps: {}".format(fps))
 
-        if args.raw_dataset_type == "vcx":
-            csv_file = Path(args.raw_dataset_path / "Cal_BW_March_split0_participants.csv")
+        if args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
             # make sure target fps is around 30
             assert abs(fps - 30) < 0.1
             parser = parsers.VCXParser(30,
-                                       csv_file,
+                                       args.raw_dataset_path,
+                                       args.raw_dataset_type,
                                        first_coder=True)
         elif args.raw_dataset_type == "lookit":
-            csv_file = Path(args.raw_dataset_path / "prephys_split0_videos.tsv")
+            csv_file = Path(args.raw_dataset_path / "prephys_split0_videos_detailed.tsv")
             parser = parsers.LookitParser(fps,
                                           csv_file,
                                           first_coder=True,
@@ -623,14 +646,14 @@ def generate_second_gaze_labels(args, force_create=False, visualize_confusion=Fa
             logging.info('[gen_2nd_labels] No label!')
             continue
         else:
-            if args.raw_dataset_type == "vcx":
-                csv_file = Path(args.raw_dataset_path / "Cal_BW_March_split0_participants.csv")
+            if args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
                 assert abs(fps - 30) < 0.1
                 parser = parsers.VCXParser(30,
-                                           csv_file,
+                                           args.raw_dataset_path,
+                                           args.raw_dataset_type,
                                            first_coder=False)
             elif args.raw_dataset_type == "lookit":
-                csv_file = Path(args.raw_dataset_path / "prephys_split0_videos.tsv")
+                csv_file = Path(args.raw_dataset_path / "prephys_split0_videos_detailed.tsv")
                 parser = parsers.LookitParser(fps,
                                               csv_file,
                                               first_coder=False,
@@ -733,7 +756,7 @@ def gen_lookit_multi_face_subset(force_create=False):
                         dst_box_file = (dst_folder / 'box' / f'{name}_{face}.npy')
                         if not dst_box_file.is_file() or force_create:
                             shutil.copy((src_folder / 'box' / (face + '.npy')), dst_box_file)
-                if num_datapoint >= 1000:
+                if num_datapoint >= 100:
                     break
         logging.info('# multi-face datapoint:{}'.format(num_datapoint))
     logging.info('total # multi-face datapoint:{}'.format(total_datapoint))
@@ -892,18 +915,18 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=args.verbosity.upper())
 
-    if args.raw_dataset_type == "lookit":
-        preprocess_raw_lookit_dataset(args)
-    elif args.raw_dataset_type == "vcx":
-        preprocess_raw_marchman_dataset(args)
-    elif args.raw_dataset_type == "generic":
-        preprocess_raw_generic_dataset(args, force_create=False)
-    else:
-        raise NotImplementedError
-
-    process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False)
-    generate_second_gaze_labels(args, force_create=False, visualize_confusion=False)
-    report_dataset_stats(args)
-    # gen_lookit_multi_face_subset(force_create=False)  # creates training set for face classifier
-    if args.fc_model:
-        process_dataset_face_classifier(args, force_create=False)
+    # if args.raw_dataset_type == "lookit":
+    #     preprocess_raw_lookit_dataset(args)
+    # elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
+    #     preprocess_raw_marchman_dataset(args)
+    # elif args.raw_dataset_type == "generic":
+    #     preprocess_raw_generic_dataset(args, force_create=False)
+    # else:
+    #     raise NotImplementedError
+    #
+    # process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False)
+    gen_lookit_multi_face_subset(force_create=False)  # creates training set for face classifier
+    # generate_second_gaze_labels(args, force_create=False, visualize_confusion=False)
+    # report_dataset_stats(args)
+    # if args.fc_model:
+    #     process_dataset_face_classifier(args, force_create=False)

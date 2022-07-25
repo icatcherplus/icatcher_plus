@@ -171,8 +171,8 @@ def predict_from_video(opt):
                 if opt.video_filter.is_file():
                     if opt.raw_dataset_type == "lookit":
                         video_dataset = build_lookit_video_dataset(opt.raw_dataset_path, opt.video_filter)
-                    elif opt.raw_dataset_type == "vcx":
-                        video_dataset = build_marchman_video_dataset(opt.raw_dataset_path, opt.video_filter)
+                    elif opt.raw_dataset_type == "cali-bw" or opt.raw_dataset_type == "senegal":
+                        video_dataset = build_marchman_video_dataset(opt.raw_dataset_path, opt.raw_dataset_type)
                     else:
                         raise NotImplementedError
                     # filter_files = [x for x in video_dataset.values() if

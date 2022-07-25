@@ -82,7 +82,7 @@ def parse_arguments_for_testing():
                         help="provided file will be used to filter only test videos,"
                              " will assume certain file structure using the lookit/marchman datasets")
     parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset (required if --video_filter is passed")
-    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "vcx", "generic"], default="lookit",
+    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
                         help="the type of dataset to preprocess")
     parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
     parser.add_argument("--on_off", action="store_true",
@@ -155,7 +155,7 @@ def parse_arguments_for_visualizations():
     parser.add_argument("output_folder", type=str, default="output", help="path to output results.")
     parser.add_argument("human_codings_folder", type=str, help="the codings from human1")
     parser.add_argument("machine_codings_folder", type=str, help="the codings from machine")
-    parser.add_argument("raw_dataset_type", type=str, choices=["lookit", "vcx", "datavyu"], default="lookit",
+    parser.add_argument("raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "datavyu"], default="lookit",
                         help="the type of dataset to preprocess")
     parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset folder")
     parser.add_argument("--dataset_folder", type=str, help="path to preprocessed dataset folder")
@@ -195,10 +195,13 @@ def parse_arguments_for_visualizations():
         args.raw_video_folder = Path(args.raw_dataset_path, "videos")
         args.db_file_name = "prephys_split0_videos_detailed.tsv"
         assert args.raw_video_folder.is_dir()
-    elif args.raw_dataset_type == "vcx":
+    elif args.raw_dataset_type == "cali-bw":
         args.raw_video_folder = Path(args.raw_dataset_path, "Cal_BW MOV")
         args.db_file_name = "Cal_BW_March_split0_participants.csv"
         assert args.raw_video_folder.is_dir()
+    elif args.raw_dataset_type == "senegal":
+        args.raw_video_folder = Path(args.raw_dataset_path, "Senegal_Color_MOV_Trim")
+        args.db_file_name = "Senegal_Color_March_split0_participants.csv"
     elif args.raw_dataset_type == "datavyu":
         args.raw_video_folder = None
         args.db_file_name = None
@@ -226,7 +229,7 @@ def parse_arguments_for_preprocess():
     parser = argparse.ArgumentParser()
     parser.add_argument("raw_dataset_path", type=str, help="path to raw dataset to preprocess")
     parser.add_argument("output_folder", type=str, help="path to put preprocessed dataset")
-    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "vcx", "generic"], default="lookit",
+    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
                         help="the type of dataset to preprocess")
     parser.add_argument("--fc_model", type=str, default="models/face_classifier_weights_best.pt", help="path to face classifier model if it was trained")
     parser.add_argument("--pre_split", type=str, help="path to pre_split file that encodes which video belongs to train and validation")

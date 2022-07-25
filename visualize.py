@@ -320,13 +320,12 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
         valid_class_num = 2
     else:
         valid_class_num = 3
-    trial_times = None
     if args.human_coding_format == "vcx":
-        csv_file = Path(args.raw_dataset_path / "Cal_BW_March_split0_participants.csv")
-        parser = parsers.VCXParser(30, csv_file)
+        parser = parsers.VCXParser(30, args.raw_dataset_path, args.raw_dataset_type)
     elif args.human_coding_format == "lookit":
-        csv_file = Path(args.raw_dataset_path / "prephys_split0_videos.tsv")
+        csv_file = Path(args.raw_dataset_path / "prephys_split0_videos_detailed.tsv")
         parser = parsers.LookitParser(30, csv_file)
+        postures, _, _ = parser.parse(human_coding_file.stem, human_coding_file, extract_poses=True)
     elif args.human_coding_format == "datavyu":
         parser = parsers.DatavyuParser()
     else:
@@ -341,6 +340,8 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
     if args.human_coding_format == "lookit":
         labels = parser.load_and_sort(human_coding_file)
         trial_times = parser.get_trial_intervals(start1, labels)
+        posture_class_map = {"over_shoulder": 0, "sitting_in_lap": 1, "sitting_alone": 2, "other_posture": 3}
+        uncollapsed_postures = parser.uncollapse_labels(postures, start1, end1, class_map=posture_class_map)
     elif args.human_coding_format == "vcx":
         trial_times = parser.get_trial_intervals(start1, human)
     elif args.human_coding_format == "datavyu":
@@ -384,6 +385,7 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
                         }
 
     logging.info("session level stats")
+    metrics["postures"] = uncollapsed_postures
     metrics["human1_vs_machine_session"] = compare_uncollapsed_coding_files(human1_uncol,
                                                                             machine_uncol,
                                                                             [[0, max(end1, mend)]],
@@ -949,7 +951,7 @@ def generate_confusion_matrices(sorted_IDs, all_metrics, args):
     total_confusion2_h2h /= np.sum(total_confusion2_h2h, 0, keepdims=True)  # normalize column-wise
     sns.heatmap(total_confusion2_h2h, ax=conf_mat2_h2h, vmin=0, vmax=1, annot=True, fmt='.2%', cbar=False, cmap='Blues',
                 annot_kws={"size": 26})
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         conf_mat2_h2h.set_xticklabels(['off*', 'on'])
         conf_mat2_h2h.set_yticklabels(['off*', 'on'])
     else:
@@ -977,7 +979,7 @@ def generate_confusion_matrices(sorted_IDs, all_metrics, args):
     total_confusion2_h2m /= np.sum(total_confusion2_h2m, 0, keepdims=True)  # normalize column-wise
     sns.heatmap(total_confusion2_h2m, ax=conf_mat2_h2m, vmin=0, vmax=1, annot=True, fmt='.2%', cbar=False, cmap='Blues',
                 annot_kws={"size": 26})
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         conf_mat2_h2m.set_xticklabels(['off*', 'on'])
         conf_mat2_h2m.set_yticklabels(['off*', 'on'])
     else:
@@ -1002,7 +1004,7 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
     ax.plot([0, 1], [0, 1], transform=ax.transAxes, color="black")
     x_target = [all_metrics[ID]["human1_vs_human2_session"]["agreement"] for ID in sorted_IDs]
     y_target = [all_metrics[ID]["human1_vs_machine_session"]["agreement"] for ID in sorted_IDs]
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         primary_label = "California-BW Videos"
         secondary_label = "Lookit Videos"
         np.savez("cali-bw_agreement", x_target, y_target)
@@ -1109,7 +1111,7 @@ def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_datase
         err.append((mean - confb, confu - mean))
     plt.rc('font', size=14)
     fig, ax = plt.subplots(figsize=(6, 8))
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         color_str = "vlgreen"
     else:
         color_str = "vlblue"
@@ -1132,6 +1134,54 @@ def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_datase
     plt.clf()
     plt.close(fig)
 
+
+def generate_posture_vs_agreement(sorted_IDs, all_metrics, args):
+    agreements = []
+    postures = []
+    labels = ["Over shoulder", "Sitting in lap", "Sitting alone", "Other posture"]
+    for id in sorted_IDs:
+        raw_postures = all_metrics[id]["postures"]
+        trial_start_times = [x["end"] for x in all_metrics[id]["human1_vs_machine_trials"]]
+        trial_start_times.insert(0, all_metrics[id]["human1_vs_machine_trials"][0]["start"])
+        trial_hvm_agreement = [x["agreement"] * 100 for x in all_metrics[id]["human1_vs_machine_trials"]]
+        for i in range(len(trial_start_times) - 1):  # last time in list is end of last trial
+            postures_in_trial = raw_postures[trial_start_times[i]:trial_start_times[i+1]]
+            valid_postures = postures_in_trial[postures_in_trial >= 0]
+            uni_values = np.unique(valid_postures)
+            if len(uni_values) == 1:
+                postures.append(uni_values)
+                agreements.append(trial_hvm_agreement[i])
+    agreements = np.array(agreements)
+    postures = np.array(postures).squeeze()
+    nan_mask = ~np.isnan(agreements)
+    agreements = agreements[nan_mask]
+    postures = postures[nan_mask]
+    ydata = []
+    yerr = []
+    for i in range(len(labels)):
+        mean, confb, confu = bootstrap(agreements[postures == i])
+        ydata.append(mean)
+        yerr.append((mean - confb, confu - mean))
+    ydata = np.array(ydata)
+    yerr = np.array(yerr)
+    plt.rc('font', size=14)
+    fig, ax = plt.subplots(figsize=(6, 8))
+    x = np.arange(len(labels))
+    w = 0.8  # bar width
+    ax.bar(x, ydata, yerr=yerr.T, color=label_to_color("vlblue"), capsize=10, width=w)
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, rotation=-45)
+    ax.set_ylim([0, 100])
+    ax.set_ylabel("Percent Agreement")
+    for i in range(len(labels)):
+        # distribute scatter randomly across whole width of bar
+        ax.scatter(x[i] + np.random.random(agreements[postures == i].size) * w - w / 2, agreements[postures == i],
+                   color="black", zorder=2, alpha=0.3)
+    save_path = args.output_folder
+    plt.savefig(str(Path(save_path, "agreement_vs_posture.pdf")), bbox_inches='tight')
+    plt.cla()
+    plt.clf()
+    plt.close(fig)
 
 def generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args):
     agreement_in = []
@@ -1207,7 +1257,7 @@ def generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, multi_datase
     valid_trials_confidence = ~np.isnan(confidence_correct) & ~np.isnan(confidence_incorrect)
     confidence_correct = confidence_correct[valid_trials_confidence]
     confidence_incorrect = confidence_incorrect[valid_trials_confidence]
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         primary_label = "California-BW"
         secondary_label = "Lookit"
         np.savez("cali-bw_confidence", confidence_correct, confidence_incorrect)
@@ -1271,7 +1321,7 @@ def generate_transitions_plot(sorted_IDs, all_metrics, args, multi_dataset=False
     transitions_h1 = np.array(transitions_h1)
     transitions_h2 = np.array(transitions_h2)
     transitions_h3 = np.array(transitions_h3)
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         primary_label = "California-BW"
         secondary_label = "Lookit"
         np.savez("cali-bw_transitions_per_100", transitions_h1, transitions_h2, transitions_h3)
@@ -1342,6 +1392,7 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
     generate_confusion_matrices(sorted_IDs, all_metrics, args)
     if args.raw_dataset_type == "lookit":
         generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args)
+        generate_posture_vs_agreement(sorted_IDs, all_metrics, args)
         generate_agreement_scatter(sorted_IDs, all_metrics, args, True)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, True)
         generate_transitions_plot(sorted_IDs, all_metrics, args, True)
@@ -1350,12 +1401,12 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_eye_color")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_skin_tone")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "camera_moved")
-    elif args.raw_dataset_type == "vcx":
+    elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
         generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
         generate_transitions_plot(sorted_IDs, all_metrics, args, False)
         csv_file = Path(args.raw_dataset_path / args.db_file_name)
-        video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, csv_file)
+        video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_preterm")
     else:
         raise NotImplementedError
@@ -1519,7 +1570,7 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, lum=None, hvh=Fals
         session_metric_name = "human1_vs_machine_session"
         plt_name += "_machine"
     plt_name += ".pdf"
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
@@ -1624,7 +1675,7 @@ def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_lev
         densities = [all_metrics[x]["stats"]["avg_face_pixel_density"] for x in sorted_IDs]
         agreement = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
         alpha = 1
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
@@ -1676,7 +1727,7 @@ def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, tr
         means = np.array([all_metrics[x]["stats"]["avg_face_loc"][stat] for x in sorted_IDs])
         agreement = np.array([all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs])
         alpha = 1
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
@@ -1719,7 +1770,7 @@ def plot_face_location_std_vs_accuracy(sorted_IDs, all_metrics, args, trial_leve
         stds = [all_metrics[x]["stats"]["avg_face_loc_std"] for x in sorted_IDs]
         agreement = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
         alpha = 1
-    if args.raw_dataset_type == "vcx":
+    if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
     else:
         color = label_to_color("vlblue")
@@ -1765,9 +1816,9 @@ def calc_all_metrics(args, force_create=False):
             if args.raw_dataset_type == "lookit":
                 video_dataset = preprocess.build_lookit_video_dataset(args.raw_dataset_path,
                                                                       Path(args.raw_dataset_path, args.db_file_name))
-            elif args.raw_dataset_type == "vcx":
+            elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
                 video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path,
-                                                                        Path(args.raw_dataset_path, args.db_file_name))
+                                                                        args.raw_dataset_type)
             else:
                 raise NotImplementedError
             filter_files = [x for x in video_dataset.values() if
@@ -1794,8 +1845,8 @@ def calc_all_metrics(args, force_create=False):
                 human_coding_file2 = None
             key = human_coding_file.stem
             try:
-                # hack for cali-bw because we accidentally mapped human1 to reliability coder
-                if args.raw_dataset_type == "vcx":
+                # hack for marchman style datasets because we accidentally mapped human1 to reliability coder
+                if args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
                     res = compare_coding_files(human_coding_file2, human_coding_file, machine_coding_file, args)
                 else:
                     res = compare_coding_files(human_coding_file, human_coding_file2, machine_coding_file, args)

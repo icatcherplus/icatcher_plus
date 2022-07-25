@@ -28,13 +28,17 @@ class BaseParser:
         """
         raise NotImplementedError
 
-    def uncollapse_labels(self, labels, start, end):
+    def uncollapse_labels(self, labels, start, end, class_map=None):
         """
         given an output from parse as described above, uncollapses it into one big numpy array of labels (-3 for invalid).
-        :param labels:
+        :param labels: the collapsed version of the labels
+        :param start: index where coding begins
+        :param end: index where coding ends
+        :param class_map: if provided, uses this dictionary to map class names into integers
         :return:
         """
-        class_map = {"away": 0, "left": 1, "right": 2}
+        if class_map is None:
+            class_map = {"away": 0, "left": 1, "right": 2}
         if type(labels) == np.ndarray:
             return labels
         output = []
@@ -108,14 +112,19 @@ class LookitParser(BaseParser):
         self.classes = ["away", "left", "right"]
         self.exclude = ["outofframe", "preview", "instructions"]
         self.special = ["codingactive"]
+        self.poses = ["over_shoulder", "sitting_in_lap", "sitting_alone", "other_posture"]
 
-    def parse(self, video_id, label_path=None):
+    def parse(self, video_id, label_path=None, extract_poses=False):
         """
         parse a coding file, see base class for output format
         :param video_id: video_id of video
         :param label_path: if provided, will parse this file instead
         :return: see base class
         """
+        if extract_poses:
+            selected_classes = self.poses
+        else:
+            selected_classes = self.classes
         if label_path is None:
             if self.first_coder:
                 label_path = self.video_dataset[video_id]["first_coding_file"]
@@ -135,7 +144,7 @@ class LookitParser(BaseParser):
         # loop over legitimate class labels
         for i in range(len(labels)):
             frame = int(labels[i, 0])
-            if labels[i, 2] in self.classes:
+            if labels[i, 2] in selected_classes:
                 cur_class = labels[i, 2]
                 if prev_class != cur_class:
                     assert frame > prev_frame  # how can two labels be different but point to same time?
@@ -173,7 +182,7 @@ class LookitParser(BaseParser):
             for entry in output:
                 entry[0] = int(int(entry[0]) * self.fps / 1000)
         if not output:  # if nothing was found, all video is invalid
-            output.append([0, False, "away"])
+            output.append([0, False, selected_classes[0]])
         start = int(output[0][0])
         trial_times = self.get_trial_intervals(start, labels)
         last_trial_end = trial_times[-1][1]
@@ -289,10 +298,10 @@ class VCXParser(BaseParser):
     """
     A parser that can parse vcx files that are used in princeton / marchman laboratories
     """
-    def __init__(self, fps, csv_file, first_coder=True):
+    def __init__(self, fps, raw_dataset_path, raw_dataset_type, first_coder=True):
         super().__init__()
         self.fps = fps
-        self.video_dataset = preprocess.build_marchman_video_dataset(csv_file.parent, csv_file)
+        self.video_dataset = preprocess.build_marchman_video_dataset(raw_dataset_path, raw_dataset_type)
         self.first_coder = first_coder
         self.start_times = self.process_start_times()
 
