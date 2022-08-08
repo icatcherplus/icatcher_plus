@@ -92,13 +92,12 @@ def build_marchman_video_dataset(raw_dataset_path, raw_dataset_type):
     start_timestamp = header.index("timestamp.vidstart")  # timestamp of video start
     codingfile1 = header.index("codingFile1")
     codingfile2 = header.index("codingFile2")
+    child_age = header.index("child.ageSessionRounded")
     try:
-        child_age = header.index("age")
         child_race = header.index("race.ethnic")
         child_preterm = header.index("preterm")
         senegal = False
     except ValueError:
-        child_age = header.index("ageSessionRounded")
         senegal = True
     csv_videos = [row[video_id] for row in rows]
     for entry in video_dataset.values():
@@ -915,18 +914,18 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=args.verbosity.upper())
 
-    # if args.raw_dataset_type == "lookit":
-    #     preprocess_raw_lookit_dataset(args)
-    # elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
-    #     preprocess_raw_marchman_dataset(args)
-    # elif args.raw_dataset_type == "generic":
-    #     preprocess_raw_generic_dataset(args, force_create=False)
-    # else:
-    #     raise NotImplementedError
-    #
-    # process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False)
+    if args.raw_dataset_type == "lookit":
+        preprocess_raw_lookit_dataset(args)
+    elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
+        preprocess_raw_marchman_dataset(args)
+    elif args.raw_dataset_type == "generic":
+        preprocess_raw_generic_dataset(args, force_create=False)
+    else:
+        raise NotImplementedError
+
+    process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False)
     gen_lookit_multi_face_subset(force_create=False)  # creates training set for face classifier
-    # generate_second_gaze_labels(args, force_create=False, visualize_confusion=False)
-    # report_dataset_stats(args)
-    # if args.fc_model:
-    #     process_dataset_face_classifier(args, force_create=False)
+    generate_second_gaze_labels(args, force_create=False, visualize_confusion=False)
+    report_dataset_stats(args)
+    if args.fc_model:
+        process_dataset_face_classifier(args, force_create=False)

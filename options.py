@@ -45,9 +45,12 @@ def parse_arguments_for_training():
     parser.add_argument('--per_channel_std', nargs=3, metavar=('Channel1_std', 'Channel2_std', 'Channel3_std'),
                         type=float, default=[0.229, 0.224, 0.225], help='supply custom per-channel std of data for normalization')
     # lookit: default
-    # marchman bw:
+    # cali bw:
     # --per_channel_mean (0.48202555, 0.4854607, 0.48115342)
     # --per_channel_std (0.1883308, 0.19372367, 0.18606699)
+    # senegal:
+    # --per_channel_mean (0.33775841, 0.20564291, 0.20078793)
+    # --per_channel_std (0.18956067, 0.1856049 , 0.18800441)
     parser.add_argument("--number_of_epochs", type=int, default=100, help="Total number of epochs to train model")
     parser.add_argument("--seed", type=int, default=42, help="Random seed to train with")
     parser.add_argument("--gpu_id", type=str, default=-1, help="GPU ids to use, comma delimited (or -1 for cpu)")

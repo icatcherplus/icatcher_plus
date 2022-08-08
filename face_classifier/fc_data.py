@@ -67,7 +67,7 @@ def create_train_test(raw_data_folder):
 def get_dataset_dataloaders(args, input_size, batch_size, shuffle=True, num_workers=0):
     data_transforms = get_fc_data_transforms(args, input_size)
     face_data_folder = args.dataset_folder
-    # create_train_test(face_data_folder)
+    create_train_test(face_data_folder)
     # Create training and validation datasets
     image_datasets = {'train': datasets.ImageFolder(str(Path(face_data_folder, 'train')), data_transforms['train']),
                       'val': datasets.ImageFolder(str(Path(face_data_folder, 'val')), data_transforms['val']),

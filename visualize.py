@@ -309,6 +309,7 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
     :param args:
     :return:
     """
+    metrics = {}
     if args.machine_coding_format == "compressed":
         parser = parsers.CompressedParser()
     else:
@@ -342,13 +343,13 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
         trial_times = parser.get_trial_intervals(start1, labels)
         posture_class_map = {"over_shoulder": 0, "sitting_in_lap": 1, "sitting_alone": 2, "other_posture": 3}
         uncollapsed_postures = parser.uncollapse_labels(postures, start1, end1, class_map=posture_class_map)
+        metrics["postures"] = uncollapsed_postures
     elif args.human_coding_format == "vcx":
         trial_times = parser.get_trial_intervals(start1, human)
     elif args.human_coding_format == "datavyu":
         trial_times = parser.get_trial_intervals(start1, human_coding_file)
     else:
         raise NotImplementedError
-    metrics = {}
     machine_uncol = parser.uncollapse_labels(machine, mstart, mend)
     # create a version of machine annotation where machine "invalid" is replaced with "away"
     special_machine = machine_uncol.copy()
@@ -385,7 +386,7 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
                         }
 
     logging.info("session level stats")
-    metrics["postures"] = uncollapsed_postures
+
     metrics["human1_vs_machine_session"] = compare_uncollapsed_coding_files(human1_uncol,
                                                                             machine_uncol,
                                                                             [[0, max(end1, mend)]],
@@ -712,7 +713,7 @@ def generate_session_plots(sorted_IDs, all_metrics, args, anonymous=False):
     sessions_path = Path(args.output_folder, "per_session_plots")
     for i, target_ID in enumerate(tqdm(sorted_IDs)):
         if anonymous:
-            session_path = Path(sessions_path, "{:02d}_".format(i))
+            session_path = Path(sessions_path, "{:02d}".format(i))
         else:
             session_path = Path(sessions_path, "{:02d}_".format(i) + target_ID)
         session_path.mkdir(exist_ok=True, parents=True)
@@ -1008,9 +1009,15 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
         primary_label = "California-BW Videos"
         secondary_label = "Lookit Videos"
         np.savez("cali-bw_agreement", x_target, y_target)
-    else:
+    elif args.raw_dataset_type == "senegal":
+        primary_label = "Senegal Videos"
+        secondary_label = "Lookit Videos"
+        np.savez("senegal_agreement", x_target, y_target)
+    elif args.raw_dataset_type == "lookit":
         primary_label = "Lookit Videos"
         secondary_label = "California-BW Videos"
+    else:
+        raise NotImplementedError
     ax.scatter(x_target, y_target,
                color=label_to_color("vlblue"), label=primary_label, alpha=0.5, s=40, marker="o")
     meanx, confx1, confx2 = bootstrap(x_target)
@@ -1176,12 +1183,13 @@ def generate_posture_vs_agreement(sorted_IDs, all_metrics, args):
     for i in range(len(labels)):
         # distribute scatter randomly across whole width of bar
         ax.scatter(x[i] + np.random.random(agreements[postures == i].size) * w - w / 2, agreements[postures == i],
-                   color="black", zorder=2, alpha=0.3)
+                   color="black", zorder=2, alpha=0.2)
     save_path = args.output_folder
     plt.savefig(str(Path(save_path, "agreement_vs_posture.pdf")), bbox_inches='tight')
     plt.cla()
     plt.clf()
     plt.close(fig)
+
 
 def generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args):
     agreement_in = []
@@ -1322,13 +1330,16 @@ def generate_transitions_plot(sorted_IDs, all_metrics, args, multi_dataset=False
     transitions_h2 = np.array(transitions_h2)
     transitions_h3 = np.array(transitions_h3)
     if args.raw_dataset_type == "cali-bw":
-        primary_label = "California-BW"
-        secondary_label = "Lookit"
         np.savez("cali-bw_transitions_per_100", transitions_h1, transitions_h2, transitions_h3)
         return
-    else:
+    elif args.raw_dataset_type == "senegal":
+        np.savez("senegal_transitions_per_100", transitions_h1, transitions_h2, transitions_h3)
+        return
+    elif args.raw_dataset_type == "lookit":
         primary_label = "Lookit"
         secondary_label = "California-BW"
+    else:
+        raise NotImplementedError
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     x = np.arange(3)
@@ -1401,16 +1412,22 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_eye_color")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_skin_tone")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "camera_moved")
-    elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_race")
+    elif args.raw_dataset_type == "cali-bw":
         generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
         generate_transitions_plot(sorted_IDs, all_metrics, args, False)
-        csv_file = Path(args.raw_dataset_path / args.db_file_name)
+        # csv_file = Path(args.raw_dataset_path / args.db_file_name)
         video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_preterm")
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_race")
+    elif args.raw_dataset_type == "senegal":
+        generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
+        generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
+        generate_transitions_plot(sorted_IDs, all_metrics, args, False)
+        video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
     else:
         raise NotImplementedError
-    generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_race")
     generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_gender")
     generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
 
@@ -2182,4 +2199,4 @@ if __name__ == "__main__":
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True, hvh=True)
             lum = plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
             plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, lum=lum, hvh=True)
-        generate_session_plots(sorted_ids, all_metrics, args)
+        generate_session_plots(sorted_ids, all_metrics, args, anonymous=True)
