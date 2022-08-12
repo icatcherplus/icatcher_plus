@@ -36,7 +36,9 @@ def label_to_color(label):
                "vlblue": (0.086, 0.568, 0.874),
                "vblue": (0.074, 0.349, 0.525),
                "vlgreen": (0.345, 0.890, 0.270),
-               "vgreen": (0.149, 0.615, 0.082)}
+               "vgreen": (0.149, 0.615, 0.082),
+               "vlpurple": (167/255, 118/255, 181/255),
+               "vpurple": (157/255, 42/255, 189/255)}
     return mapping[label]
 
 
@@ -711,6 +713,8 @@ def session_scatter_plot(target_ID, metric, session_path):
 
 def generate_session_plots(sorted_IDs, all_metrics, args, anonymous=False):
     sessions_path = Path(args.output_folder, "per_session_plots")
+    for i, id in enumerate(sorted_IDs):
+        print("{} = {}".format(i, id))
     for i, target_ID in enumerate(tqdm(sorted_IDs)):
         if anonymous:
             session_path = Path(sessions_path, "{:02d}".format(i))
@@ -1016,6 +1020,7 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
     elif args.raw_dataset_type == "lookit":
         primary_label = "Lookit Videos"
         secondary_label = "California-BW Videos"
+        third_label = "Senegal Videos"
     else:
         raise NotImplementedError
     ax.scatter(x_target, y_target,
@@ -1034,8 +1039,8 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
     if multi_dataset:
         data = np.load("cali-bw_agreement.npz")
         x_target_2, y_target_2 = data["arr_0"], data["arr_1"]
-        minx = min(np.min(x_target), np.min(x_target_2))
-        miny = min(np.min(y_target), np.min(y_target_2))
+        minx = min(minx, np.min(x_target_2))
+        miny = min(miny, np.min(y_target_2))
         ax.scatter(x_target_2, y_target_2,
                    color=label_to_color("vlgreen"), label=secondary_label, alpha=0.5, s=40, marker="^")
         meanx, confx1, confx2 = bootstrap(x_target_2)
@@ -1045,6 +1050,20 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
                     yerr=np.array([meanx - confx1, confx2 - meanx])[:, None],
                     barsabove=True,
                     color="k", markerfacecolor=label_to_color("vgreen"),
+                    linewidth=1, marker='^', capsize=3, ms=10)  # ms=40
+        data = np.load("senegal_agreement.npz")
+        x_target_3, y_target_3 = data["arr_0"], data["arr_1"]
+        minx = min(minx, np.min(x_target_3))
+        miny = min(miny, np.min(y_target_3))
+        ax.scatter(x_target_3, y_target_3,
+                   color=label_to_color("vlpurple"), label=third_label, alpha=0.5, s=40, marker="s")
+        meanx, confx1, confx2 = bootstrap(x_target_3)
+        meany, confy1, confy2 = bootstrap(y_target_3)
+        ax.errorbar(meanx, meany,
+                    xerr=np.array([meanx - confx1, confx2 - meanx])[:, None],
+                    yerr=np.array([meanx - confx1, confx2 - meanx])[:, None],
+                    barsabove=True,
+                    color="k", markerfacecolor=label_to_color("vpurple"),
                     linewidth=1, marker='^', capsize=3, ms=10)  # ms=40
         plot_name = "multi_dataset_agreement_scatter.pdf"
     final_min = min(minx, miny)
@@ -1269,20 +1288,25 @@ def generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, multi_datase
         primary_label = "California-BW"
         secondary_label = "Lookit"
         np.savez("cali-bw_confidence", confidence_correct, confidence_incorrect)
+    elif args.raw_dataset_type == "senegal":
+        primary_label = "Senegal"
+        secondary_label = "Lookit"
+        np.savez("senegal_confidence", confidence_correct, confidence_incorrect)
     else:
         primary_label = "Lookit"
         secondary_label = "California-BW"
+        third_label = "Senegal"
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     x = np.arange(2)
-    width = 0.35  # the width of the bars
+    width = 0.2  # the width of the bars
     correct_mean, correct_confb, correct_confu = bootstrap(confidence_correct)
     incorrect_mean, incorrect_confb, incorrect_confu = bootstrap(confidence_incorrect)
     ydata = np.array([correct_mean, incorrect_mean])
     yerr = np.array([(correct_confb, correct_confu),
                      (incorrect_confb, incorrect_confu)])
     yerr = np.abs(yerr - ydata[:, None])
-    rects1 = ax.bar(x - width / 2, ydata,
+    rects1 = ax.bar(x - width, ydata,
                     yerr=yerr.T, width=width,
                     label=primary_label, align='center', ecolor='black',
                     color=label_to_color("vlblue"), capsize=10)
@@ -1295,10 +1319,22 @@ def generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, multi_datase
         yerr = np.array([(correct_confb2, correct_confu2),
                          (incorrect_confb2, incorrect_confu2)])
         yerr = np.abs(yerr - ydata[:, None])
-        rects2 = ax.bar(x + width / 2, ydata,
+        rects2 = ax.bar(x, ydata,
                         yerr=yerr.T, width=width,
                         label=secondary_label, align='center', ecolor='black',
                         color=label_to_color("vlgreen"), capsize=10)
+        data = np.load("senegal_confidence.npz")
+        x1, x2 = data["arr_0"], data["arr_1"]
+        correct_mean2, correct_confb2, correct_confu2 = bootstrap(x1)
+        incorrect_mean2, incorrect_confb2, incorrect_confu2 = bootstrap(x2)
+        ydata = np.array([correct_mean2, incorrect_mean2])
+        yerr = np.array([(correct_confb2, correct_confu2),
+                         (incorrect_confb2, incorrect_confu2)])
+        yerr = np.abs(yerr - ydata[:, None])
+        rects3 = ax.bar(x + width, ydata,
+                        yerr=yerr.T, width=width,
+                        label=third_label, align='center', ecolor='black',
+                        color=label_to_color("vlpurple"), capsize=10)
     labels = ['H1-M Agree', 'H1-M Disagree']
     ax.set_xticks(x)
     ax.set_yticks(np.arange(0, 1.2, step=0.2))
@@ -1306,6 +1342,7 @@ def generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, multi_datase
     ax.bar_label(rects1, fmt='%.2f', padding=3, label_type="center")
     if multi_dataset:
         ax.bar_label(rects2, fmt='%.2f', padding=3, label_type="center")
+        ax.bar_label(rects3, fmt='%.2f', padding=3, label_type="center")
     ax.legend(loc='lower right')
     ax.set_ylabel("Confidence")
     save_path = args.output_folder
@@ -1604,7 +1641,6 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, lum=None, hvh=Fals
     sns.regplot(x=x, y=y, color=color)
     ax.set_xlabel("Luminance")
     ax.set_ylabel("Percent Agreement")
-
     save_path = args.output_folder
     plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
     plt.cla()
@@ -2198,5 +2234,6 @@ if __name__ == "__main__":
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True, hvh=True)
             lum = plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
+            np.savez("{}_lum".format(args.raw_dataset_type), np.array(lum))  # incase luminance is needed somewhere
             plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, lum=lum, hvh=True)
         generate_session_plots(sorted_ids, all_metrics, args, anonymous=True)
