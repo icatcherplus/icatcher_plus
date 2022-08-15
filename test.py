@@ -163,10 +163,10 @@ def predict_from_video(opt):
     # set video source
     if opt.source_type == 'file':
         video_path = Path(opt.source)
+        video_ids = None
         if video_path.is_dir():
             logging.warning("Video folder provided as source. Make sure it contains video files only.")
             video_paths = list(video_path.glob("*"))
-            video_ids = None
             if opt.video_filter:
                 if opt.video_filter.is_file():
                     if opt.raw_dataset_type == "lookit":
