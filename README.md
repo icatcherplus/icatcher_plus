@@ -1,5 +1,5 @@
 ## Introduction
-This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing original manuscripts results.
+This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing the original manuscripts results.
 
 ## Installation
 
@@ -56,7 +56,7 @@ For a full command line option list use:
 
 `python test.py --help`
 
-### Output format
+## Output format
 
 The test.py file currently supports 3 output formats, though further formats can be added upon request.
 
@@ -64,14 +64,16 @@ The test.py file currently supports 3 output formats, though further formats can
 - compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
 - PrefLookTimestamp: will save a file in the format described [here](https://osf.io/3n97m/) describing the output of the automated coding.
 
-### Datasets access
+## Datasets access
 
-The public videos from the Lookit dataset, along with human annotations and group-level demographics for all datasets, are available at https://osf.io/ujteb/. Videos from the Lookit dataset with permission granted for scientific use are available at https://osf.io/5u9df/. Requests for access to the remainder of the dataset can be directed to corrosponding author. To protect participant privacy, the participant identifiers for the video and demographic data are not linked to each other. However, this information is also available upon reasonable request to corrosponding author.
+The public videos from the Lookit dataset, along with human annotations and group-level demographics for all datasets, are available at https://osf.io/ujteb/. Videos from the Lookit dataset with permission granted for scientific use are available at https://osf.io/5u9df/ (requests for access can be directed to corresponding author).
+
+Requests for access to the remainder of the datasets (Cali-BW, Senegal) can be directed to Katherine Adams Shannon (katashannon@gmail.com). To protect participant privacy, the participant identifiers for the video and demographic data are not linked to each other. However, this information is also available upon reasonable request.
 
 
-### Best Results (test sets)
+## Best Results (test sets)
 To view all results, see all plots under /plots.
-per session plots (per-video) are sorted from 0 to n, where 0 has the lowest agreement (between iCatcher+ and Human 1) and n the highest.
+per session plots (per-video) are sorted from 0 to n, where 0 has the lowest agreement (between iCatcher+ and Coder 1) and n the highest.
 
 <table>
         <tr>
@@ -90,7 +92,7 @@ per session plots (per-video) are sorted from 0 to n, where 0 has the lowest agr
         </tr>
 </table>
 
-### Project Structure:
+## Project Structure (subject to change):
 
 
     ├── assets                  # contains assets for README
@@ -116,7 +118,7 @@ per session plots (per-video) are sorted from 0 to n, where 0 has the lowest agr
     ├── video.py                # API to ffmpeg functionallity
     ├── visualize.py            # compares human annotation with results from icatcher to reproduce paper results
     
-### Contributions
+## Contributions
 Feel free to contribute by submitting a pull request. Make sure to run all tests under /tests
 
 
