@@ -112,7 +112,7 @@ class LookitParser(BaseParser):
         self.classes = ["away", "left", "right"]
         self.exclude = ["outofframe", "preview", "instructions"]
         self.special = ["codingactive"]
-        self.poses = ["over_shoulder", "sitting_in_lap", "sitting_alone", "other_posture"]
+        self.poses = ["over_shoulder", "sitting_in_lap", "sitting_alone", "other_posture", "no_posture"]
 
     def parse(self, video_id, label_path=None, extract_poses=False):
         """

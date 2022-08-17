@@ -343,7 +343,7 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
     if args.human_coding_format == "lookit":
         labels = parser.load_and_sort(human_coding_file)
         trial_times = parser.get_trial_intervals(start1, labels)
-        posture_class_map = {"over_shoulder": 0, "sitting_in_lap": 1, "sitting_alone": 2, "other_posture": 3}
+        posture_class_map = {x: i for i, x in enumerate(parser.poses)}
         uncollapsed_postures = parser.uncollapse_labels(postures, start1, end1, class_map=posture_class_map)
         metrics["postures"] = uncollapsed_postures
     elif args.human_coding_format == "vcx":
@@ -561,6 +561,7 @@ def sample_luminance(ID, raw_video_folder, start, end, num_samples=100):
                     r = (r / 255) ** 2.2
                     lum_image = 0.2126 * r + 0.7152 * g + 0.0722 * b
                     lum_means.append(np.mean(lum_image))
+                    logging.info("{} / {} samples collected for luminance".format(len(lum_means), num_samples))
                 cur_frame += 1
     return np.mean(lum_means)
 
@@ -1090,8 +1091,13 @@ def generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset):
         y.append(agreement)
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
-
-    ax = sns.regplot(x=x, y=y)
+    if args.raw_dataset_type == "cali-bw":
+        color = label_to_color("vlgreen")
+    elif args.raw_dataset_type == "senegal":
+        color = label_to_color("vlpurple")
+    else:
+        color = label_to_color("vlblue")
+    ax = sns.regplot(x=x, y=y, color=color)
 
     # ax.scatter(x, y,
     #            color=label_to_color("vlblue"), alpha=0.5, s=40, marker="o")
@@ -1139,6 +1145,8 @@ def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_datase
     fig, ax = plt.subplots(figsize=(6, 8))
     if args.raw_dataset_type == "cali-bw":
         color_str = "vlgreen"
+    elif args.raw_dataset_type == "senegal":
+        color_str = "vlpurple"
     else:
         color_str = "vlblue"
     color = label_to_color(color_str)
@@ -1164,7 +1172,7 @@ def generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_datase
 def generate_posture_vs_agreement(sorted_IDs, all_metrics, args):
     agreements = []
     postures = []
-    labels = ["Over shoulder", "Sitting in lap", "Sitting alone", "Other posture"]
+    labels = ["Over shoulder", "Sitting in lap", "Sitting alone", "Other posture"]  # "No Posture"
     for id in sorted_IDs:
         raw_postures = all_metrics[id]["postures"]
         trial_start_times = [x["end"] for x in all_metrics[id]["human1_vs_machine_trials"]]
@@ -1612,7 +1620,7 @@ def generate_collage_plot(sorted_IDs, all_metrics, save_path):
     plt.close(fig)
 
 
-def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, lum=None, hvh=False):
+def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, hvh=False):
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     # plt.figure(figsize=(8.0, 6.0))
@@ -1626,17 +1634,13 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, lum=None, hvh=Fals
     plt_name += ".pdf"
     if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
+    elif args.raw_dataset_type == "senegal":
+        color = label_to_color("vlpurple")
     else:
         color = label_to_color("vlblue")
-    if lum is not None:
-        x = lum
-    else:
-        x = []
-        for i, id in enumerate(sorted_IDs):
-            logging.info("calculating luminance (this may take some time): {} / {}".format(i, len(sorted_IDs)))
-            x.append(sample_luminance(id, args.raw_video_folder,
-                                      all_metrics[id]["human1_vs_machine_session"]['start'],
-                                      all_metrics[id]["human1_vs_machine_session"]['end']))
+    x = []
+    for i, id in enumerate(sorted_IDs):
+        x.append(all_metrics[id]["stats"]["luminance"])
     y = [all_metrics[id][session_metric_name]["agreement"] for id in sorted_IDs]
     sns.regplot(x=x, y=y, color=color)
     ax.set_xlabel("Luminance")
@@ -1646,7 +1650,6 @@ def plot_luminance_vs_accuracy(sorted_IDs, all_metrics, args, lum=None, hvh=Fals
     plt.cla()
     plt.clf()
     plt.close(fig)
-    return x
 
 
 def get_face_stats(id, faces_folder, start=0, end=None, mask=None):
@@ -1703,7 +1706,7 @@ def get_face_stats(id, faces_folder, start=0, end=None, mask=None):
 
 def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_level=False, hvh=False):
     plt.rc('font', size=16)
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
     plt_name = "agreement_vs_face_density"
     if hvh:
         trial_metric_name = "human1_vs_human2_trials"
@@ -1730,18 +1733,22 @@ def plot_face_pixel_density_vs_accuracy(sorted_IDs, all_metrics, args, trial_lev
         alpha = 1
     if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
+    elif args.raw_dataset_type == "senegal":
+        color = label_to_color("vlpurple")
     else:
         color = label_to_color("vlblue")
 
-    sns.regplot(x=densities, y=agreement, color=color, scatter_kws={"alpha": alpha})
+    ax = sns.regplot(x=densities, y=agreement, color=color, scatter_kws={"alpha": alpha})
     ax.set_xlabel("Face pixel density")
+    # ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right")
+    # ax.ticklabel_format(axis="x", style="sci")
     ax.set_ylabel("Percent Agreement")
-
+    ax.ticklabel_format(style='sci', axis='x', scilimits=[-5, 4])
     save_path = args.output_folder
     plt.savefig(str(Path(save_path, plt_name)), bbox_inches='tight')
     plt.cla()
     plt.clf()
-    plt.close(fig)
+    # plt.close(fig)
 
 
 def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, trial_level=False, hvh=False):
@@ -1782,6 +1789,8 @@ def plot_face_location_vs_accuracy(sorted_IDs, all_metrics, args, use_x=True, tr
         alpha = 1
     if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
+    elif args.raw_dataset_type == "senegal":
+        color = label_to_color("vlpurple")
     else:
         color = label_to_color("vlblue")
     means = means - 0.5  # move from 0:1 to -0.5:0.5
@@ -1825,6 +1834,8 @@ def plot_face_location_std_vs_accuracy(sorted_IDs, all_metrics, args, trial_leve
         alpha = 1
     if args.raw_dataset_type == "cali-bw":
         color = label_to_color("vlgreen")
+    elif args.raw_dataset_type == "senegal":
+        color = label_to_color("vlpurple")
     else:
         color = label_to_color("vlblue")
     sns.regplot(x=stds, y=agreement, color=color, scatter_kws={"alpha": alpha})
@@ -1865,15 +1876,15 @@ def calc_all_metrics(args, force_create=False):
                 human2_ext = file.suffix
             coding_intersect = coding_intersect.intersection(set(human_annotation2))
 
+        if args.raw_dataset_type == "lookit":
+            video_dataset = preprocess.build_lookit_video_dataset(args.raw_dataset_path,
+                                                                  Path(args.raw_dataset_path, args.db_file_name))
+        elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
+            video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path,
+                                                                    args.raw_dataset_type)
+        else:
+            raise NotImplementedError
         if args.unique_children_only:  # allow only one video per child
-            if args.raw_dataset_type == "lookit":
-                video_dataset = preprocess.build_lookit_video_dataset(args.raw_dataset_path,
-                                                                      Path(args.raw_dataset_path, args.db_file_name))
-            elif args.raw_dataset_type == "cali-bw" or args.raw_dataset_type == "senegal":
-                video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path,
-                                                                        args.raw_dataset_type)
-            else:
-                raise NotImplementedError
             filter_files = [x for x in video_dataset.values() if
                             x["in_csv"] and x["has_1coding"] and x["has_2coding"] and x[
                                 "split"] == "2_test"]
@@ -1913,6 +1924,11 @@ def calc_all_metrics(args, force_create=False):
             all_metrics[key]["stats"]["avg_face_pixel_density"] = face_stats[0]
             all_metrics[key]["stats"]["avg_face_loc"] = face_stats[1]  # x, y
             all_metrics[key]["stats"]["avg_face_loc_std"] = np.mean(face_stats[2])
+            if args.faces_folder is not None:
+                all_metrics[key]["stats"]["luminance"] = sample_luminance(key, args.raw_video_folder,
+                                                                          all_metrics[key]["human1_vs_machine_session"]['start'],
+                                                                          all_metrics[key]["human1_vs_machine_session"]['end'])
+            all_metrics[key]["csv_info"] = video_dataset[key]  # add participant info just in case
         # Store in disk for faster access next time:
         pickle.dump(all_metrics, open(metric_save_path, "wb"))
     return all_metrics
@@ -2233,7 +2249,6 @@ if __name__ == "__main__":
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, trial_level=True, hvh=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True)
             plot_face_location_vs_accuracy(sorted_ids, all_metrics, args, use_x=False, trial_level=True, hvh=True)
-            lum = plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
-            np.savez("{}_lum".format(args.raw_dataset_type), np.array(lum))  # incase luminance is needed somewhere
-            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, lum=lum, hvh=True)
+            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args)
+            plot_luminance_vs_accuracy(sorted_ids, all_metrics, args, hvh=True)
         generate_session_plots(sorted_ids, all_metrics, args, anonymous=True)
