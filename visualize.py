@@ -1244,6 +1244,8 @@ def generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args):
 
     agreement_between = np.array(agreement_between)
     agreement_in = np.array(agreement_in)
+    t, p, dof = t_test_paired(agreement_in, agreement_between)
+    print("t-test (paired) trial_between vs trial_in: t={:.2f}, p={:.8f}, dof={}]".format(t, p, dof))
     in_mean, in_b, in_u = bootstrap(agreement_in)
     between_mean, between_b, between_u = bootstrap(agreement_between)
     plt.rc('font', size=16)
