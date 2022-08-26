@@ -98,10 +98,10 @@ class LookItDataset(data.Dataset):
         dataset_folder_path = Path(self.opt.dataset_folder, "faces")
         my_list = []
         logging.info("{}: Collecting paths for dataloader".format(self.opt.phase))
-        humans_disagree_counter = 0
-        total_data_points = 0
-        video_counter = 0
+        stats = {}
+        stats["video_counter"] = 0
         for name in coding_names:
+            stats[name] = {}
             gaze_labels = np.load(str(Path.joinpath(dataset_folder_path, name, f'gaze_labels.npy')))
             gaze_labels_second = None
             if self.opt.use_mutually_agreed:
@@ -109,38 +109,37 @@ class LookItDataset(data.Dataset):
                 if second_label_path.exists():
                     gaze_labels_second = np.load(str(second_label_path))
             face_labels = np.load(str(Path.joinpath(dataset_folder_path, name, f'{face_label_name}.npy')))
-            cur_video_counter = 0
-            sequence_fail_counter = 0
-            single_fail_counter = 0
-            cur_video_total = len(gaze_labels)
-            cur_video_fc_fail = np.count_nonzero(face_labels == -1)
-            cur_video_fd_fail = np.count_nonzero(face_labels == -2)
+            stats[name]["datapoints_counter"] = 0
+            stats[name]["window_not_fully_coded_counter"] = 0
+            stats[name]["coders_disagree_counter"] = 0
+            stats[name]["availble_datapoints"] = len(gaze_labels)
+            stats[name]["fc_fail_counter"] = 0
+            stats[name]["other_fail_counter"] = 0  # face detector failed or no annotation (must change preprocess.py to decouple them)
             logging.info("Video: {}".format(name))
-            logging.info("face classifier failures: {},"
-                         " other failures: {},"  # (face detector failed, no annotation, start and end window, etc)
-                         " total labeled: {}.".format(cur_video_fc_fail,
-                                                      cur_video_fd_fail,
-                                                      cur_video_total))
             for frame_number in range(gaze_labels.shape[0]):
-                total_data_points += 1
                 gaze_label_seg = gaze_labels[frame_number:frame_number + self.opt.sliding_window_size]
                 face_label_seg = face_labels[frame_number:frame_number + self.opt.sliding_window_size]
                 if len(gaze_label_seg) != self.opt.sliding_window_size:
-                    sequence_fail_counter += 1
-                    break
+                    stats[name]["window_not_fully_coded_counter"] += 1
+                    continue
                 if any(face_label_seg < 0):  # a tidy bit too strict?...we can basically afford 1 or two missing labels
-                    if np.count_nonzero(face_label_seg < 0) == 1:
-                        single_fail_counter += 1
+                    cur_face = face_label_seg[self.opt.sliding_window_size // 2]
+                    if cur_face >= 0:
+                        stats[name]["window_not_fully_coded_counter"] += 1
                     else:
-                        sequence_fail_counter += 1
+                        if cur_face == -1:
+                            stats[name]["fc_fail_counter"] += 1
+                        elif cur_face == -2:
+                            stats[name]["other_fail_counter"] += 1
+                        else:
+                            raise ValueError
                     continue
                 if not self.opt.eliminate_transitions or self.check_all_same(gaze_label_seg):
                     class_seg = gaze_label_seg[self.opt.sliding_window_size // 2]
                     if gaze_labels_second is not None:
                         gaze_label_second = gaze_labels_second[frame_number + self.opt.sliding_window_size // 2]
                         if class_seg != gaze_label_second:
-                            single_fail_counter += 1
-                            humans_disagree_counter += 1
+                            stats[name]["coders_disagree_counter"] += 1
                             continue
                     img_files_seg = []
                     box_files_seg = []
@@ -150,20 +149,29 @@ class LookItDataset(data.Dataset):
                     img_files_seg = img_files_seg[::self.opt.window_stride]
                     box_files_seg = box_files_seg[::self.opt.window_stride]
                     my_list.append((img_files_seg, box_files_seg, class_seg))
-                    cur_video_counter += 1
-            logging.info("{}/{} ({:.2f}%) usable datapoints with {} sequence failures\n".format(cur_video_counter,
-                                                                                                cur_video_total,
-                                                                                                100 * (cur_video_counter / cur_video_total),
-                                                                                                sequence_fail_counter))
+                    stats[name]["datapoints_counter"] += 1
+            logging.info("extracted {} datapoints from {} frames.".format(stats[name]["datapoints_counter"],
+                                                                          stats[name]["availble_datapoints"]))
+            logging.info("window_fail: {}, coders_disagree: {}, fc_fail: {}, other_fail: {}\n".format(stats[name]["window_not_fully_coded_counter"],
+                                                                                                      stats[name]["coders_disagree_counter"],
+                                                                                                      stats[name]["fc_fail_counter"],
+                                                                                                      stats[name]["other_fail_counter"]))
             if not my_list:
                 logging.info("The video {} has no annotations".format(name))
                 continue
-            video_counter += 1
-        logging.info("Discarded {:.2f}% of total data due to humans disagreeing".format(
-            100 * (humans_disagree_counter / total_data_points)))
-        logging.info("Discarded {:.2f}% of actual data due to humans disagreeing".format(
-            100 * (humans_disagree_counter / len(my_list))))
-        logging.info("Used {} videos, for a total of {} datapoints".format(video_counter, len(my_list)))
+            stats["video_counter"] += 1
+        total_ava_datapoints = np.sum([stats[key]["availble_datapoints"] for key in stats.keys() if key != "video_counter"])
+        total_used_datapoints = np.sum([stats[key]["datapoints_counter"] for key in stats.keys() if key != "video_counter"])
+        total_window_fail = np.sum([stats[key]["window_not_fully_coded_counter"] for key in stats.keys() if key != "video_counter"])
+        total_coders_disagree = np.sum([stats[key]["coders_disagree_counter"] for key in stats.keys() if key != "video_counter"])
+        total_fc_fail = np.sum([stats[key]["fc_fail_counter"] for key in stats.keys() if key != "video_counter"])
+        total_other_fail = np.sum([stats[key]["other_fail_counter"] for key in stats.keys() if key != "video_counter"])
+        logging.info("dataset video used: {}".format(stats["video_counter"]))
+        logging.info("dataset usage percent: {:.2f} %".format(100 * total_used_datapoints / total_ava_datapoints))  
+        logging.info("window fails: {:.2f} %".format(100 * total_window_fail / total_ava_datapoints))
+        logging.info("coders disagree: {:.2f} %".format(100 * total_coders_disagree / total_ava_datapoints))
+        logging.info("fc fails: {:.2f} %".format(100 * total_fc_fail / total_ava_datapoints))
+        logging.info("other fails: {:.2f} %".format(100 * total_other_fail / total_ava_datapoints))
         return my_list
 
     def __getitem__(self, index):
