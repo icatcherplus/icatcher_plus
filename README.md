@@ -72,23 +72,28 @@ Requests for access to the remainder of the datasets (Cali-BW, Senegal) can be d
 
 
 ## Best Results (test sets)
-To view all results, see all plots under /plots.
-per session plots (per-video) are sorted from 0 to n, where 0 has the lowest agreement (between iCatcher+ and Coder 1) and n the highest.
+To view visualizations of all results, see [plots](https://github.com/yoterel/icatcher_plus/tree/master/plots).
+Per-session plots (i.e. per-video) are sorted from 0 to n, where 0 has the lowest agreement (between iCatcher+ and Coder 1) and n the highest.
 
 <table>
         <tr>
                 <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement.png"  alt="0" width = 400px height = 300px ></td>
                 <td align="center"><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement_vs_confidence.png"  alt="0" width = 400px height = 300px ></td>
         </tr>
+        <tr><td colspan=2>Lookit</td></tr>
+        <tr>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_conf.png" alt="1" width = 300px height = 300px></td>
+        </tr>
         <tr><td colspan=2>California-BW</td></tr>
         <tr>
                 <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/cali-bw_bar.png" alt="0" width = 400px height = 300px></td>
                 <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/cali-bw_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
-        <tr><td colspan=2>Lookit</td></tr>
+        <tr><td colspan=2>Senegal</td></tr>
         <tr>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_bar.png" alt="0" width = 400px height = 300px></td>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_conf.png" alt="1" width = 300px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/senegal_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/senegal_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
 </table>
 
