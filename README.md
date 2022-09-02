@@ -1,5 +1,5 @@
 ## Introduction
-This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab or online (remotely). It also contains code for reproducing the original manuscripts results.
+This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab, field or online (remotely). It also contains code for reproducing the original manuscripts results.
 
 ## Installation
 
