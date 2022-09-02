@@ -190,7 +190,7 @@ def predict_from_video(opt):
         elif video_path.is_file():
             video_paths = [str(video_path)]
         else:
-            raise NotImplementedError
+            raise FileNotFoundError
     else:
         # video_paths = [int(opt.source)]
         raise NotImplementedError
