@@ -11,9 +11,28 @@ import torch
 import models
 import data
 import video
+import time
+import collections
 
+
+class FPS:
+    """
+    calculates current fps and returns it, see https://stackoverflow.com/a/54539292
+    """
+    def __init__(self,avarageof=50):
+        self.frametimestamps = collections.deque(maxlen=avarageof)
+    def __call__(self):
+        self.frametimestamps.append(time.time())
+        if(len(self.frametimestamps) > 1):
+            return len(self.frametimestamps)/(self.frametimestamps[-1]-self.frametimestamps[0])
+        else:
+            return 0.0
+        
 
 class FaceClassifierArgs:
+    """
+    encapsulates face classifier arguments
+    """
     def __init__(self, device):
         self.device = device
         self.rotation = False
@@ -203,6 +222,7 @@ def predict_from_video(opt):
         bbox_sequence = []
         frames = []
         frame_count = 0
+        cur_fps = FPS()
         last_class_text = ""  # Initialize so that we see the first class assignment as an event to record
         logging.info("predicting on : {}".format(video_paths[i]))
         cap = cv2.VideoCapture(video_paths[i])
@@ -285,8 +305,8 @@ def predict_from_video(opt):
                 bbox_sequence.pop(0)
                 if not image_sequence[opt.sliding_window_size // 2][1]:  # if middle image is valid
                     if opt.architecture == "icatcher+":
-                        to_predict = {"imgs": torch.tensor([x[0] for x in image_sequence[0::2]], dtype=torch.float).squeeze().permute(0, 3, 1, 2).to(opt.device),
-                                      "boxs": torch.tensor(box_sequence[::2], dtype=torch.float).to(opt.device)
+                        to_predict = {"imgs": torch.tensor(np.array([x[0] for x in image_sequence[0::2]]), dtype=torch.float).squeeze().permute(0, 3, 1, 2).to(opt.device),
+                                      "boxs": torch.tensor(np.array(box_sequence[::2]), dtype=torch.float).to(opt.device)
                                       }
                     elif opt.architecture == "icatcher_vanilla":
                         to_predict = {"imgs": torch.tensor([x[0] for x in image_sequence[0::2]], dtype=torch.float).permute(1, 0, 4, 2, 3).to(opt.device)}
@@ -325,7 +345,7 @@ def predict_from_video(opt):
                             frame_ms = int((frame_count + loc + 1) * (1000. / framerate))
                             output_file.write("{},0,{}\n".format(frame_ms, class_text))
                             last_class_text = class_text
-                logging.info("frame: {}, class: {}, confidence: {:.02f}".format(str(frame_count + loc + 1), class_text, confidences[loc]))
+                logging.info("frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(str(frame_count + loc + 1), class_text, confidences[loc], cur_fps()))
             ret_val, frame = cap.read()
             frame_count += 1
         # finished processing a video file, cleanup
