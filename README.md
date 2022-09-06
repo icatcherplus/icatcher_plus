@@ -102,7 +102,7 @@ Per-session plots (i.e. per-video) are sorted from 0 to n, where 0 has the lowes
 
 <table>
         <tr>
-                <td>iCatcher+ on GPU (NVIDIA RTX 2060)</td>
+                <td>iCatcher+ on GPU (NVIDIA GeForce RTX 2060)</td>
                 <td>~45 fps</td>
         </tr>
         <tr>
