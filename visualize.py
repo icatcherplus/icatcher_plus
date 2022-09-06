@@ -1065,7 +1065,7 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
                     yerr=np.array([meanx - confx1, confx2 - meanx])[:, None],
                     barsabove=True,
                     color="k", markerfacecolor=label_to_color("vpurple"),
-                    linewidth=1, marker='^', capsize=3, ms=10)  # ms=40
+                    linewidth=1, marker='s', capsize=3, ms=10)  # ms=40
         plot_name = "multi_dataset_agreement_scatter.pdf"
     final_min = min(minx, miny)
     ax.set_xlim([final_min, 1])
