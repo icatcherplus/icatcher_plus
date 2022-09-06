@@ -99,6 +99,7 @@ Per-session plots (i.e. per-video) are sorted from 0 to n, where 0 has the lowes
 
 
 ## Performance Benchmark
+We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported results are averaged upon all frames.
 
 <table>
         <tr>
