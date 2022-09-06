@@ -97,6 +97,20 @@ Per-session plots (i.e. per-video) are sorted from 0 to n, where 0 has the lowes
         </tr>
 </table>
 
+
+## Performance Benchmark
+
+<table>
+        <tr>
+                <td>iCatcher+ on GPU (NVIDIA RTX 2060)</td>
+                <td>~45 fps</td>
+        </tr>
+        <tr>
+                <td>iCatcher+ on CPU (Intel Core i7-9700)</td>
+                <td>~17 fps</td>
+        </tr>
+</table>
+
 ## Project Structure (subject to change):
 
 
