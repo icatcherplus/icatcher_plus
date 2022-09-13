@@ -74,6 +74,8 @@ Requests for access to the remainder of the datasets (Cali-BW, Senegal) can be d
 ## Best Results (test sets)
 To view visualizations of all results, see [plots](https://github.com/yoterel/icatcher_plus/tree/master/plots).
 Per-session plots (i.e. per-video) are sorted from 0 to n, where 0 has the lowest agreement (between iCatcher+ and Coder 1) and n the highest.
+### A Note About Data-Leaks
+The test sets were kept "untouched" until the very last stages of submission (i.e. they were not *directly* nor *indirectly* used optimize the network models). Conforming to this methodolgy is encouraged to avoid data leaks, so if you happen to submit improvements made to iCatcher+ in terms of performance, **do not** use the test sets for improving your method. Please consider creating a validation set out of the original training set for that.
 
 <table>
         <tr>
