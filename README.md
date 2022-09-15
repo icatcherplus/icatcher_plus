@@ -19,7 +19,7 @@ or
 
 `conda env create --prefix /path/to/virtual/environment -f "/path/to/environment.yml"`
 
-**Note for Mac users**: you might need to edit the environment.yml file depending on your OS version. see [here](https://github.com/yoterel/icatcher_plus/issues/6#issuecomment-1244125700).
+**Note for Mac users**: you might need to edit the [environment.yml](https://github.com/yoterel/icatcher_plus/blob/master/environment.yml) file depending on your OS version. see [here](https://github.com/yoterel/icatcher_plus/issues/6#issuecomment-1244125700) for how.
 
 Activate the environment
 
