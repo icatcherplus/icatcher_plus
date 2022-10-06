@@ -13,6 +13,12 @@ We recommend installing [Miniconda](https://docs.conda.io/en/latest/miniconda.ht
 
 **Note**: conda must be in the PATH envrionment variable for the shell to find it.
 
+Navigate to the icatcher_plus folder using the Anaconda Prompt:
+
+`cd /path/to/icathcer_plus`
+
+Then:
+
 `conda env create -n env -f environment.yml`
 
 or
@@ -24,10 +30,6 @@ or
 Activate the environment
 
 `conda activate env`
-
-Navigate to the icatcher_plus folder using a terminal / command prompt:
-
-`cd icatcher_plus`
 
 ### Step 3: Download the latest network model & weights file
 
