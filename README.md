@@ -21,7 +21,7 @@ Then:
 
 `conda env create -n env -f environment.yml`
 
-or
+Or (if you want to install the environment in a specific location):
 
 `conda env create --prefix /path/to/virtual/environment -f "/path/to/environment.yml"`
 
