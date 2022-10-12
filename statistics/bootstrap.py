@@ -2,7 +2,7 @@ import numpy as np
 from scipy import stats
 
 
-def bootstrap(x, confidence=0.95):
+def bootstrap(x, confidence=0.95, return_empirical_mean=True):
     # sample = np.random.choice(x, size=30, replace=False)
     x = np.array(x)
     valid_x = ~np.isnan(x)
@@ -14,6 +14,8 @@ def bootstrap(x, confidence=0.95):
     maxquant = minquant + confidence
     lower_ci = np.quantile(bs_means, minquant)
     upper_ci = np.quantile(bs_means, maxquant)
+    if return_empirical_mean:
+        bs_means_mean = x.mean()
     return bs_means_mean, lower_ci, upper_ci
 
 
