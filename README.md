@@ -3,12 +3,11 @@ This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k
 
 # Installation
 
+You can set up your own conda environment, or now you can access the environment, code, and models wrapped up as a [container](https://apptainer.org/user-docs/3.8/introduction.html#why-use-containers). Instructions for both options are below. 
 
 ## Setup with Docker container 
 
-A Docker container (including all dependencies, a clone of this respository, and the models) is now available here: 
-
-https://hub.docker.com/repository/docker/saxelab/looking_time_analysis 
+A Docker image is now available here: https://hub.docker.com/repository/docker/saxelab/looking_time_analysis 
 
 ### Use as [Docker](https://aws.amazon.com/docker/) container (e.g., to run on your own computer):
 
@@ -20,9 +19,9 @@ Follow instructions on the [Docker site](https://docs.docker.com/get-docker/) to
 
 `docker pull saxelab/looking_time_analysis:icatcher_env`
 
-### Use as Singularity container: 
+### Use as [Singularity](https://apptainer.org/user-docs/3.8/) container: 
 
-[Singularity](https://apptainer.org/user-docs/3.8/) is the main containerization software that is used on High-Performance Computing Clusters (HPCCs), but is a similar containerization software to Docker. If you use Singularity instead of docker, you can convert the Docker image to a singularity container using the following command: 
+Singularity is the main containerization software that is used on High-Performance Computing Clusters (HPCCs), but is a similar containerization software to Docker. If you use Singularity instead of docker, you can convert the Docker image to a singularity container using the following command: 
 
 #### Step 2: pull the Docker image into a singularity container:
 
