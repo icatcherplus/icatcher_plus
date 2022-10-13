@@ -98,6 +98,11 @@ For a full command line option list use:
 
 `python test.py --help`
 
+### Running the code from a container, e.g., as a singularity container: 
+
+`singularity exec -B /filesystem/filesystem icatcher_env.sif python3 /icatcher_plus/test.py /path/to/my/video.mp4  /icatcher_plus/models/icatcher+_lookit.pth --fc_model /icatcher_plus/models/face_classifier_lookit.pth --output_annotation /path/to/output_folder --output_format compressed --output_video_path /path/to/output_folder`
+
+
 # Output format
 
 The test.py file currently supports 3 output formats, though further formats can be added upon request.
