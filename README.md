@@ -76,7 +76,7 @@ iCatcher+ relies on some neural-network model files to work (or reproduce experi
 Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
 
 
-## Running iCatcher+
+# Running iCatcher+
 
 To run icatcher with a video file (if a folder is provided, all videos will be used for prediction):
 
