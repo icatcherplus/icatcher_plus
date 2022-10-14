@@ -1,7 +1,45 @@
-## Introduction
+# Introduction
 This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab, field or online (remotely). It also contains code for reproducing the original manuscripts results.
 
-## Installation
+# Installation
+
+You can set up your own conda environment, or now you can access the environment, code, and models wrapped up as a [container](https://apptainer.org/user-docs/3.8/introduction.html#why-use-containers). Instructions for both options are below. 
+
+## Setup with Docker container 
+
+A Docker image is now available here: https://hub.docker.com/repository/docker/saxelab/looking_time_analysis 
+
+### Use as [Docker](https://aws.amazon.com/docker/) container (e.g., to run on your own computer):
+
+#### Step 1: Install Docker
+
+Follow instructions on the [Docker site](https://docs.docker.com/get-docker/) to install Docker Desktop on your computer 
+
+#### Step 2: Pull a copy of the docker container for use
+
+`docker pull saxelab/looking_time_analysis:icatcher_env`
+
+### Use as [Singularity](https://apptainer.org/user-docs/3.8/) container: 
+
+Singularity is the main containerization software that is used on High-Performance Computing Clusters (HPCCs), but is a similar containerization software to Docker. If you use Singularity instead of docker, you can convert the Docker image to a singularity container using the following command: 
+
+#### Step 2: pull the Docker image into a singularity container:
+
+##### Directly to an immutable container: 
+
+`singularity build icatcher_env.sif docker://saxelab/looking_time_analysis:icatcher_env`
+
+##### .. Or as a "sandbox" for editing: 
+
+If you want to make changes to the environment, you can also build as a sandbox: 
+
+`singularity build --sandbox icatcher_env/ docker://saxelab/looking_time_analysis:icatcher_env`
+
+then use `singularity shell --writable icatcher_env` to access the sandbox container for making changes
+
+and finally, `singularity build icatcher_env.sif icatcher_env/` to make the container immutable. 
+
+## Setup with conda environment
 
 ### Step 1: Clone this repository to get a copy of the code to run locally
 
@@ -38,7 +76,7 @@ iCatcher+ relies on some neural-network model files to work (or reproduce experi
 Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
 
 
-### Step 4: Running iCatcher+
+# Running iCatcher+
 
 To run icatcher with a video file (if a folder is provided, all videos will be used for prediction):
 
@@ -60,7 +98,12 @@ For a full command line option list use:
 
 `python test.py --help`
 
-## Output format
+### Running the code from a container, e.g., as a singularity container: 
+
+`singularity exec -B /filesystem/filesystem icatcher_env.sif python3 /icatcher_plus/test.py /path/to/my/video.mp4  /icatcher_plus/models/icatcher+_lookit.pth --fc_model /icatcher_plus/models/face_classifier_lookit.pth --output_annotation /path/to/output_folder --output_format compressed --output_video_path /path/to/output_folder`
+
+
+# Output format
 
 The test.py file currently supports 3 output formats, though further formats can be added upon request.
 
@@ -68,7 +111,7 @@ The test.py file currently supports 3 output formats, though further formats can
 - compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
 - PrefLookTimestamp: will save a file in the format described [here](https://osf.io/3n97m/) describing the output of the automated coding.
 
-## Datasets access
+# Datasets access
 
 The public videos from the Lookit dataset, along with human annotations and group-level demographics for all datasets, are available at https://osf.io/ujteb/. Videos from the Lookit dataset with permission granted for scientific use are available at https://osf.io/5u9df/. Requests for access can be directed to Junyi Chu (junyichu@mit.edu).
 
@@ -104,7 +147,7 @@ The test sets were kept "untouched" until the very last stages of submission (i.
 </table>
 
 
-## Performance Benchmark
+# Performance Benchmark
 We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported results are averaged upon all frames.
 
 <table>
@@ -144,7 +187,7 @@ We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported re
     ├── video.py                # API to ffmpeg functionallity
     ├── visualize.py            # compares human annotation with results from icatcher to reproduce paper results
     
-## Contributions
+# Contributions
 Feel free to contribute by submitting a pull request. Make sure to run all tests under /tests
 
 
