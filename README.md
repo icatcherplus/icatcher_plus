@@ -3,41 +3,7 @@ This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k
 
 # Installation
 
-You can set up your own conda environment, or now you can access the environment, code, and models wrapped up as a [container](https://apptainer.org/user-docs/3.8/introduction.html#why-use-containers). Instructions for both options are below. 
-
-## Setup with Docker container 
-
-A Docker image is now available here: https://hub.docker.com/repository/docker/saxelab/looking_time_analysis 
-
-### Use as [Docker](https://aws.amazon.com/docker/) container (e.g., to run on your own computer):
-
-#### Step 1: Install Docker
-
-Follow instructions on the [Docker site](https://docs.docker.com/get-docker/) to install Docker Desktop on your computer 
-
-#### Step 2: Pull a copy of the docker container for use
-
-`docker pull saxelab/looking_time_analysis:icatcher_env`
-
-### Use as [Singularity](https://apptainer.org/user-docs/3.8/) container: 
-
-Singularity is the main containerization software that is used on High-Performance Computing Clusters (HPCCs), but is a similar containerization software to Docker. If you use Singularity instead of docker, you can convert the Docker image to a singularity container using the following command: 
-
-#### Step 2: pull the Docker image into a singularity container:
-
-##### Directly to an immutable container: 
-
-`singularity build icatcher_env.sif docker://saxelab/looking_time_analysis:icatcher_env`
-
-##### .. Or as a "sandbox" for editing: 
-
-If you want to make changes to the environment, you can also build as a sandbox: 
-
-`singularity build --sandbox icatcher_env/ docker://saxelab/looking_time_analysis:icatcher_env`
-
-then use `singularity shell --writable icatcher_env` to access the sandbox container for making changes
-
-and finally, `singularity build icatcher_env.sif icatcher_env/` to make the container immutable. 
+You can set up your own conda environment, or access the environment/code/models wrapped up as a [container](https://apptainer.org/user-docs/3.8/introduction.html#why-use-containers). Instructions for both options are below. 
 
 ## Setup with conda environment
 
@@ -74,6 +40,40 @@ Activate the environment
 iCatcher+ relies on some neural-network model files to work (or reproduce experiments).
 
 Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
+
+## Setup with Docker container 
+
+A Docker image is now available here: https://hub.docker.com/repository/docker/saxelab/looking_time_analysis 
+
+### Use as [Docker](https://aws.amazon.com/docker/) container (e.g., to run on your own computer):
+
+#### Step 1: Install Docker
+
+Follow instructions on the [Docker site](https://docs.docker.com/get-docker/) to install Docker Desktop on your computer 
+
+#### Step 2: Pull a copy of the docker container for use
+
+`docker pull saxelab/looking_time_analysis:icatcher_env`
+
+### Use as [Singularity](https://apptainer.org/user-docs/3.8/) container: 
+
+Singularity is the main containerization software that is used on High-Performance Computing Clusters (HPCCs), but is a similar containerization software to Docker. If you use Singularity instead of docker, you can convert the Docker image to a singularity container using the following command: 
+
+#### Step 2: pull the Docker image into a singularity container:
+
+##### Directly to an immutable container: 
+
+`singularity build icatcher_env.sif docker://saxelab/looking_time_analysis:icatcher_env`
+
+##### .. Or as a "sandbox" for editing: 
+
+If you want to make changes to the environment, you can also build as a sandbox: 
+
+`singularity build --sandbox icatcher_env/ docker://saxelab/looking_time_analysis:icatcher_env`
+
+then use `singularity shell --writable icatcher_env` to access the sandbox container for making changes
+
+and finally, `singularity build icatcher_env.sif icatcher_env/` to make the container immutable. 
 
 
 # Running iCatcher+
