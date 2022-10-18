@@ -1,2 +1,5 @@
 .idea/
 *.pyc
+models/
+*.mp4
+.vscode
