@@ -79,14 +79,10 @@ def parse_arguments_for_testing():
     parser.add_argument("model", type=str, help="path to model that will be used for predictions")
     parser.add_argument("--fc_model", type=str, help="path to face classifier model that will be used for deciding "
                                                      "which crop should we select from every frame")
+    parser.add_argument("--crop_video", type=int, default=0, help="A percent to crop video frames from the top to prevent parents from appearing")
     parser.add_argument("--source_type", type=str, default="file", choices=["file", "webcam"],
                         help="selects source of stream to use.")
-    parser.add_argument("--video_filter", type=str,
-                        help="provided file will be used to filter only test videos,"
-                             " will assume certain file structure using the lookit/marchman datasets")
-    parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset (required if --video_filter is passed")
-    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
-                        help="the type of dataset to preprocess")
+    parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
     parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
     parser.add_argument("--on_off", action="store_true",
                         help="left/right/away annotations will be swapped with on/off (only works with icatcher+)")
@@ -94,15 +90,12 @@ def parse_arguments_for_testing():
     parser.add_argument("--output_format", type=str, default="raw_output", choices=["raw_output",
                                                                                     "compressed",
                                                                                     "PrefLookTimestamp"])
+    parser.add_argument("--output_video_path", help="if present, annotated video will be saved to this folder")
     parser.add_argument("--output_file_suffix", type=str, default=".txt", help="the output file suffix")
     parser.add_argument("--architecture", type=str, choices=["fc", "icatcher_vanilla", "icatcher+", "rnn"],
                         default="icatcher+",
                         help="Selects architecture to use")
-    parser.add_argument("--loss", type=str, choices=["cat_cross_entropy"], default="cat_cross_entropy",
-                        help="Selects loss function to optimize")
     parser.add_argument("--image_size", type=int, default=100, help="All images will be resized to this size")
-    parser.add_argument("--output_video_path", help="if present, annotated video will be saved to this folder")
-    parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
     parser.add_argument('--per_channel_mean', nargs=3, metavar=('Channel1_mean', 'Channel2_mean', 'Channel3_mean'),
                         type=float, default=[0.485, 0.456, 0.406],
                         help='supply custom per-channel mean of data for normalization')
@@ -114,26 +107,29 @@ def parse_arguments_for_testing():
                         help="If present, writes log to this path")
     parser.add_argument("-v", "--verbosity", type=str, choices=["debug", "info", "warning"], default="info",
                         help="Selects verbosity level")
+    parser.add_argument("--video_filter", type=str,
+                        help="provided file will be used to filter only test videos,"
+                             " will assume certain file structure using the lookit/cali-bw/senegal datasets")
+    parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset (required if --video_filter is passed")
+    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
+                        help="the type of dataset to preprocess")
     args = parser.parse_args()
     args.model = Path(args.model)
-    assert args.model.is_file()
+    if not args.model.is_file():
+        raise FileNotFoundError("Model file not found")
+    if args.crop_video not in [x for x in range(100)]:
+        raise ValueError("crop_video must be a percent between 0 - 99")
     if args.video_filter:
         args.video_filter = Path(args.video_filter)
         assert args.video_filter.is_file() or args.video_filter.is_dir()
     if args.raw_dataset_path:
         args.raw_dataset_path = Path(args.raw_dataset_path)
     if args.output_annotation:
-        args.output_filepath = Path(args.output_annotation)
-        args.output_filepath.mkdir(exist_ok=True, parents=True)
-        if not args.output_filepath.is_dir():
-            print("--output_filepath argument must point to a folder.")
-            raise AssertionError
+        args.output_annotation = Path(args.output_annotation)
+        args.output_annotation.mkdir(exist_ok=True, parents=True)
     if args.output_video_path:
         args.output_video_path = Path(args.output_video_path)
         args.output_video_path.mkdir(exist_ok=True, parents=True)
-        if not args.output_video_path.is_dir():
-            print("--output_video_path argument must point to a folder.")
-            raise AssertionError
     if args.log:
         args.log = Path(args.log)
     if args.on_off:

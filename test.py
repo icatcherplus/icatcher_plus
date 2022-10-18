@@ -240,8 +240,9 @@ def predict_from_video(opt):
         else:
             logging.info("video fps: {}".format(framerate))
         width = meta_data["width"]
-        height = meta_data["height"]
-        resolution = (int(width), int(height))
+        raw_height = meta_data["height"]
+        cropped_height = int(raw_height * (1 - (opt.crop_video / 100)))  # crop x% of the video from the top
+        resolution = (int(width), int(cropped_height))
         # If creating annotated video output, set up now
         if opt.output_video_path:
             fourcc = cv2.VideoWriter_fourcc(*"MP4V")  # may need to be adjusted per available codecs & OS
@@ -266,6 +267,7 @@ def predict_from_video(opt):
         ret_val, frame = cap.read()
         hor, ver = 0.5, 1  # used for improved selection of face
         while ret_val:
+            frame = frame[(raw_height - cropped_height):, :, :]  # crop x% of the video from the top
             frames.append(frame)
             cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
