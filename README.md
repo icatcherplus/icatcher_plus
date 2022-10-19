@@ -1,9 +1,9 @@
 # Introduction
 This repository contains all the code for [iCatcher+](https://psyarxiv.com/up97k/), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab, field or online (remotely). It also contains code for reproducing the original manuscripts results.
 
-Below are examples of representative good and poor performance, taken from videos of infants participating in online research (all families featured consented to sharing their video data publicly):
+Click below for a video including examples of representative good and poor performance, taken from videos of infants participating in online research (all families featured consented to sharing their video data publicly):
 
-![icatcher_SM_video_AdobeExpress](https://user-images.githubusercontent.com/11280045/196298661-ed56f256-de92-4af2-81db-53c807e8b0d3.gif)
+[![iCatcher representative good and poor performance](https://img.youtube.com/vi/iK_T2P2ZDnU/0.jpg)](https://www.youtube.com/watch?v=iK_T2P2ZDnU)
 
 
 # Installation
