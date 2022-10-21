@@ -154,11 +154,11 @@ def parse_arguments_for_visualizations():
     parser.add_argument("output_folder", type=str, default="output", help="path to output results.")
     parser.add_argument("human_codings_folder", type=str, help="the codings from human1")
     parser.add_argument("machine_codings_folder", type=str, help="the codings from machine")
-    parser.add_argument("raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "datavyu"], default="lookit",
+    parser.add_argument("raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "datavyu", "just_annotations"], default="lookit",
                         help="the type of dataset to preprocess")
     parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset folder")
     parser.add_argument("--dataset_folder", type=str, help="path to preprocessed dataset folder")
-    parser.add_argument("--human2_codings_folder", type=str, help="the codings from human12")
+    parser.add_argument("--human2_codings_folder", type=str, help="the codings from human2")
     parser.add_argument("--human_coding_format",
                         type=str,
                         default="lookit",
@@ -173,7 +173,7 @@ def parse_arguments_for_visualizations():
                                  "compressed",
                                  "vcx"])
     parser.add_argument("--unique_children_only", action="store_true", default=False,
-                        help="only uses unique children for visualizations")
+                        help="only uses unique children for visualizations. works only for lookit/cali-bw/senegal datasets")
     parser.add_argument("--log", help="If present, writes log to this path")
     parser.add_argument("-v", "--verbosity", type=str, choices=["debug", "info", "warning"], default="info",
                         help="Selects verbosity level")
@@ -204,18 +204,29 @@ def parse_arguments_for_visualizations():
     elif args.raw_dataset_type == "datavyu":
         args.raw_video_folder = None
         args.db_file_name = None
+    elif args.raw_dataset_type == "just_annotations":
+        args.raw_video_folder = None
+        args.db_file_name = None
+        if args.human_coding_format != "lookit":
+            raise AssertionError("For the just_annotations dataset type, only lookit coding format (for humans) is supported.")
     else:
         raise NotImplementedError
     args.human_codings_folder = Path(args.human_codings_folder)
     if args.human2_codings_folder:  # a second human annotation folder was passed
         args.human2_codings_folder = Path(args.human2_codings_folder)
         if not args.human_codings_folder.is_dir() or not args.human2_codings_folder.is_dir():
-            import preprocess
-            preprocess.create_annotation_split(args, args.db_file_name)
-        assert args.human2_codings_folder.is_dir()
-    assert args.human_codings_folder.is_dir()
+            if args.raw_dataset_type == "lookit" or args.raw_dataset_type == "senegal" or args.raw_dataset_type == "cali-bw":
+                import preprocess
+                preprocess.create_annotation_split(args, args.db_file_name)
+            else:
+                raise NotImplementedError("One of the human codings folder doesn't exist.")
+        if not args.human2_codings_folder.is_dir():
+            raise NotImplementedError("One of the human codings folder doesn't exist.")
+    if not args.human_codings_folder.is_dir():
+        raise NotImplementedError("One of the human codings folder doesn't exist.")
     args.machine_codings_folder = Path(args.machine_codings_folder)
-    assert args.machine_codings_folder.is_dir()
+    if not args.machine_codings_folder.is_dir():
+        raise NotImplementedError("Machine coding folder doesn't exist.")
     if args.dataset_folder:
         args.faces_folder = Path(args.dataset_folder, "faces")
         assert args.faces_folder.is_dir()

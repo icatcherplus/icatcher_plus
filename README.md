@@ -117,12 +117,24 @@ The test.py file currently supports 3 output formats, though further formats can
 - compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
 - PrefLookTimestamp: will save a file in the format described [here](https://osf.io/3n97m/) describing the output of the automated coding.
 
-# Datasets access
+# Datasets access & reproduction of results
 
 The public videos from the Lookit dataset, along with human annotations and group-level demographics for all datasets, are available at https://osf.io/ujteb/. Videos from the Lookit dataset with permission granted for scientific use are available at https://osf.io/5u9df/. Requests for access can be directed to Junyi Chu (junyichu@mit.edu).
 
 Requests for access to the remainder of the datasets (Cali-BW, Senegal) can be directed to Dr. Katherine Adams Shannon (katashannon@gmail.com). Note that access to raw video files from the California-BW and Senegal datasets *is not available* due to restricted participant privacy agreements. To protect participant privacy, the participant identifiers for the video and demographic data are not linked to each other. However, this information is available upon reasonable request.
 
+We made substantial effort to allow reproduction of results form the paper. True reproduction requires full access to the datasets (including the videos).
+Instead, to reproduce most of the statistics we present in the paper for the lookit dataset from the annotations created by us (using iCatcher+), run visualize.py using the following commands:
+
+First navigate to where you placed the source code at:
+
+`cd /path/to/icathcer_plus`
+
+Then run:
+
+`python visualize.py output resource/lookit_annotations/coding_human1 resource/lookit_annotations/coding_icatcherplus just_annotations --human2_codings_folder resource/lookit_annotations/coding_human2`
+
+Results will appear in a folder called "output".
 
 ## Best Results (test sets)
 To view visualizations of all results, see [plots](https://github.com/yoterel/icatcher_plus/tree/master/plots).
@@ -132,23 +144,23 @@ The test sets were kept "untouched" until the very last stages of submission (i.
 
 <table>
         <tr>
-                <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement.png"  alt="0" width = 400px height = 300px ></td>
-                <td align="center"><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/agreement_vs_confidence.png"  alt="0" width = 400px height = 300px ></td>
+                <td align="center"> <img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/agreement.png"  alt="0" width = 400px height = 300px ></td>
+                <td align="center"><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/agreement_vs_confidence.png"  alt="0" width = 400px height = 300px ></td>
         </tr>
         <tr><td colspan=2>Lookit</td></tr>
         <tr>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_bar.png" alt="0" width = 400px height = 300px></td>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/lookit_conf.png" alt="1" width = 300px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/lookit_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/lookit_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
         <tr><td colspan=2>California-BW</td></tr>
         <tr>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/cali-bw_bar.png" alt="0" width = 400px height = 300px></td>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/cali-bw_conf.png" alt="1" width = 300px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/cali-bw_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/cali-bw_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
         <tr><td colspan=2>Senegal</td></tr>
         <tr>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/senegal_bar.png" alt="0" width = 400px height = 300px></td>
-                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/assets/senegal_conf.png" alt="1" width = 300px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/senegal_bar.png" alt="0" width = 400px height = 300px></td>
+                <td><img src="https://github.com/yoterel/icatcher_plus/blob/master/resource/senegal_conf.png" alt="1" width = 300px height = 300px></td>
         </tr>
 </table>
 
@@ -170,7 +182,7 @@ We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported re
 ## Project Structure (subject to change):
 
 
-    ├── assets                  # contains assets for README
+    ├── resource                # contains extra resources
     ├── datasets                # place holder for datasets 
     ├── face_classifier         # contains all specific code for face classification, separated from main project files on purpose.
         ├── fc_data.py          # creates face classifier dataset

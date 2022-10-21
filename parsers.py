@@ -103,11 +103,14 @@ class LookitParser(BaseParser):
     """
     a parser that parses Lookit format, a slightly different version of PrefLookTimestampParser.
     """
-    def __init__(self, fps, csv_file, first_coder=True, return_time_stamps=False):
+    def __init__(self, fps, csv_file=None, first_coder=True, return_time_stamps=False):
         super().__init__()
         self.fps = fps
         self.return_time_stamps = return_time_stamps
-        self.video_dataset = preprocess.build_lookit_video_dataset(csv_file.parent, csv_file)
+        if csv_file is not None:
+            self.video_dataset = preprocess.build_lookit_video_dataset(csv_file.parent, csv_file)
+        else:
+            self.video_dataset = None
         self.first_coder = first_coder
         self.classes = ["away", "left", "right"]
         self.exclude = ["outofframe", "preview", "instructions"]
@@ -126,16 +129,19 @@ class LookitParser(BaseParser):
         else:
             selected_classes = self.classes
         if label_path is None:
-            if self.first_coder:
-                label_path = self.video_dataset[video_id]["first_coding_file"]
+            if self.video_dataset is None:
+                raise ValueError("no label path provided and no csv file provided on initialization")
             else:
-                label_path = self.video_dataset[video_id]["second_coding_file"]
-            if label_path is None:
-                logging.warning("Video ID: " + str(video_id) + " no matching vcx was found.")
-                return None
-            if not label_path.is_file():
-                logging.warning("For the file: " + str(label_path) + " no matching vcx was found.")
-                return None
+                if self.first_coder:
+                    label_path = self.video_dataset[video_id]["first_coding_file"]
+                else:
+                    label_path = self.video_dataset[video_id]["second_coding_file"]
+                if label_path is None:
+                    logging.warning("Video ID: " + str(video_id) + " no matching vcx was found.")
+                    return None
+                if not label_path.is_file():
+                    logging.warning("For the file: " + str(label_path) + " no matching vcx was found.")
+                    return None
         labels = self.load_and_sort(label_path)
         # initialize
         output = []

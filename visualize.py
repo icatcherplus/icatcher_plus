@@ -326,8 +326,7 @@ def compare_coding_files(human_coding_file, human_coding_file2, machine_coding_f
     if args.human_coding_format == "vcx":
         parser = parsers.VCXParser(30, args.raw_dataset_path, args.raw_dataset_type)
     elif args.human_coding_format == "lookit":
-        csv_file = Path(args.raw_dataset_path / "prephys_split0_videos_detailed.tsv")
-        parser = parsers.LookitParser(30, csv_file)
+        parser = parsers.LookitParser(30)
         postures, _, _ = parser.parse(human_coding_file.stem, human_coding_file, extract_poses=True)
     elif args.human_coding_format == "datavyu":
         parser = parsers.DatavyuParser()
@@ -723,9 +722,10 @@ def generate_session_plots(sorted_IDs, all_metrics, args, anonymous=False):
             session_path = Path(sessions_path, "{:02d}_".format(i) + target_ID)
         session_path.mkdir(exist_ok=True, parents=True)
         session_frame_by_frame_plot(target_ID, all_metrics[target_ID], session_path)
-        session_image_collage_plot(target_ID, all_metrics[target_ID], session_path)
         session_agreement_plot(target_ID, all_metrics[target_ID], session_path)
         session_scatter_plot(target_ID, all_metrics[target_ID], session_path)
+        if args.raw_dataset_type != "just_annotations":
+            session_image_collage_plot(target_ID, all_metrics[target_ID], session_path)
 
 
 def generate_collage_plot2(sorted_IDs, all_metrics, save_path):
@@ -1023,7 +1023,9 @@ def generate_agreement_scatter(sorted_IDs, all_metrics, args, multi_dataset=Fals
         secondary_label = "California-BW Videos"
         third_label = "Senegal Videos"
     else:
-        raise NotImplementedError
+        primary_label = "My Dataset"
+        secondary_label = "placeholder"
+        third_label = "placeholder"
     ax.scatter(x_target, y_target,
                color=label_to_color("vlblue"), label=primary_label, alpha=0.5, s=40, marker="o")
     meanx, confx1, confx2 = bootstrap(x_target)
@@ -1302,10 +1304,14 @@ def generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, multi_datase
         primary_label = "Senegal"
         secondary_label = "Lookit"
         np.savez("senegal_confidence", confidence_correct, confidence_incorrect)
-    else:
+    elif args.raw_dataset_type == "lookit":
         primary_label = "Lookit"
         secondary_label = "California-BW"
         third_label = "Senegal"
+    else:
+        primary_label = "Dataset"
+        secondary_label = "placeholder"
+        third_label = "placeholder"
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     x = np.arange(2)
@@ -1386,7 +1392,8 @@ def generate_transitions_plot(sorted_IDs, all_metrics, args, multi_dataset=False
         primary_label = "Lookit"
         secondary_label = "California-BW"
     else:
-        raise NotImplementedError
+        primary_label = "Dataset"
+        secondary_label = "placeholder"
     plt.rc('font', size=16)
     fig, ax = plt.subplots()
     x = np.arange(3)
@@ -1460,6 +1467,8 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_skin_tone")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "camera_moved")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_race")
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_gender")
+        generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
     elif args.raw_dataset_type == "cali-bw":
         generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
@@ -1468,15 +1477,23 @@ def generate_dataset_plots(sorted_IDs, all_metrics, args):
         video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_preterm")
         generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_race")
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_gender")
+        generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
     elif args.raw_dataset_type == "senegal":
         generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
         generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
         generate_transitions_plot(sorted_IDs, all_metrics, args, False)
         video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path, args.raw_dataset_type)
+        generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_gender")
+        generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
+    elif args.raw_dataset_type == "just_annotations":
+        # generate_in_out_trial_vs_agreement(sorted_IDs, all_metrics, args)
+        # generate_posture_vs_agreement(sorted_IDs, all_metrics, args)
+        generate_agreement_scatter(sorted_IDs, all_metrics, args, False)
+        generate_confidence_vs_agreement(sorted_IDs, all_metrics, args, False)
+        generate_transitions_plot(sorted_IDs, all_metrics, args, False)
     else:
         raise NotImplementedError
-    generate_categorial_vs_agreement(sorted_IDs, all_metrics, args, video_dataset, "child_gender")
-    generate_age_vs_agreement(sorted_IDs, all_metrics, args, video_dataset)
 
 
 def generate_collage_plot(sorted_IDs, all_metrics, save_path):
@@ -1870,7 +1887,7 @@ def calc_all_metrics(args, force_create=False):
         for file in Path(args.machine_codings_folder).glob("*"):
             machine_annotation.append(file.stem)
             machine_ext = file.suffix
-
+        # Intersect the sets to get a list of mutually coded videos
         coding_intersect = set(machine_annotation).intersection(set(human_annotation))
         if args.human2_codings_folder:
             for file in Path(args.human2_codings_folder).glob("*"):
@@ -1885,8 +1902,9 @@ def calc_all_metrics(args, force_create=False):
             video_dataset = preprocess.build_marchman_video_dataset(args.raw_dataset_path,
                                                                     args.raw_dataset_type)
         else:
-            raise NotImplementedError
-        if args.unique_children_only:  # allow only one video per child
+            video_dataset = None
+        
+        if args.unique_children_only and video_dataset is not None:  # allow only one video per child
             filter_files = [x for x in video_dataset.values() if
                             x["in_csv"] and x["has_1coding"] and x["has_2coding"] and x[
                                 "split"] == "2_test"]
@@ -1922,15 +1940,17 @@ def calc_all_metrics(args, force_create=False):
                 continue
             all_metrics[key] = res
             # other stats
-            face_stats = get_face_stats(key, args.faces_folder)
-            all_metrics[key]["stats"]["avg_face_pixel_density"] = face_stats[0]
-            all_metrics[key]["stats"]["avg_face_loc"] = face_stats[1]  # x, y
-            all_metrics[key]["stats"]["avg_face_loc_std"] = np.mean(face_stats[2])
             if args.faces_folder is not None:
-                all_metrics[key]["stats"]["luminance"] = sample_luminance(key, args.raw_video_folder,
-                                                                          all_metrics[key]["human1_vs_machine_session"]['start'],
-                                                                          all_metrics[key]["human1_vs_machine_session"]['end'])
-            all_metrics[key]["csv_info"] = video_dataset[key]  # add participant info just in case
+                face_stats = get_face_stats(key, args.faces_folder)
+                all_metrics[key]["stats"]["avg_face_pixel_density"] = face_stats[0]
+                all_metrics[key]["stats"]["avg_face_loc"] = face_stats[1]  # x, y
+                all_metrics[key]["stats"]["avg_face_loc_std"] = np.mean(face_stats[2])
+                if args.raw_video_folder is not None:
+                    all_metrics[key]["stats"]["luminance"] = sample_luminance(key, args.raw_video_folder,
+                                                                            all_metrics[key]["human1_vs_machine_session"]['start'],
+                                                                            all_metrics[key]["human1_vs_machine_session"]['end'])
+            if video_dataset is not None:
+                all_metrics[key]["csv_info"] = video_dataset[key]  # add participant info just in case
         # Store in disk for faster access next time:
         pickle.dump(all_metrics, open(metric_save_path, "wb"))
     return all_metrics
@@ -2132,7 +2152,7 @@ def print_stats(sorted_ids, all_metrics, hvm, args):
     # ICC_PR_mean = np.mean(ICC_PR)
     # ICC_PR_std = np.std(ICC_PR)
 
-    if args.raw_dataset_type != "datavyu":
+    if args.raw_dataset_type == "lookit":
         data = np.load("cali-bw_agreement.npz")
         cali_hvh, cali_hvm = data["arr_0"], data["arr_1"]
 
