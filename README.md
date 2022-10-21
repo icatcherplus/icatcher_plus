@@ -124,7 +124,7 @@ The public videos from the Lookit dataset, along with human annotations and grou
 Requests for access to the remainder of the datasets (Cali-BW, Senegal) can be directed to Dr. Katherine Adams Shannon (katashannon@gmail.com). Note that access to raw video files from the California-BW and Senegal datasets *is not available* due to restricted participant privacy agreements. To protect participant privacy, the participant identifiers for the video and demographic data are not linked to each other. However, this information is available upon reasonable request.
 
 We made substantial effort to allow reproduction of results form the paper. True reproduction requires full access to the datasets (including the videos).
-Instead, to reproduce most of the statistics we present in the paper for the lookit dataset from the annotations created by us (using iCatcher+), run visualize.py using the following commands:
+Instead, to reproduce most of the statistics we present in the paper for the Lookit dataset, run visualize.py using the following commands:
 
 First navigate to where you placed the source code at:
 
