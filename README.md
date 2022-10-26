@@ -128,7 +128,7 @@ Instead, to reproduce most of the statistics we present in the paper for the Loo
 
 First navigate to where you placed the source code at:
 
-`cd /path/to/icathcer_plus`
+`cd /path/to/icatcher_plus`
 
 Then run:
 
