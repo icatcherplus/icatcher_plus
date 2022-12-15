@@ -79,9 +79,10 @@ def parse_arguments_for_testing():
     parser.add_argument("model", type=str, help="path to model that will be used for predictions")
     parser.add_argument("--fc_model", type=str, help="path to face classifier model that will be used for deciding "
                                                      "which crop should we select from every frame")
-    parser.add_argument("--crop_video", type=int, default=0, help="A percent to crop video frames from the top to prevent parents from appearing")
     parser.add_argument("--source_type", type=str, default="file", choices=["file", "webcam"],
                         help="selects source of stream to use.")
+    parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
+    parser.add_argument("--crop_mode", type=str, choices=["top", "left", "right"], nargs="+", default=["top"], help="where to crop video from, multi-choice.")
     parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
     parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
     parser.add_argument("--on_off", action="store_true",
@@ -117,8 +118,11 @@ def parse_arguments_for_testing():
     args.model = Path(args.model)
     if not args.model.is_file():
         raise FileNotFoundError("Model file not found")
-    if args.crop_video not in [x for x in range(100)]:
+    if args.crop_percent not in [x for x in range(100)]:
         raise ValueError("crop_video must be a percent between 0 - 99")
+    if "left" in args.crop_mode and "right" in args.crop_mode:
+        if args.crop_percent > 49:
+            raise ValueError("crop_video must be a percent between 0 - 49 when cropping both sides")
     if args.video_filter:
         args.video_filter = Path(args.video_filter)
         assert args.video_filter.is_file() or args.video_filter.is_dir()

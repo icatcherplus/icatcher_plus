@@ -239,10 +239,17 @@ def predict_from_video(opt):
                 logging.warning("output_video_path argument passed, but input video is VFR !")
         else:
             logging.info("video fps: {}".format(framerate))
-        width = meta_data["width"]
+        raw_width = meta_data["width"]
         raw_height = meta_data["height"]
-        cropped_height = int(raw_height * (1 - (opt.crop_video / 100)))  # crop x% of the video from the top
-        resolution = (int(width), int(cropped_height))
+        cropped_height = raw_height
+        if "top" in opt.crop_mode:
+            cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # crop x% of the video from the top
+        cropped_width = raw_width
+        if "left" and "right" in opt.crop_mode:
+            cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # crop x% of the video from the top
+        elif "left" in opt.crop_mode or "right" in opt.crop_mode:
+            cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))
+        resolution = (int(cropped_width), int(cropped_height))
         # If creating annotated video output, set up now
         if opt.output_video_path:
             fourcc = cv2.VideoWriter_fourcc(*"MP4V")  # may need to be adjusted per available codecs & OS
@@ -267,7 +274,20 @@ def predict_from_video(opt):
         ret_val, frame = cap.read()
         hor, ver = 0.5, 1  # used for improved selection of face
         while ret_val:
-            frame = frame[(raw_height - cropped_height):, :, :]  # crop x% of the video from the top
+            h_start_at = (raw_height - cropped_height)
+            if "left" and "right" in opt.crop_mode:
+                w_start_at = (raw_width - cropped_width)//2
+                w_end_at = w_start_at + cropped_width
+            elif "left" in opt.crop_mode:
+                w_start_at = (raw_width - cropped_width)
+                w_end_at = raw_width
+            elif "right" in opt.crop_mode:
+                w_start_at = 0
+                w_end_at = cropped_width
+            elif "top" in opt.crop_mode:
+                w_start_at = 0
+                w_end_at = raw_width
+            frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
             frames.append(frame)
             cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
