@@ -83,20 +83,22 @@ def parse_arguments_for_testing():
                         help="selects source of stream to use.")
     parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
     parser.add_argument("--crop_mode", type=str, choices=["top", "left", "right"], nargs="+", default=["top"], help="where to crop video from, multi-choice.")
+    parser.add_argument("--track_face", action="store_true", help="if true, will track faces in video and use them for predictions")
     parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
     parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
     parser.add_argument("--on_off", action="store_true",
                         help="left/right/away annotations will be swapped with on/off (only works with icatcher+)")
-    # Set up text output file, using https://osf.io/3n97m/ - PrefLookTimestamp coding standard
     parser.add_argument("--output_format", type=str, default="raw_output", choices=["raw_output",
                                                                                     "compressed",
-                                                                                    "PrefLookTimestamp"])
+                                                                                    "PrefLookTimestamp"])  # https://osf.io/3n97m/ - PrefLookTimestamp coding standard
     parser.add_argument("--output_video_path", help="if present, annotated video will be saved to this folder")
     parser.add_argument("--output_file_suffix", type=str, default=".txt", help="the output file suffix")
     parser.add_argument("--architecture", type=str, choices=["fc", "icatcher_vanilla", "icatcher+", "rnn"],
                         default="icatcher+",
                         help="Selects architecture to use")
     parser.add_argument("--image_size", type=int, default=100, help="All images will be resized to this size")
+    parser.add_argument("--sliding_window_size", type=int, default=9, help="Number of frames in rolling window of each datapoint")
+    parser.add_argument("--window_stride", type=int, default=2, help="Stride between frames in rolling window")
     parser.add_argument('--per_channel_mean', nargs=3, metavar=('Channel1_mean', 'Channel2_mean', 'Channel3_mean'),
                         type=float, default=[0.485, 0.456, 0.406],
                         help='supply custom per-channel mean of data for normalization')

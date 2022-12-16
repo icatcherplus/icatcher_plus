@@ -13,7 +13,7 @@ import data
 import video
 import time
 import collections
-
+from particle_filter import ParticleFilter
 
 class FPS:
     """
@@ -123,63 +123,107 @@ def extract_crop(frame, bbox, opt):
     return crop, my_box
 
 
-def predict_from_video(opt):
+def process_video(video_path, opt):
     """
-    perform prediction on a stream or video file(s) using a network.
-    output can be of various kinds, see options for details.
-    :param opt:
-    :return:
+    give a video path, process it and return a generator to iterate over frames
+    :param video_path: the video path
+    :param opt: command line options
+    :return: a generator to iterate over frames, framerate, resolution, and height/width pixel coordinates to crop from
     """
-    # todo: refactor, this function is too big
-    # initialize
-    opt.sliding_window_size = 9
-    opt.window_stride = 2
-    loc = -5
-    classes = {'noface': -2, 'nobabyface': -1, 'away': 0, 'left': 1, 'right': 2}
-    reverse_classes = {-2: 'noface', -1: 'nobabyface', 0: 'away', 1: 'left', 2: 'right'}
-    logging.info("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
-    logging.info("using the following values for per-channel std: {}".format(opt.per_channel_std))
+    cap = cv2.VideoCapture(str(video_path))
+    # Get some basic info about the video
+
+    vfr, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
+    framerate = video.get_fps(video_path)
+    if vfr:
+        logging.warning("video file: {} has variable frame rate".format(str(video_path.name)))
+        logging.info(str(meta_data))
+        if opt.output_video_path:
+            # todo: support this by extracting frame timestamps
+            # i.e.: frame_info, vfr_frame_counter, _ = video.get_frame_information(video_path)
+            logging.warning("output_video_path argument passed, but input video is VFR !")
+    else:
+        logging.info("video fps: {}".format(framerate))
+    raw_width = meta_data["width"]
+    raw_height = meta_data["height"]
+    cropped_height = raw_height
+    if "top" in opt.crop_mode:
+        cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # crop x% of the video from the top
+    cropped_width = raw_width
+    if "left" and "right" in opt.crop_mode:
+        cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # crop x% of the video from the top
+    elif "left" in opt.crop_mode or "right" in opt.crop_mode:
+        cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))
+    resolution = (int(cropped_width), int(cropped_height))
+    h_start_at = (raw_height - cropped_height)
+    if "left" and "right" in opt.crop_mode:
+        w_start_at = (raw_width - cropped_width)//2
+        w_end_at = w_start_at + cropped_width
+    elif "left" in opt.crop_mode:
+        w_start_at = (raw_width - cropped_width)
+        w_end_at = raw_width
+    elif "right" in opt.crop_mode:
+        w_start_at = 0
+        w_end_at = cropped_width
+    elif "top" in opt.crop_mode:
+        w_start_at = 0
+        w_end_at = raw_width
+    return cap, framerate, resolution, h_start_at, w_start_at, w_end_at
+
+def load_models(opt):
+    """
+    loads all relevant neural network models to perform predictions
+    :param opt: command line options
+    :return all nn models
+    """
     face_detector_model_file = Path("models", "face_model.caffemodel")
     config_file = Path("models", "config.prototxt")
-    path_to_primary_model = opt.model
+    path_to_gaze_model = opt.model
     if opt.architecture == "icatcher+":
-        primary_model = models.GazeCodingModel(opt).to(opt.device)
+        gaze_model = models.GazeCodingModel(opt).to(opt.device)
     elif opt.architecture == "icatcher_vanilla":
-        primary_model = models.iCatcherOriginal(opt).to(opt.device)
+        gaze_model = models.iCatcherOriginal(opt).to(opt.device)
     else:
         raise NotImplementedError
     if opt.device == 'cpu':
-        state_dict = torch.load(str(path_to_primary_model), map_location=torch.device(opt.device))
+        state_dict = torch.load(str(path_to_gaze_model), map_location=torch.device(opt.device))
     else:
-        state_dict = torch.load(str(path_to_primary_model))
+        state_dict = torch.load(str(path_to_gaze_model))
     try:
-        primary_model.load_state_dict(state_dict)
-    except RuntimeError as e:  # deal with models trained on distributed setup
+        gaze_model.load_state_dict(state_dict)
+    except RuntimeError as e:  # hack to deal with models trained on distributed setup
         from collections import OrderedDict
         new_state_dict = OrderedDict()
         for k, v in state_dict.items():
             name = k[7:]  # remove `module.`
             new_state_dict[name] = v
         # load params
-        primary_model.load_state_dict(new_state_dict)
-    primary_model.eval()
+        gaze_model.load_state_dict(new_state_dict)
+    gaze_model.eval()
 
     if opt.fc_model:
         fc_args = FaceClassifierArgs(opt.device)
-        fc_model, fc_input_size = face_classifier.fc_model.init_face_classifier(fc_args,
+        face_classifier_model, fc_input_size = face_classifier.fc_model.init_face_classifier(fc_args,
                                                                                 model_name=fc_args.model,
                                                                                 num_classes=2,
                                                                                 resume_from=opt.fc_model)
-        fc_model.eval()
-        fc_model.to(opt.device)
-        fc_data_transforms = face_classifier.fc_eval.get_fc_data_transforms(fc_args,
+        face_classifier_model.eval()
+        face_classifier_model.to(opt.device)
+        face_classifier_data_transforms = face_classifier.fc_eval.get_fc_data_transforms(fc_args,
                                                                             fc_input_size)
     else:
-        fc_model = None
-        fc_data_transforms = None
+        face_classifier_model = None
+        face_classifier_data_transforms = None
     # load face extractor model
-    face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))
-    # set video source
+    face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))    
+    return gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms
+
+def get_video_paths(opt):
+    """
+    obtain the video paths (and possibly video ids) from the source argument
+    :param opt: command line options
+    :return: a list of video paths and a list of video ids
+    """
     if opt.source_type == 'file':
         video_path = Path(opt.source)
         video_ids = None
@@ -213,83 +257,106 @@ def predict_from_video(opt):
     else:
         # video_paths = [int(opt.source)]
         raise NotImplementedError
+    return video_paths, video_ids
+
+def create_output_streams(video_path, framerate, resolution, video_ids, opt):
+    """
+    creates output streams
+    :param video_path: path to video
+    :param framerate: video framerate
+    :param resolution: video resolution
+    :param video_ids: list of video ids
+    :param opt: options
+    :return: video_output_file, prediction_output_file, skip = prediction file already exists
+    """
+    video_output_file = None
+    prediction_output_file = None
+    skip=False
+    if opt.output_video_path:
+        fourcc = cv2.VideoWriter_fourcc(*"MP4V")  # may need to be adjusted per available codecs & OS
+        my_video_path = Path(opt.output_video_path, video_path.stem + "_output.mp4")
+        video_output_file = cv2.VideoWriter(str(my_video_path), fourcc, framerate, resolution, True)
+    if opt.output_annotation:
+        if opt.output_format == "compressed":
+            if video_ids is not None:
+                prediction_output_file = Path(opt.output_annotation, video_ids[i])
+                if Path(str(prediction_output_file) + ".npz").is_file():
+                    skip=True
+            else:
+                prediction_output_file = Path(opt.output_annotation, video_path.stem)
+        else:
+            prediction_output_file = Path(opt.output_annotation, video_path.stem + opt.output_file_suffix)
+            if opt.output_format == "PrefLookTimestamp":
+                with open(prediction_output_file, "w", newline="") as f: # Write header
+                    f.write("Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n")
+    return video_output_file, prediction_output_file, skip
+    
+def create_tracker(resolution, opt):
+    tracker = None
+    if opt.track_face:
+        tracker = ParticleFilter(resolution[0], resolution[1], 3000)        
+    return tracker
+
+def cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt):
+    if opt.show_output:
+        cv2.destroyAllWindows()
+    if opt.output_video_path:
+        video_output_file.release()
+    if opt.output_annotation:  # write footer to file
+        if opt.output_format == "PrefLookTimestamp":
+            start_ms = int((1000. / framerate) * (opt.sliding_window_size // 2))
+            end_ms = int((1000. / framerate) * frame_count)
+            with open(prediction_output_file, "a", newline="") as f:
+                f.write("{},{},codingactive\n".format(start_ms, end_ms))
+        elif opt.output_format == "compressed":
+            np.savez(prediction_output_file, answers, confidences)
+    cap.release()
+
+def predict_from_video(opt):
+    """
+    perform prediction on a stream or video file(s) using a network.
+    output can be of various kinds, see options for details.
+    :param opt: command line arguments
+    :return:
+    """
+    # initialize
+    loc = -5  # where in the sliding window to take the prediction (should be a function of opt.sliding_window_size)
+    classes = {'noface': -2, 'nobabyface': -1, 'away': 0, 'left': 1, 'right': 2}
+    reverse_classes = {-2: 'noface', -1: 'nobabyface', 0: 'away', 1: 'left', 2: 'right'}
+    logging.info("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
+    logging.info("using the following values for per-channel std: {}".format(opt.per_channel_std))
+    gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms = load_models(opt)
+    video_paths, video_ids = get_video_paths(opt)
+    # loop over inputs
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
-        answers = []
-        confidences = []
-        image_sequence = []
-        box_sequence = []
-        bbox_sequence = []
-        frames = []
-        frame_count = 0
-        cur_fps = FPS()
+        logging.info("predicting on : {}".format(video_path))
+        cap, framerate, resolution, h_start_at, w_start_at, w_end_at = process_video(video_path, opt)
+        video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, video_ids, opt)
+        if skip:
+            continue
+        tracker = create_tracker(resolution, opt)
+        # per video initialization
+        answers = []  # list of answers for each frame
+        confidences = []  # list of confidences for each frame
+        image_sequence = []  # list of (crop, valid) for each frame in the sliding window
+        box_sequence = []  # list of bounding boxes for each frame in the sliding window
+        bbox_sequence = []  # list of bounding boxes for each frame in the sliding window
+        frames = []  # list of frames for each frame in the sliding window
+        last_known_valid_bbox = None  # last known valid bounding box
+        frame_count = 0  # frame counter
+        hor, ver = 0.5, 1  # initial guess for face location
+        cur_fps = FPS()  # for debugging purposes
         last_class_text = ""  # Initialize so that we see the first class assignment as an event to record
-        logging.info("predicting on : {}".format(video_paths[i]))
-        cap = cv2.VideoCapture(video_paths[i])
-        # Get some basic info about the video
-
-        vfr, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
-        framerate = video.get_fps(video_path)
-        if vfr:
-            logging.warning("video file: {} has variable frame rate".format(str(video_path.name)))
-            logging.info(str(meta_data))
-            if opt.output_video_path:
-                # todo: support this by extracting frame timestamps
-                # i.e.: frame_info, vfr_frame_counter, _ = video.get_frame_information(video_path)
-                logging.warning("output_video_path argument passed, but input video is VFR !")
-        else:
-            logging.info("video fps: {}".format(framerate))
-        raw_width = meta_data["width"]
-        raw_height = meta_data["height"]
-        cropped_height = raw_height
-        if "top" in opt.crop_mode:
-            cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # crop x% of the video from the top
-        cropped_width = raw_width
-        if "left" and "right" in opt.crop_mode:
-            cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # crop x% of the video from the top
-        elif "left" in opt.crop_mode or "right" in opt.crop_mode:
-            cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))
-        resolution = (int(cropped_width), int(cropped_height))
-        # If creating annotated video output, set up now
-        if opt.output_video_path:
-            fourcc = cv2.VideoWriter_fourcc(*"MP4V")  # may need to be adjusted per available codecs & OS
-            my_video_path = Path(opt.output_video_path, video_path.stem + "_output.mp4")
-            video_output = cv2.VideoWriter(str(my_video_path), fourcc, framerate, resolution, True)
-        if opt.output_annotation:
-            if opt.output_format == "compressed":
-                if video_ids is not None:
-                    my_output_file_path = Path(opt.output_annotation, video_ids[i])
-                    if Path(str(my_output_file_path) + ".npz").is_file():
-                        continue
-                else:
-                    my_output_file_path = Path(opt.output_annotation, video_path.stem)
-            else:
-                my_output_file_path = Path(opt.output_annotation, video_path.stem + opt.output_file_suffix)
-                output_file = open(my_output_file_path, "w", newline="")
-            if opt.output_format == "PrefLookTimestamp":
-                # Write header
-                output_file.write(
-                    "Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n")
-        # iterate over frames
+        # loop over frames (refactor !)
         ret_val, frame = cap.read()
-        hor, ver = 0.5, 1  # used for improved selection of face
         while ret_val:
-            h_start_at = (raw_height - cropped_height)
-            if "left" and "right" in opt.crop_mode:
-                w_start_at = (raw_width - cropped_width)//2
-                w_end_at = w_start_at + cropped_width
-            elif "left" in opt.crop_mode:
-                w_start_at = (raw_width - cropped_width)
-                w_end_at = raw_width
-            elif "right" in opt.crop_mode:
-                w_start_at = 0
-                w_end_at = cropped_width
-            elif "top" in opt.crop_mode:
-                w_start_at = 0
-                w_end_at = raw_width
             frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
             frames.append(frame)
             cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
+            if tracker:
+                tracker.predict(x_velocity=1, y_velocity=1, std=25)
+                x_estimated, y_estimated = tracker.estimate()
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
             # if len(cv2_bboxes) > 2:
             #     visualize.temp_hook(frame, cv2_bboxes, frame_count)
@@ -302,7 +369,7 @@ def predict_from_video(opt):
                 box_sequence.append(my_box)
                 bbox_sequence.append(None)
             else:
-                selected_bbox = select_face(cv2_bboxes, frame, fc_model, fc_data_transforms, hor, ver)
+                selected_bbox = select_face(cv2_bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver)
                 crop, my_box = extract_crop(frame, selected_bbox, opt)
                 if selected_bbox is None:
                     answers.append(classes['nobabyface'])  # if selecting face fails, treat as away and mark invalid
@@ -320,6 +387,9 @@ def predict_from_video(opt):
                     box_sequence.append(my_box)
                     bbox_sequence.append(selected_bbox)
                     hor, ver = my_box[2], my_box[1]
+                    if tracker:
+                        tracker.update(hor*resolution[0], ver*resolution[1])
+                        tracker.resample()
             if len(image_sequence) == opt.sliding_window_size:  # we have enough frames for prediction, predict for middle frame
                 cur_frame = frames[loc]
                 cur_bbox = bbox_sequence[loc]
@@ -335,57 +405,56 @@ def predict_from_video(opt):
                     else:
                         raise NotImplementedError
                     with torch.set_grad_enabled(False):
-                        outputs = primary_model(to_predict)
+                        outputs = gaze_model(to_predict)  # actual gaze prediction
                         probs = torch.nn.functional.softmax(outputs, dim=1)
                         _, prediction = torch.max(outputs, 1)
                         confidence, _ = torch.max(probs, 1)
                         float32_conf = confidence.cpu().numpy()[0]
                         int32_pred = prediction.cpu().numpy()[0]
-                    answers[loc] = int32_pred
-                    confidences[loc] = float32_conf
+                    answers[loc] = int32_pred  # update answers for the middle frame
+                    confidences[loc] = float32_conf  # update confidences for the middle frame
                 image_sequence.pop(0)
                 box_sequence.pop(0)
                 class_text = reverse_classes[answers[loc]]
                 if opt.on_off:
                     class_text = "off" if class_text == "away" else "on"
+                if tracker and cur_bbox is not None:
+                    last_known_valid_bbox = cur_bbox.copy()
+                    last_known_valid_bbox[0] = x_estimated - last_known_valid_bbox[2] // 2
+                    last_known_valid_bbox[1] = y_estimated - last_known_valid_bbox[3] // 2
+                if opt.output_video_path:
+                    if tracker:
+                        visualize.prep_frame(cur_frame, last_known_valid_bbox,
+                                             show_arrow=False, rect_color=(0, 0, 255))
+                    visualize.prep_frame(cur_frame, cur_bbox,
+                                         show_arrow=True, conf=confidences[loc], class_text=class_text)
+                    video_output_file.write(cur_frame)
                 if opt.show_output:
-                    prepped_frame = visualize.prep_frame(cur_frame, cur_bbox,
-                                                         show_arrow=True, conf=confidences[loc], class_text=class_text)
-                    cv2.imshow('frame', prepped_frame)
+                    if tracker:
+                        # tracker.drawParticles(cur_frame)
+                        visualize.prep_frame(cur_frame, last_known_valid_bbox,
+                                             show_arrow=False, rect_color=(0, 0, 255))
+                    visualize.prep_frame(cur_frame, cur_bbox,
+                                         show_arrow=True, conf=confidences[loc], class_text=class_text)
+                    cv2.imshow('frame', cur_frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
-                if opt.output_video_path:
-                    prepped_frame = visualize.prep_frame(cur_frame, cur_bbox,
-                                                         show_arrow=True, conf=confidences[loc], class_text=class_text)
-                    video_output.write(prepped_frame)
                 # handle writing output to file
                 if opt.output_annotation:
                     if opt.output_format == "raw_output":
-                        output_file.write("{}, {}, {:.02f}\n".format(str(frame_count + loc + 1), class_text, confidences[loc]))
+                        with open(prediction_output_file, "a", newline="") as f:
+                            f.write("{}, {}, {:.02f}\n".format(str(frame_count + loc + 1), class_text, confidences[loc]))
                     elif opt.output_format == "PrefLookTimestamp":
                         if class_text != last_class_text:  # Record "event" for change of direction if code has changed
                             frame_ms = int((frame_count + loc + 1) * (1000. / framerate))
-                            output_file.write("{},0,{}\n".format(frame_ms, class_text))
+                            with open(prediction_output_file, "a", newline="") as f:
+                                f.write("{},0,{}\n".format(frame_ms, class_text))
                             last_class_text = class_text
                 logging.info("frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(str(frame_count + loc + 1), class_text, confidences[loc], cur_fps()))
             ret_val, frame = cap.read()
             frame_count += 1
         # finished processing a video file, cleanup
-        if opt.show_output:
-            cv2.destroyAllWindows()
-        if opt.output_video_path:
-            video_output.release()
-        if opt.output_annotation:  # write footer to file
-            if opt.output_format == "PrefLookTimestamp":
-                start_ms = int((1000. / framerate) * (opt.sliding_window_size // 2))
-                end_ms = int((1000. / framerate) * frame_count)
-                output_file.write("{},{},codingactive\n".format(start_ms, end_ms))
-                output_file.close()
-            elif opt.output_format == "compressed":
-                np.savez(my_output_file_path, answers, confidences)
-            elif opt.output_format == "raw_output":
-                output_file.close()
-        cap.release()
+        cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt)
 
 
 if __name__ == '__main__':

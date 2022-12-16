@@ -2001,14 +2001,15 @@ def put_arrow(img, class_name, face):
     return img
 
 
-def put_rectangle(frame, rec):
+def put_rectangle(frame, rec, color=None):
     """
     inserts a rectangle in frame
     :param frame: the frame
     :param rec: the bounding box of the rectangle
     :return:
     """
-    color = (0, 255, 0)  # green
+    if color is None:
+        color = (0, 255, 0)  # green
     thickness = 2
     frame = cv2.rectangle(frame,
                           (rec[0], rec[1]), (rec[0] + rec[2], rec[1] + rec[3]),
@@ -2039,7 +2040,7 @@ def make_gridview(array, ncols=3, save_path=None):
     return result
 
 
-def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None):
+def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None, rect_color=None):
     """
     prepares a frame for visualization by adding text, rectangles and arrows.
     :param frame: the frame for which to add the gizmo's to
@@ -2052,7 +2053,7 @@ def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_t
     if class_text is not None:
         frame = put_text(frame, class_text)
     if show_bbox and bbox is not None:
-        frame = put_rectangle(frame, bbox)
+        frame = put_rectangle(frame, bbox, rect_color)
     if conf and bbox is not None:
         frame = put_text(frame, "{:.02f}".format(conf),
                          loc=(bbox[0], bbox[1] + bbox[3]))
