@@ -14,6 +14,7 @@ import video
 import time
 import collections
 from particle_filter import ParticleFilter
+from parsers import parse_illegal_transitions_file
 
 class FPS:
     """
@@ -92,6 +93,20 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
         bbox = min(bboxes, key=lambda x: x[3] - x[1])
     return bbox
 
+def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions):
+    """
+    this method fixes illegal transitions happening in answers at [loc-max_trans_len+1, loc] inclusive
+    """
+    for i, transition in enumerate(illegal_transitions):
+        len_trans = len(transition)
+        buffer = answers[loc-len_trans+1:loc+1]
+        if buffer == transition:
+            buffer_update = corrected_transitions[i]
+            answers[loc-len_trans+1:loc+1] = buffer_update
+            buffer_splits = np.where(np.array(buffer_update) != np.array(buffer))
+            for spot in buffer_splits[0].tolist():
+                confidences[loc - len_trans + 1 + spot] = -1
+    return answers, confidences
 
 def extract_crop(frame, bbox, opt):
     """
@@ -321,12 +336,19 @@ def predict_from_video(opt):
     """
     # initialize
     loc = -5  # where in the sliding window to take the prediction (should be a function of opt.sliding_window_size)
+    cursor = -5 # points to the frame we will write to output relative to current frame
     classes = {'noface': -2, 'nobabyface': -1, 'away': 0, 'left': 1, 'right': 2}
     reverse_classes = {-2: 'noface', -1: 'nobabyface', 0: 'away', 1: 'left', 2: 'right'}
     logging.info("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
     logging.info("using the following values for per-channel std: {}".format(opt.per_channel_std))
     gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms = load_models(opt)
     video_paths, video_ids = get_video_paths(opt)
+    if opt.illegal_transitions_path:
+        illegal_transitions, corrected_transitions = parse_illegal_transitions_file(opt.illegal_transitions_path)
+        max_illegal_transition_length = max([len(transition) for transition in illegal_transitions])
+        cursor -= max_illegal_transition_length
+        if abs(cursor) > opt.sliding_window_size:
+            raise ValueError("illegal_transitions_path contains transitions longer than the sliding window size")
     # loop over inputs
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
@@ -391,8 +413,8 @@ def predict_from_video(opt):
                         tracker.update(hor*resolution[0], ver*resolution[1])
                         tracker.resample()
             if len(image_sequence) == opt.sliding_window_size:  # we have enough frames for prediction, predict for middle frame
-                cur_frame = frames[loc]
-                cur_bbox = bbox_sequence[loc]
+                cur_frame = frames[cursor]
+                cur_bbox = bbox_sequence[cursor]
                 frames.pop(0)
                 bbox_sequence.pop(0)
                 if not image_sequence[opt.sliding_window_size // 2][1]:  # if middle image is valid
@@ -415,7 +437,12 @@ def predict_from_video(opt):
                     confidences[loc] = float32_conf  # update confidences for the middle frame
                 image_sequence.pop(0)
                 box_sequence.pop(0)
-                class_text = reverse_classes[answers[loc]]
+
+                if opt.illegal_transitions_path:
+                    if len(answers) >= max_illegal_transition_length: 
+                        answers, confidences = fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions)
+
+                class_text = reverse_classes[answers[cursor]]
                 if opt.on_off:
                     class_text = "off" if class_text == "away" else "on"
                 if tracker and cur_bbox is not None:
@@ -426,16 +453,16 @@ def predict_from_video(opt):
                     if tracker:
                         visualize.prep_frame(cur_frame, last_known_valid_bbox,
                                              show_arrow=False, rect_color=(0, 0, 255))
-                    visualize.prep_frame(cur_frame, cur_bbox,
-                                         show_arrow=True, conf=confidences[loc], class_text=class_text)
+                    visualize.prep_frame(cur_frame, cur_bbox, show_arrow=True,
+                                         conf=confidences[cursor], class_text=class_text, frame_number=frame_count)
                     video_output_file.write(cur_frame)
                 if opt.show_output:
                     if tracker:
                         # tracker.drawParticles(cur_frame)
                         visualize.prep_frame(cur_frame, last_known_valid_bbox,
                                              show_arrow=False, rect_color=(0, 0, 255))
-                    visualize.prep_frame(cur_frame, cur_bbox,
-                                         show_arrow=True, conf=confidences[loc], class_text=class_text)
+                    visualize.prep_frame(cur_frame, cur_bbox, show_arrow=True, 
+                                         conf=confidences[cursor], class_text=class_text, frame_number=frame_count)
                     cv2.imshow('frame', cur_frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
@@ -443,14 +470,14 @@ def predict_from_video(opt):
                 if opt.output_annotation:
                     if opt.output_format == "raw_output":
                         with open(prediction_output_file, "a", newline="") as f:
-                            f.write("{}, {}, {:.02f}\n".format(str(frame_count + loc + 1), class_text, confidences[loc]))
+                            f.write("{}, {}, {:.02f}\n".format(str(frame_count + cursor + 1), class_text, confidences[cursor]))
                     elif opt.output_format == "PrefLookTimestamp":
                         if class_text != last_class_text:  # Record "event" for change of direction if code has changed
-                            frame_ms = int((frame_count + loc + 1) * (1000. / framerate))
+                            frame_ms = int((frame_count + cursor + 1) * (1000. / framerate))
                             with open(prediction_output_file, "a", newline="") as f:
                                 f.write("{},0,{}\n".format(frame_ms, class_text))
                             last_class_text = class_text
-                logging.info("frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(str(frame_count + loc + 1), class_text, confidences[loc], cur_fps()))
+                logging.info("frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(str(frame_count + cursor + 1), class_text, confidences[cursor], cur_fps()))
             ret_val, frame = cap.read()
             frame_count += 1
         # finished processing a video file, cleanup

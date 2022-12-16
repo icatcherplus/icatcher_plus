@@ -116,6 +116,7 @@ def parse_arguments_for_testing():
     parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset (required if --video_filter is passed")
     parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
                         help="the type of dataset to preprocess")
+    parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
     args = parser.parse_args()
     args.model = Path(args.model)
     if not args.model.is_file():

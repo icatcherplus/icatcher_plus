@@ -2040,7 +2040,7 @@ def make_gridview(array, ncols=3, save_path=None):
     return result
 
 
-def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None, rect_color=None):
+def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None, rect_color=None, frame_number=None):
     """
     prepares a frame for visualization by adding text, rectangles and arrows.
     :param frame: the frame for which to add the gizmo's to
@@ -2061,6 +2061,8 @@ def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_t
         if class_text is not None:
             if class_text == "right" or class_text == "left":
                 frame = put_arrow(frame, class_text, bbox)
+    if frame_number is not None:  # may fail if loc outside resolution
+        frame = put_text(frame, str(frame_number), loc=(10,70))
     return frame
 
 
