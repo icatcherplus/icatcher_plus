@@ -306,12 +306,6 @@ def create_output_streams(video_path, framerate, resolution, video_ids, opt):
                     f.write("Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n")
     return video_output_file, prediction_output_file, skip
     
-def create_tracker(resolution, opt):
-    tracker = None
-    if opt.track_face:
-        tracker = ParticleFilter(resolution[0], resolution[1], 3000)        
-    return tracker
-
 def cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt):
     if opt.show_output:
         cv2.destroyAllWindows()
@@ -357,7 +351,6 @@ def predict_from_video(opt):
         video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, video_ids, opt)
         if skip:
             continue
-        tracker = create_tracker(resolution, opt)
         # per video initialization
         answers = []  # list of answers for each frame
         confidences = []  # list of confidences for each frame
@@ -365,6 +358,7 @@ def predict_from_video(opt):
         box_sequence = []  # list of bounding boxes for each frame in the sliding window
         bbox_sequence = []  # list of bounding boxes for each frame in the sliding window
         frames = []  # list of frames for each frame in the sliding window
+        from_tracker = []  # list of booleans indicating whether the bounding box was obtained from the tracker
         last_known_valid_bbox = None  # last known valid bounding box
         frame_count = 0  # frame counter
         hor, ver = 0.5, 1  # initial guess for face location
@@ -376,13 +370,10 @@ def predict_from_video(opt):
             frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
             frames.append(frame)
             cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
-            if tracker:
-                tracker.predict(x_velocity=1, y_velocity=1, std=25)
-                x_estimated, y_estimated = tracker.estimate()
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
             # if len(cv2_bboxes) > 2:
             #     visualize.temp_hook(frame, cv2_bboxes, frame_count)
-            if not cv2_bboxes:
+            if not cv2_bboxes and (last_known_valid_bbox is None or not opt.track_face):
                 answers.append(classes['noface'])  # if face detector fails, treat as away and mark invalid
                 confidences.append(-1)
                 image = np.zeros((1, opt.image_size, opt.image_size, 3), np.float64)
@@ -390,7 +381,13 @@ def predict_from_video(opt):
                 image_sequence.append((image, True))
                 box_sequence.append(my_box)
                 bbox_sequence.append(None)
+                from_tracker.append(False)
             else:
+                if cv2_bboxes:
+                    from_tracker.append(False)
+                else:
+                    from_tracker.append(True)
+                    cv2_bboxes = [last_known_valid_bbox]
                 selected_bbox = select_face(cv2_bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver)
                 crop, my_box = extract_crop(frame, selected_bbox, opt)
                 if selected_bbox is None:
@@ -408,15 +405,15 @@ def predict_from_video(opt):
                     image_sequence.append((crop, False))
                     box_sequence.append(my_box)
                     bbox_sequence.append(selected_bbox)
-                    hor, ver = my_box[2], my_box[1]
-                    if tracker:
-                        tracker.update(hor*resolution[0], ver*resolution[1])
-                        tracker.resample()
+                    if not from_tracker[-1]:
+                        last_known_valid_bbox = selected_bbox.copy()
             if len(image_sequence) == opt.sliding_window_size:  # we have enough frames for prediction, predict for middle frame
                 cur_frame = frames[cursor]
                 cur_bbox = bbox_sequence[cursor]
+                is_from_tracker = from_tracker[cursor]
                 frames.pop(0)
                 bbox_sequence.pop(0)
+                from_tracker.pop(0)
                 if not image_sequence[opt.sliding_window_size // 2][1]:  # if middle image is valid
                     if opt.architecture == "icatcher+":
                         to_predict = {"imgs": torch.tensor(np.array([x[0] for x in image_sequence[0::2]]), dtype=torch.float).squeeze().permute(0, 3, 1, 2).to(opt.device),
@@ -441,28 +438,27 @@ def predict_from_video(opt):
                 if opt.illegal_transitions_path:
                     if len(answers) >= max_illegal_transition_length: 
                         answers, confidences = fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions)
-
                 class_text = reverse_classes[answers[cursor]]
                 if opt.on_off:
                     class_text = "off" if class_text == "away" else "on"
-                if tracker and cur_bbox is not None:
-                    last_known_valid_bbox = cur_bbox.copy()
-                    last_known_valid_bbox[0] = x_estimated - last_known_valid_bbox[2] // 2
-                    last_known_valid_bbox[1] = y_estimated - last_known_valid_bbox[3] // 2
                 if opt.output_video_path:
-                    if tracker:
-                        visualize.prep_frame(cur_frame, last_known_valid_bbox,
-                                             show_arrow=False, rect_color=(0, 0, 255))
-                    visualize.prep_frame(cur_frame, cur_bbox, show_arrow=True,
-                                         conf=confidences[cursor], class_text=class_text, frame_number=frame_count)
+                    if is_from_tracker and opt.track_face:
+                        rect_color = (0, 0, 255)
+                    else:
+                        rect_color = (0, 255, 0) 
+                    visualize.prep_frame(cur_frame, cur_bbox, show_arrow=True, rect_color=rect_color,
+                                         conf=confidences[cursor], class_text=class_text,
+                                         frame_number=frame_count, pic_in_pic=opt.pic_in_pic)
                     video_output_file.write(cur_frame)
                 if opt.show_output:
-                    if tracker:
-                        # tracker.drawParticles(cur_frame)
-                        visualize.prep_frame(cur_frame, last_known_valid_bbox,
-                                             show_arrow=False, rect_color=(0, 0, 255))
-                    visualize.prep_frame(cur_frame, cur_bbox, show_arrow=True, 
-                                         conf=confidences[cursor], class_text=class_text, frame_number=frame_count)
+                    if is_from_tracker and opt.track_face:
+                        rect_color = (0, 0, 255)
+                    else:
+                        rect_color = (0, 255, 0) 
+                    visualize.prep_frame(cur_frame, cur_bbox, show_arrow=True, rect_color=rect_color,
+                                         conf=confidences[cursor], class_text=class_text,
+                                         frame_number=frame_count, pic_in_pic=opt.pic_in_pic)
+                    
                     cv2.imshow('frame', cur_frame)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break

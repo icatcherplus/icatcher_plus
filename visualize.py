@@ -2040,27 +2040,39 @@ def make_gridview(array, ncols=3, save_path=None):
     return result
 
 
-def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None, rect_color=None, frame_number=None):
+def prep_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, class_text=None, rect_color=None, frame_number=None, pic_in_pic=False):
     """
     prepares a frame for visualization by adding text, rectangles and arrows.
     :param frame: the frame for which to add the gizmo's to
     :param bbox: bbox as in cv2
     :param show_bbox: to show bbox on face as a green rectangle
     :param show_arrow: to show arrow indicating direciton of looking
+    :param conf: confidence of the classifier
     :param class_text: class text to show on top left corner
+    :param rect_color: color of the rectangle
+    :param frame_number: frame number to show on top left corner
+    :param pic_in_pic: to show a small frame of the face
     :return:
     """
-    if class_text is not None:
-        frame = put_text(frame, class_text)
-    if show_bbox and bbox is not None:
-        frame = put_rectangle(frame, bbox, rect_color)
-    if conf and bbox is not None:
-        frame = put_text(frame, "{:.02f}".format(conf),
-                         loc=(bbox[0], bbox[1] + bbox[3]))
     if show_arrow:
         if class_text is not None:
             if class_text == "right" or class_text == "left":
                 frame = put_arrow(frame, class_text, bbox)
+    if conf and bbox is not None:
+        frame = put_text(frame, "{:.02f}".format(conf),
+                         loc=(bbox[0], bbox[1] + bbox[3]))
+    if pic_in_pic:
+        pic_in_pic_size = 100
+        if bbox is None:
+            crop_img = np.zeros((pic_in_pic_size, pic_in_pic_size, 3), np.uint8)
+        else:
+            crop_img = frame[bbox[1]:bbox[1] + bbox[3], bbox[0]:bbox[0] + bbox[2]]
+            crop_img = cv2.resize(crop_img, (pic_in_pic_size, pic_in_pic_size))
+        frame[frame.shape[0]-pic_in_pic_size:, :pic_in_pic_size] = crop_img
+    if class_text is not None:
+        frame = put_text(frame, class_text)
+    if show_bbox and bbox is not None:
+        frame = put_rectangle(frame, bbox, rect_color)
     if frame_number is not None:  # may fail if loc outside resolution
         frame = put_text(frame, str(frame_number), loc=(10,70))
     return frame

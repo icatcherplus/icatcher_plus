@@ -83,7 +83,7 @@ def parse_arguments_for_testing():
                         help="selects source of stream to use.")
     parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
     parser.add_argument("--crop_mode", type=str, choices=["top", "left", "right"], nargs="+", default=["top"], help="where to crop video from, multi-choice.")
-    parser.add_argument("--track_face", action="store_true", help="if true, will track faces in video and use them for predictions")
+    parser.add_argument("--track_face", action="store_true", help="if detectin is lost, will keep track of face using last known position.")
     parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
     parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
     parser.add_argument("--on_off", action="store_true",
@@ -92,6 +92,7 @@ def parse_arguments_for_testing():
                                                                                     "compressed",
                                                                                     "PrefLookTimestamp"])  # https://osf.io/3n97m/ - PrefLookTimestamp coding standard
     parser.add_argument("--output_video_path", help="if present, annotated video will be saved to this folder")
+    parser.add_argument("--pic_in_pic", action="store_true", help="if present, a mini picture with detection will be shown in the output video")
     parser.add_argument("--output_file_suffix", type=str, default=".txt", help="the output file suffix")
     parser.add_argument("--architecture", type=str, choices=["fc", "icatcher_vanilla", "icatcher+", "rnn"],
                         default="icatcher+",
