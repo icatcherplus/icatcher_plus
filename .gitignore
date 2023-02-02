@@ -4,3 +4,4 @@ models/
 *.mp4
 .vscode
 datasets/
+src/icatcher.egg-info/

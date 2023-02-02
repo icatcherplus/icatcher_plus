@@ -1,0 +1,82 @@
+import argparse
+from pathlib import Path
+
+def parse_arguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
+    parser.add_argument("model", type=str, help="path to model that will be used for predictions")
+    parser.add_argument("--fc_model", type=str, help="path to face classifier model that will be used for deciding "
+                                                     "which crop should we select from every frame")
+    parser.add_argument("--source_type", type=str, default="file", choices=["file", "webcam"],
+                        help="selects source of stream to use.")
+    parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
+    parser.add_argument("--crop_mode", type=str, choices=["top", "left", "right"], nargs="+", default=["top"], help="where to crop video from, multi-choice.")
+    parser.add_argument("--track_face", action="store_true", help="if detectin is lost, will keep track of face using last known position.")
+    parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
+    parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
+    parser.add_argument("--on_off", action="store_true",
+                        help="left/right/away annotations will be swapped with on/off (only works with icatcher+)")
+    parser.add_argument("--output_format", type=str, default="raw_output", choices=["raw_output",
+                                                                                    "compressed",
+                                                                                    "PrefLookTimestamp"])  # https://osf.io/3n97m/ - PrefLookTimestamp coding standard
+    parser.add_argument("--output_video_path", help="if present, annotated video will be saved to this folder")
+    parser.add_argument("--pic_in_pic", action="store_true", help="if present, a mini picture with detection will be shown in the output video")
+    parser.add_argument("--output_file_suffix", type=str, default=".txt", help="the output file suffix")
+    parser.add_argument("--image_size", type=int, default=100, help="All images will be resized to this size")
+    parser.add_argument("--sliding_window_size", type=int, default=9, help="Number of frames in rolling window of each datapoint")
+    parser.add_argument("--window_stride", type=int, default=2, help="Stride between frames in rolling window")
+    parser.add_argument('--per_channel_mean', nargs=3, metavar=('Channel1_mean', 'Channel2_mean', 'Channel3_mean'),
+                        type=float, default=[0.485, 0.456, 0.406],
+                        help='supply custom per-channel mean of data for normalization')
+    parser.add_argument('--per_channel_std', nargs=3, metavar=('Channel1_std', 'Channel2_std', 'Channel3_std'),
+                        type=float, default=[0.229, 0.224, 0.225],
+                        help='supply custom per-channel std of data for normalization')
+    parser.add_argument("--gpu_id", type=int, default=-1, help="GPU id to use, use -1 for CPU.")
+    parser.add_argument("--log",
+                        help="If present, writes log to this path")
+    parser.add_argument("-v", "--verbosity", type=str, choices=["debug", "info", "warning"], default="info",
+                        help="Selects verbosity level")
+    parser.add_argument("--video_filter", type=str,
+                        help="provided file will be used to filter only test videos,"
+                             " will assume certain file structure using the lookit/cali-bw/senegal datasets")
+    parser.add_argument("--raw_dataset_path", type=str, help="path to raw dataset (required if --video_filter is passed")
+    parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
+                        help="the type of dataset to preprocess")
+    parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
+    args = parser.parse_args()
+    args.model = Path(args.model)
+    if not args.model.is_file():
+        raise FileNotFoundError("Model file not found")
+    if args.crop_percent not in [x for x in range(100)]:
+        raise ValueError("crop_video must be a percent between 0 - 99")
+    if "left" in args.crop_mode and "right" in args.crop_mode:
+        if args.crop_percent > 49:
+            raise ValueError("crop_video must be a percent between 0 - 49 when cropping both sides")
+    if args.video_filter:
+        args.video_filter = Path(args.video_filter)
+        assert args.video_filter.is_file() or args.video_filter.is_dir()
+    if args.raw_dataset_path:
+        args.raw_dataset_path = Path(args.raw_dataset_path)
+    if args.output_annotation:
+        args.output_annotation = Path(args.output_annotation)
+        args.output_annotation.mkdir(exist_ok=True, parents=True)
+    if args.output_video_path:
+        args.output_video_path = Path(args.output_video_path)
+        args.output_video_path.mkdir(exist_ok=True, parents=True)
+    if args.log:
+        args.log = Path(args.log)
+    if args.on_off:
+        if args.output_format != "raw_output":
+            print("On off mode can only be used with raw output format. Pass raw_output with the --output_format flag.")
+            raise AssertionError
+    if not args.per_channel_mean:
+        args.per_channel_mean = [0.485, 0.456, 0.406]
+    if not args.per_channel_std:
+        args.per_channel_std = [0.229, 0.224, 0.225]
+    if args.gpu_id == -1:
+        args.device = "cpu"
+    else:
+        import os
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+        args.device = "cuda:{}".format(0)
+    return args
