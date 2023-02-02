@@ -78,7 +78,11 @@ To show the predictions online in a seperate window, add the option:
 
 `--show_output`
 
-For a full command line option list use:
+You can also add parameters to crop the video before passing to iCatcher: 
+
+`--crop_mode m` where `m` is any of [top, left, right], specifying which side of the video to crop from (if not provided, default is none; if crop_percent is provided but not crop_mode, default is top)
+
+For a full command line option list (there are several other optional parameters!) use:
 
 `python test.py --help`
 
