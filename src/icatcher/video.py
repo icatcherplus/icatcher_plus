@@ -31,9 +31,15 @@ def get_fps(video_file_path):
 
 
 def is_video_vfr(video_file_path, get_meta_data=False):
+    """
+    checks if video is vfr
+    """
+    # these three cases cover windows linux and MacOS hopefully
     ENVBIN = Path(sys.exec_prefix, "bin", "ffmpeg")
     if not ENVBIN.exists():
         ENVBIN = Path("ffmpeg.exe")
+    if not ENVBIN.exists():
+        ENVBIN = Path("ffmpeg")
     args = [str(ENVBIN)+" ",
             "-i \"{}\"".format(str(video_file_path)),
             "-vf vfrdet",
