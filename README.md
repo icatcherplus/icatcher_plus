@@ -60,7 +60,7 @@ Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatch
 # Running iCatcher+
 If you installed iCatcher+ using the quick installation, you can run it with the command:
 `icatcher --help`
-which will list all availble options. Description below will help you with some common command line arguments, but you need to replace `python test.py` with `icatcher` for it to work.
+which will list all available options. Description below will help you with some common command line arguments, but you need to replace `python test.py` with `icatcher` for it to work.
 
 To run icatcher with a video file (if a folder is provided, all videos will be used for prediction):
 
