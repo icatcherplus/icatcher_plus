@@ -5,3 +5,4 @@ models/
 .vscode
 datasets/
 src/icatcher.egg-info/
+dist/
