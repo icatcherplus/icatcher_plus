@@ -9,12 +9,18 @@ Click below for a video including examples of representative good and poor perfo
 
 [![iCatcher representative good and poor performance](https://img.youtube.com/vi/iK_T2P2ZDnU/0.jpg)](https://www.youtube.com/watch?v=iK_T2P2ZDnU)
 
-
 # Installation
+## Quick installation (Windows & Linux only)
+This option will let you use iCatcher+ with minimum effort, but only for predictions (inference).
+We strongly recommend using a virtual environment such as [Miniconda](https://conda.io) or [virtualenv](https://pypi.org/project/virtualenv/) before running the command below.
 
-You can set up your own conda environment, or access the environment/code/models wrapped up as a [container](https://apptainer.org/user-docs/3.8/introduction.html#why-use-containers). Instructions for both options are below. 
+`pip install icatcher`
 
-## Setup with conda environment
+You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available, as well as model files:
+Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in a directory named models. iCatcher+ expects this folder to exist in the location you launch it from (see Running iCatcher+)
+
+## Installation from source
+This options allows you to reproduce the paper results, train icatcher on your own dataset, and tinker with its core.
 
 ### Step 1: Clone this repository to get a copy of the code to run locally
 
@@ -22,7 +28,7 @@ You can set up your own conda environment, or access the environment/code/models
 
 ### Step 2: Create a conda virtual environment
 
-We recommend installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for this, but you can also [Install Anaconda](https://www.anaconda.com/products/individual/get-started) if needed, then create an environment using the environment.yml file in this repository:
+We recommend installing [Miniconda](https://docs.conda.io/en/latest/miniconda.html) for this, then create an environment using the environment.yml file in this repository:
 
 **Note**: conda must be in the PATH envrionment variable for the shell to find it.
 
@@ -50,42 +56,11 @@ iCatcher+ relies on some neural-network model files to work (or reproduce experi
 
 Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
 
-## Setup with Docker container 
-
-A Docker image is now available here: https://hub.docker.com/repository/docker/saxelab/looking_time_analysis 
-
-### Use as [Docker](https://aws.amazon.com/docker/) container (e.g., to run on your own computer):
-
-#### Step 1: Install Docker
-
-Follow instructions on the [Docker site](https://docs.docker.com/get-docker/) to install Docker Desktop on your computer 
-
-#### Step 2: Pull a copy of the docker container for use
-
-`docker pull saxelab/looking_time_analysis:icatcher_env`
-
-### Use as [Singularity](https://apptainer.org/user-docs/3.8/) container: 
-
-Singularity is the main containerization software that is used on High-Performance Computing Clusters (HPCCs), but is a similar containerization software to Docker. If you use Singularity instead of docker, you can convert the Docker image to a singularity container using the following command: 
-
-#### Step 2: pull the Docker image into a singularity container:
-
-##### Directly to an immutable container: 
-
-`singularity build icatcher_env.sif docker://saxelab/looking_time_analysis:icatcher_env`
-
-##### .. Or as a "sandbox" for editing: 
-
-If you want to make changes to the environment, you can also build as a sandbox: 
-
-`singularity build --sandbox icatcher_env/ docker://saxelab/looking_time_analysis:icatcher_env`
-
-then use `singularity shell --writable icatcher_env` to access the sandbox container for making changes
-
-and finally, `singularity build icatcher_env.sif icatcher_env/` to make the container immutable. 
-
 
 # Running iCatcher+
+If you installed iCatcher+ using the quick installation, you can run it with the command:
+`icatcher --help`
+which will list all availble options. Description below will help you with some common command line arguments, but you need to replace `python test.py` with `icatcher` for it to work.
 
 To run icatcher with a video file (if a folder is provided, all videos will be used for prediction):
 
@@ -107,14 +82,9 @@ For a full command line option list use:
 
 `python test.py --help`
 
-### Running the code from a container, e.g., as a singularity container: 
-
-`singularity exec -B /filesystem/filesystem icatcher_env.sif python3 /icatcher_plus/test.py /path/to/my/video.mp4  /icatcher_plus/models/icatcher+_lookit.pth --fc_model /icatcher_plus/models/face_classifier_lookit.pth --output_annotation /path/to/output_folder --output_format compressed --output_video_path /path/to/output_folder`
-
-
 # Output format
 
-The test.py file currently supports 3 output formats, though further formats can be added upon request.
+Currently we supports 3 output formats, though further formats can be added upon request.
 
 - raw_output: a file where each row will contain the frame number, the class prediction and the confidence of that prediction seperated by a comma
 - compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
