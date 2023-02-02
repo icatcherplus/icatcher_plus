@@ -13,7 +13,6 @@ import data
 import video
 import time
 import collections
-from particle_filter import ParticleFilter
 from parsers import parse_illegal_transitions_file
 
 class FPS:
@@ -75,7 +74,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
             img = fc_data_transforms['val'](img)
             faces.append(img)
         centers = np.stack(centers)
-        faces = torch.stack(faces).to(args.device)
+        faces = torch.stack(faces).to(fc_model.device)
         output = fc_model(faces)
         _, preds = torch.max(output, 1)
         preds = preds.cpu().numpy()
