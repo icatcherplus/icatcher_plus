@@ -78,7 +78,14 @@ To show the predictions online in a seperate window, add the option:
 
 `--show_output`
 
-For a full command line option list use:
+You can also add parameters to crop the video a given percent before passing to iCatcher: 
+
+`--crop_mode m` where `m` is any of [top, left, right], specifying which side of the video to crop from (if not provided, default is none; if crop_percent is provided but not crop_mode, default is top)
+
+`--crop_percent x` where `x` is an integer (default = 0) specifying what percent of the video size to crop from the specified side. E.g., if `--crop_mode top` is provided with `--crop_percent 10`, 10% of the video height will be cropped from the top. If `--crop_mode left` is provided with `--crop_percent 25`, 25% of the video width will be cropped from the left side, etc. 
+
+
+For a full command line option list (there are several other optional parameters!) use:
 
 `python test.py --help`
 
