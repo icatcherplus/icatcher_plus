@@ -1979,7 +1979,7 @@ def put_text(img, text, loc=None):
     
     cv2.rectangle(img, text_location, (text_location[0] + text_w, text_location[1] + text_h), bg_color, -1)
 
-    cv2.putText(img, text, text_location,
+    cv2.putText(img, text, (text_location[0], text_location[1] + text_h + font_scale - 1),
                 font,
                 font_scale,
                 font_color,
