@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "icatcher"
-version = "0.0.4"
+version = "0.0.5"
 description = "iCatcher+: Robust and automated annotation of infant gaze from videos collected in laboratory, field, and online studies."
 readme = "README.md"
 authors = [{ name = "Yotam Erel", email = "erelyotam@gmail.com" }]
@@ -37,7 +37,7 @@ dev = ["bumpver", "pytest"]
 Homepage = "https://github.com/yoterel/icatcher_plus"
 
 [tool.bumpver]
-current_version = "0.0.4"
+current_version = "0.0.5"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = false
@@ -52,7 +52,3 @@ push = false
 "src/icatcher/__init__.py" = [
     "{version}"
 ]
-"README.md" = [
-    "v{version}",
-]
-
