@@ -16,8 +16,7 @@ We strongly recommend using a virtual environment such as [Miniconda](https://co
 
 `pip install icatcher`
 
-You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available, as well as model files:
-Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in a directory named models. iCatcher+ expects this folder to exist in the location you launch it from (see Running iCatcher+)
+You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available. When using for the first time, neural network model files will automatically be downloaded to a local cache folder. To control where they are downloaded to set the "ICATCHER_DATA_DIR" environment variable.
 
 ## Installation from source
 This options allows you to reproduce the paper results, train icatcher on your own dataset, and tinker with its core.
@@ -58,13 +57,22 @@ Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatch
 
 
 # Running iCatcher+
-If you installed iCatcher+ using the quick installation, you can run it with the command:
+If you installed iCatcher+ from source, the inference file is "test.py". It will require an additional mandatory argument of which model file to use for predicitons.
+Otherwise, using the quick installation, you can run iCatcher+ with the command:
+
 `icatcher --help`
-which will list all available options. Description below will help you with some common command line arguments, but you need to replace `python test.py` with `icatcher` for it to work.
 
-To run icatcher with a video file (if a folder is provided, all videos will be used for prediction):
+which will list all available options. Description below will help you get more familiar with some common command line arguments.
 
-`python test.py /path/to/my/video.mp4 /path/to/icatcher_model.pth --fc_model /path/to/face_classifier.pth`
+To run iCatcher+ with a video file (if a folder is provided, all videos will be used for prediction):
+
+`icatcher /path/to/my/video.mp4`
+
+A common option is to add:
+
+`icatcher /path/to/my/video.mp4 --use_fc_model`
+
+Which enables a child face detector for more robust results (however, sometimes this can result in too much loss of data).
 
 You can save a labeled video by adding:
 
@@ -83,7 +91,6 @@ You can also add parameters to crop the video a given percent before passing to 
 `--crop_mode m` where `m` is any of [top, left, right], specifying which side of the video to crop from (if not provided, default is none; if crop_percent is provided but not crop_mode, default is top)
 
 `--crop_percent x` where `x` is an integer (default = 0) specifying what percent of the video size to crop from the specified side. E.g., if `--crop_mode top` is provided with `--crop_percent 10`, 10% of the video height will be cropped from the top. If `--crop_mode left` is provided with `--crop_percent 25`, 25% of the video width will be cropped from the left side, etc. 
-
 
 For a full command line option list (there are several other optional parameters!) use:
 
