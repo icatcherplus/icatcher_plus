@@ -6,7 +6,7 @@ def parse_arguments():
     parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
     parser.add_argument("--model", type=str, help="path to model that will be used for predictions "
                                                   "if not supplied will use model trained on the lookit dataset")
-    parser.add_argument("--use_fc_model", action="store_true", type=str, help="if supplied, will use face classifier "
+    parser.add_argument("--use_fc_model", action="store_true", help="if supplied, will use face classifier "
                                                                               "to decide which crop to use from every frame.")
     parser.add_argument("--fc_model", type=str, help="path to face classifier model that will be used for deciding "
                                                      "which crop should we select from every frame. "
@@ -48,7 +48,8 @@ def parse_arguments():
                         help="the type of dataset to preprocess")
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
     args = parser.parse_args()
-    args.model = Path(args.model)
+    if args.model:
+        args.model = Path(args.model)
     # if not args.model.is_file():
     #     raise FileNotFoundError("Model file not found")
     if args.crop_percent not in [x for x in range(100)]:

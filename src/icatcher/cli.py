@@ -269,7 +269,7 @@ def get_video_paths(opt):
         elif video_path.is_file():
             video_paths = [str(video_path)]
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError("Couldn't find a file or a directory at {}".format(video_path))
     else:
         # video_paths = [int(opt.source)]
         raise NotImplementedError
