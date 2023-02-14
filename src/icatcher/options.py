@@ -4,9 +4,13 @@ from pathlib import Path
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
-    parser.add_argument("model", type=str, help="path to model that will be used for predictions")
+    parser.add_argument("--model", type=str, help="path to model that will be used for predictions "
+                                                  "if not supplied will use model trained on the lookit dataset")
+    parser.add_argument("--use_fc_model", action="store_true", type=str, help="if supplied, will use face classifier "
+                                                                              "to decide which crop to use from every frame.")
     parser.add_argument("--fc_model", type=str, help="path to face classifier model that will be used for deciding "
-                                                     "which crop should we select from every frame")
+                                                     "which crop should we select from every frame. "
+                                                     "if not supplied but use_fc_model is true, will use the model trained on the lookit dataset.")
     parser.add_argument("--source_type", type=str, default="file", choices=["file", "webcam"],
                         help="selects source of stream to use.")
     parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
@@ -45,8 +49,8 @@ def parse_arguments():
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
     args = parser.parse_args()
     args.model = Path(args.model)
-    if not args.model.is_file():
-        raise FileNotFoundError("Model file not found")
+    # if not args.model.is_file():
+    #     raise FileNotFoundError("Model file not found")
     if args.crop_percent not in [x for x in range(100)]:
         raise ValueError("crop_video must be a percent between 0 - 99")
     if "left" in args.crop_mode and "right" in args.crop_mode:

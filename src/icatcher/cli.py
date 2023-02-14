@@ -9,7 +9,8 @@ from . import draw
 from . import video
 from . import models
 from . import parsers
-
+from . import version
+import pooch
 
 def detect_face_opencv_dnn(net, frame, conf_threshold):
     """
@@ -196,12 +197,29 @@ def process_video(video_path, opt):
 def load_models(opt):
     """
     loads all relevant neural network models to perform predictions
+    models will be automatically downloaded if not found in the cache, user may overide downloaded location wit hthe env variable ICATCHER_DATA_DIR
     :param opt: command line options
     :return all nn models
     """
-    face_detector_model_file = Path("models", "face_model.caffemodel")
-    config_file = Path("models", "config.prototxt")
-    path_to_gaze_model = opt.model
+    GOODBOY = pooch.create(path=pooch.os_cache("icatcher_plus"),
+                           base_url="https://www.cs.tau.ac.il/~yotamerel/icatcher+/",
+                           version=version,
+                           version_dev="main",
+                           env="ICATCHER_DATA_DIR",
+                           registry={"icatcher+_models.zip": "d78385b3a08f3d55ce75249142d15549e4c5552d5e1231cad3b69063bb778ce9"})
+    file_paths = GOODBOY.fetch("icatcher+_models.zip", processor=pooch.Unzip())
+    file_names = [Path(x).name for x in file_paths]
+    face_detector_model_file = file_paths[file_names.index("face_model.caffemodel")]
+    config_file = file_paths[file_names.index("config.prototxt")]
+    path_to_gaze_model = file_paths[file_names.index("icatcher+_lookit.pth")]
+    if opt.model:
+        path_to_gaze_model = opt.model
+    path_to_fc_model = file_paths[file_names.index("face_classifier_lookit.pth")]
+    if opt.fc_model:
+        path_to_fc_model = opt.fc_model
+    # face_detector_model_file = Path("models", "face_model.caffemodel")
+    # config_file = Path("models", "config.prototxt")
+    # path_to_gaze_model = opt.model
     gaze_model = models.GazeCodingModel(opt).to(opt.device)
     if opt.device == 'cpu':
         state_dict = torch.load(str(path_to_gaze_model), map_location=torch.device(opt.device))
@@ -219,10 +237,10 @@ def load_models(opt):
         gaze_model.load_state_dict(new_state_dict)
     gaze_model.eval()
 
-    if opt.fc_model:
+    if opt.fc_model or opt.use_fc_model:
         face_classifier_model, fc_input_size = models.init_face_classifier(opt.device,
                                                                            num_classes=2,
-                                                                           resume_from=opt.fc_model)
+                                                                           resume_from=path_to_fc_model)
         face_classifier_model.eval()
         face_classifier_model.to(opt.device)
         face_classifier_data_transforms = models.get_fc_data_transforms(fc_input_size)
@@ -241,7 +259,6 @@ def get_video_paths(opt):
     """
     if opt.source_type == 'file':
         video_path = Path(opt.source)
-        video_ids = None
         if video_path.is_dir():
             logging.warning("Video folder provided as source. Make sure it contains video files only.")
             video_paths = list(video_path.glob("*"))
@@ -256,9 +273,9 @@ def get_video_paths(opt):
     else:
         # video_paths = [int(opt.source)]
         raise NotImplementedError
-    return video_paths, video_ids
+    return video_paths
 
-def create_output_streams(video_path, framerate, resolution, video_ids, opt):
+def create_output_streams(video_path, framerate, resolution, opt):
     """
     creates output streams
     :param video_path: path to video
@@ -277,12 +294,7 @@ def create_output_streams(video_path, framerate, resolution, video_ids, opt):
         video_output_file = cv2.VideoWriter(str(my_video_path), fourcc, framerate, resolution, True)
     if opt.output_annotation:
         if opt.output_format == "compressed":
-            if video_ids is not None:
-                prediction_output_file = Path(opt.output_annotation, video_ids[i])
-                if Path(str(prediction_output_file) + ".npz").is_file():
-                    skip=True
-            else:
-                prediction_output_file = Path(opt.output_annotation, video_path.stem)
+            prediction_output_file = Path(opt.output_annotation, video_path.stem)
         else:
             prediction_output_file = Path(opt.output_annotation, video_path.stem + opt.output_file_suffix)
             if opt.output_format == "PrefLookTimestamp":
@@ -320,7 +332,7 @@ def predict_from_video(opt):
     logging.info("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
     logging.info("using the following values for per-channel std: {}".format(opt.per_channel_std))
     gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms = load_models(opt)
-    video_paths, video_ids = get_video_paths(opt)
+    video_paths = get_video_paths(opt)
     if opt.illegal_transitions_path:
         illegal_transitions, corrected_transitions = parsers.parse_illegal_transitions_file(opt.illegal_transitions_path)
         max_illegal_transition_length = max([len(transition) for transition in illegal_transitions])
@@ -332,7 +344,7 @@ def predict_from_video(opt):
         video_path = Path(str(video_paths[i]))
         logging.info("predicting on : {}".format(video_path))
         cap, framerate, resolution, h_start_at, w_start_at, w_end_at = process_video(video_path, opt)
-        video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, video_ids, opt)
+        video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, opt)
         if skip:
             continue
         # per video initialization
