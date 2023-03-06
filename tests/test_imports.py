@@ -4,7 +4,7 @@ def test_imports():
     @return:
     """
     import torch
-    import tensorboard
-    import tqdm
-    import cv2
-    import seaborn
+    import numpy as np
+    import pooch
+    import PIL
+    
