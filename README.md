@@ -10,7 +10,7 @@ Click below for a video including examples of representative good and poor perfo
 [![iCatcher representative good and poor performance](https://img.youtube.com/vi/iK_T2P2ZDnU/0.jpg)](https://www.youtube.com/watch?v=iK_T2P2ZDnU)
 
 # Installation
-## Quick installation (Windows & Linux only)
+## Quick installation (Windows, Linux, Mac)
 This option will let you use iCatcher+ with minimum effort, but only for predictions (inference).
 We strongly recommend using a virtual environment such as [Miniconda](https://conda.io) or [virtualenv](https://pypi.org/project/virtualenv/) before running the command below.
 
