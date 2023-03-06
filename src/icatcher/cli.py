@@ -197,17 +197,26 @@ def process_video(video_path, opt):
 def load_models(opt):
     """
     loads all relevant neural network models to perform predictions
-    models will be automatically downloaded if not found in the cache, user may overide downloaded location wit hthe env variable ICATCHER_DATA_DIR
+    models will be automatically downloaded if not found in the cache,
+    user may overide downloaded location with the env variable ICATCHER_DATA_DIR
+    defaults:
+    :Mac: "~/Library/Caches/<AppName>"
+    :Unix: "~/.cache/<AppName>" or the value of the "XDG_CACHE_HOME"
+    environment variable, if defined.
+    :Windows: "C:\\Users\\<user>\\AppData\\Local\\<AppAuthor>\\<AppName>\\Cache"
     :param opt: command line options
     :return all nn models
     """
     GOODBOY = pooch.create(path=pooch.os_cache("icatcher_plus"),
-                           base_url="https://www.cs.tau.ac.il/~yotamerel/icatcher+/",
+                           base_url="https://osf.io/ycju8/download",
                            version=version,
                            version_dev="main",
                            env="ICATCHER_DATA_DIR",
-                           registry={"icatcher+_models.zip": "d78385b3a08f3d55ce75249142d15549e4c5552d5e1231cad3b69063bb778ce9"})
-    file_paths = GOODBOY.fetch("icatcher+_models.zip", processor=pooch.Unzip())
+                           registry={"icatcher+_models.zip": "d78385b3a08f3d55ce75249142d15549e4c5552d5e1231cad3b69063bb778ce9"},
+                           urls={"icatcher+_models.zip":"https://osf.io/ycju8/download"})
+    file_paths = GOODBOY.fetch("icatcher+_models.zip",
+                               processor=pooch.Unzip(),
+                               progressbar=True)
     file_names = [Path(x).name for x in file_paths]
     face_detector_model_file = file_paths[file_names.index("face_model.caffemodel")]
     config_file = file_paths[file_names.index("config.prototxt")]

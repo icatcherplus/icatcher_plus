@@ -18,8 +18,8 @@ We strongly recommend using a virtual environment such as [Miniconda](https://co
 
 You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available. When using for the first time, neural network model files will automatically be downloaded to a local cache folder. To control where they are downloaded to set the "ICATCHER_DATA_DIR" environment variable.
 
-## Installation from source
-This options allows you to reproduce the paper results, train icatcher on your own dataset, and tinker with its core.
+## Installation for reproduction of original research results
+This options allows you to reproduce the paper results, train icatcher on your own dataset, compare and measure performance and visualize results as well.
 
 ### Step 1: Clone this repository to get a copy of the code to run locally
 
@@ -31,9 +31,9 @@ We recommend installing [Miniconda](https://docs.conda.io/en/latest/miniconda.ht
 
 **Note**: conda must be in the PATH envrionment variable for the shell to find it.
 
-Navigate to the icatcher_plus folder using the Anaconda Prompt:
+Navigate to the icatcher_plus reproduce folder using the Anaconda Prompt:
 
-`cd /path/to/icathcer_plus`
+`cd /path/to/icathcer_plus/reproduce`
 
 Then:
 
@@ -49,11 +49,11 @@ Activate the environment
 
 `conda activate env`
 
-### Step 3: Download the latest network model & weights file
+### Step 3: Download the neural network model & weight files
 
 iCatcher+ relies on some neural-network model files to work (or reproduce experiments).
 
-Please download all files from [here](https://www.cs.tau.ac.il/~yotamerel/icatcher+/icatcher+_models.zip) and place them in the models directory.
+Please download all files from [here](https://osf.io/ycju8/download) and place them in the reproduce/models directory.
 
 
 # Running iCatcher+
@@ -92,17 +92,12 @@ You can also add parameters to crop the video a given percent before passing to 
 
 `--crop_percent x` where `x` is an integer (default = 0) specifying what percent of the video size to crop from the specified side. E.g., if `--crop_mode top` is provided with `--crop_percent 10`, 10% of the video height will be cropped from the top. If `--crop_mode left` is provided with `--crop_percent 25`, 25% of the video width will be cropped from the left side, etc. 
 
-For a full command line option list (there are several other optional parameters!) use:
-
-`python test.py --help`
-
 # Output format
 
-Currently we supports 3 output formats, though further formats can be added upon request.
+Currently we supports 2 output formats, though further formats can be added upon request.
 
 - raw_output: a file where each row will contain the frame number, the class prediction and the confidence of that prediction seperated by a comma
 - compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
-- PrefLookTimestamp: will save a file in the format described [here](https://osf.io/3n97m/) describing the output of the automated coding.
 
 # Datasets access & reproduction of results
 
@@ -113,9 +108,9 @@ Requests for access to the remainder of the datasets (Cali-BW, Senegal) can be d
 We made substantial effort to allow reproduction of results form the paper. True reproduction requires full access to the datasets (including the videos).
 Instead, to reproduce most of the statistics we present in the paper for the Lookit dataset, run visualize.py using the following commands:
 
-First navigate to where you placed the source code at:
+First navigate to the reproduce folder:
 
-`cd /path/to/icatcher_plus`
+`cd /path/to/icatcher_plus/reproduce`
 
 Then run:
 
@@ -168,29 +163,9 @@ We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported re
 
 ## Project Structure (subject to change):
 
-
-    ├── resource                # contains extra resources
-    ├── datasets                # place holder for datasets 
-    ├── face_classifier         # contains all specific code for face classification, separated from main project files on purpose.
-        ├── fc_data.py          # creates face classifier dataset
-        ├── fc_eval.py          # face classifier evaluation
-        ├── fc_model.py         # face classifier model
-        ├── fc_train.py         # face classifier training  script
-    ├── models                  # place holder for model files
-    ├── plots                   # place holder for various plots
-    ├── statistics              # code for analyzing multi-variant video dataset statistics
-    ├── tests                   # pytests
-    ├── augmentations.py        # defines RandAugment set of augmentations
-    ├── data.py                 # dataloaders and datasets
-    ├── logger.py               # simple logger class
-    ├── models.py               # definition of model architectures etc
-    ├── options.py              # parse command line arguments
-    ├── parsers.py              # annotations (labels) of videos in various formats are parsed using classes in this file
-    ├── preprocess.py           # used to parse a raw dataset from OSF into a dataloader ready dataset
-    ├── test.py                 # use this to run a full test on a video or a folder of videos
-    ├── train.py                # main training loop
-    ├── video.py                # API to ffmpeg functionallity
-    ├── visualize.py            # compares human annotation with results from icatcher to reproduce paper results
+    ├── src                     # code for package (inference only)
+    ├── tests                   # tests for package
+    ├── reproduce               # all code used for producing paper results, including training and visualizations.
     
 # Contributions
 Feel free to contribute by submitting a pull request. Make sure to run all tests under /tests

@@ -1,0 +1,20 @@
+channels:
+  - pytorch
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - pytorch
+  - torchvision
+  - python=3.9
+  - pip
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - tensorboard
+  - tqdm
+  - pytest
+  - ffmpeg-python
+  - pingouin
+  - pip:
+    - opencv-python
