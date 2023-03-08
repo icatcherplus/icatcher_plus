@@ -17,13 +17,20 @@ def put_text(img, text, loc=None):
         text_location = (10, 30)  # top_left_corner_text
     font_scale = 1
     font_color = (255, 255, 255)
+    bg_color = (0,0,0)
     line_type = 2
+    
+    text_size, _ = cv2.getTextSize(text, font, font_scale, line_type)
+    text_w, text_h = text_size
+    
+    cv2.rectangle(img, text_location, (text_location[0] + text_w, text_location[1] + text_h), bg_color, -1)
 
-    cv2.putText(img, text, text_location,
+    cv2.putText(img, text, (text_location[0], text_location[1] + text_h + font_scale - 1),
                 font,
                 font_scale,
                 font_color,
                 line_type)
+    
     return img
 
 def put_arrow(img, class_name, face):
