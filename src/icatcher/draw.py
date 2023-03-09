@@ -97,3 +97,19 @@ def prepare_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, clas
     if frame_number is not None:  # may fail if loc outside resolution
         frame = put_text(frame, str(frame_number), loc=(10,70))
     return frame
+
+def mask_regions(image, start_h, end_h, start_w, end_w):
+    """
+    masks a numpy image with black background outside of region of interest (roi)
+    :param start_h: where does the roi height start
+    :param end_h: where does the roi height end
+    :param start_w: where does the roi width start
+    :param end_w: where does the roi width end
+    :return: masked image
+    """
+    h, w, _ = image.shape
+    if start_h < 0 or start_w < 0 or end_h > h or end_w > w:
+        raise ValueError("Values exceed image resolution")
+    output = np.zeros_like(image)
+    output[start_h:end_h, start_w:end_w, :] = image[start_h:end_h, start_w:end_w, :]
+    return output

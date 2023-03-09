@@ -172,14 +172,15 @@ def process_video(video_path, opt):
     raw_height = meta_data["height"]
     cropped_height = raw_height
     if "top" in opt.crop_mode:
-        cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # crop x% of the video from the top
+        cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # x% of the video from the top
     cropped_width = raw_width
     if "left" and "right" in opt.crop_mode:
-        cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # crop x% of the video from the top
+        cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # x% of the video from both left/right
     elif "left" in opt.crop_mode or "right" in opt.crop_mode:
-        cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))
+        cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))  # x% of the video from both left/right
     resolution = (int(cropped_width), int(cropped_height))
     h_start_at = (raw_height - cropped_height)
+    h_end_at = raw_height
     if "left" and "right" in opt.crop_mode:
         w_start_at = (raw_width - cropped_width)//2
         w_end_at = w_start_at + cropped_width
@@ -192,7 +193,7 @@ def process_video(video_path, opt):
     elif "top" in opt.crop_mode:
         w_start_at = 0
         w_end_at = raw_width
-    return cap, framerate, resolution, h_start_at, w_start_at, w_end_at
+    return cap, framerate, resolution, h_start_at, h_end_at, w_start_at, w_end_at
 
 def load_models(opt):
     """
@@ -352,7 +353,7 @@ def predict_from_video(opt):
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
         logging.info("predicting on : {}".format(video_path))
-        cap, framerate, resolution, h_start_at, w_start_at, w_end_at = process_video(video_path, opt)
+        cap, framerate, resolution, h_start_at, h_end_at, w_start_at, w_end_at = process_video(video_path, opt)
         video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, opt)
         if skip:
             continue
@@ -372,7 +373,8 @@ def predict_from_video(opt):
         # loop over frames (refactor !)
         ret_val, frame = cap.read()
         while ret_val:
-            frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
+            frame = draw.mask_regions(frame, h_start_at, h_end_at, w_start_at, w_end_at)  # mask roi
+            # frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
             frames.append(frame)
             cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
