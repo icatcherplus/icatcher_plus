@@ -108,6 +108,7 @@ def prepare_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, clas
 def mask_regions(image, start_h, end_h, start_w, end_w):
     """
     masks a numpy image with black background outside of region of interest (roi)
+    :param image: numpy image h x w x c
     :param start_h: where does the roi height start
     :param end_h: where does the roi height end
     :param start_w: where does the roi width start
