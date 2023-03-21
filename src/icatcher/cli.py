@@ -56,7 +56,7 @@ class FaceClassifierArgs:
         self.dropout = 0.0
 
 
-def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
+def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
     """
     selects a correct face from candidates bbox in frame
     :param bboxes: the bounding boxes of candidates
@@ -84,7 +84,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
             img = fc_data_transforms['val'](img)
             faces.append(img)
         centers = np.stack(centers)
-        faces = torch.stack(faces).to(fc_model.device)
+        faces = torch.stack(faces).to(device)
         output = fc_model(faces)
         _, preds = torch.max(output, 1)
         preds = preds.cpu().numpy()
@@ -213,8 +213,13 @@ def load_models(opt):
                            version=version,
                            version_dev="main",
                            env="ICATCHER_DATA_DIR",
-                           registry={"icatcher+_models.zip": "d78385b3a08f3d55ce75249142d15549e4c5552d5e1231cad3b69063bb778ce9"},
-                           urls={"icatcher+_models.zip":"https://osf.io/ycju8/download"})
+                           registry={"zip_content.txt": "d81bfb5a183edea6dc74f7f342d516a9843865570b9ecfbf481209ec5114110a",
+                                     "icatcher+_models.zip": "d78385b3a08f3d55ce75249142d15549e4c5552d5e1231cad3b69063bb778ce9"},
+                           urls={"zip_content.txt":"https://osf.io/v4w53/download",
+                                 "icatcher+_models.zip":"https://osf.io/ycju8/download"})
+    # zip_content_file = GOODBOY.fetch("zip_content.txt")
+    # with open(zip_content_file, "r") as f:
+        # zip_content = [x.strip() for x in f]
     file_paths = GOODBOY.fetch("icatcher+_models.zip",
                                processor=pooch.Unzip(),
                                progressbar=True)
@@ -393,7 +398,7 @@ def predict_from_video(opt):
                 else:
                     from_tracker.append(True)
                     cv2_bboxes = [last_known_valid_bbox]
-                selected_bbox = select_face(cv2_bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver)
+                selected_bbox = select_face(cv2_bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver, opt.device)
                 crop, my_box = extract_crop(frame, selected_bbox, opt)
                 if selected_bbox is None:
                     answers.append(classes['nobabyface'])  # if selecting face fails, treat as away and mark invalid
