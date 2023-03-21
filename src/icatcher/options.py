@@ -1,8 +1,9 @@
 import argparse
 from pathlib import Path
+from . import version
 
 def parse_arguments():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(prog='icatcher')
     parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
     parser.add_argument("--model", type=str, help="path to model that will be used for predictions "
                                                   "if not supplied will use model trained on the lookit dataset")
@@ -47,6 +48,7 @@ def parse_arguments():
     parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
                         help="the type of dataset to preprocess")
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
+    parser.add_argument('--version', action='version', version="%(prog)s "+version)
     args = parser.parse_args()
     if args.model:
         args.model = Path(args.model)
