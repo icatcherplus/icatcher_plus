@@ -170,6 +170,7 @@ def process_video(video_path, opt):
         logging.info("video fps: {}".format(framerate))
     raw_width = meta_data["width"]
     raw_height = meta_data["height"]
+    resolution = (int(raw_width), int(raw_height))
     cropped_height = raw_height
     if "top" in opt.crop_mode:
         cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # x% of the video from the top
@@ -178,7 +179,6 @@ def process_video(video_path, opt):
         cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # x% of the video from both left/right
     elif "left" in opt.crop_mode or "right" in opt.crop_mode:
         cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))  # x% of the video from both left/right
-    resolution = (int(cropped_width), int(cropped_height))
     h_start_at = (raw_height - cropped_height)
     h_end_at = raw_height
     if "left" and "right" in opt.crop_mode:
