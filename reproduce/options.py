@@ -118,6 +118,12 @@ def parse_arguments_for_testing():
     parser.add_argument("--raw_dataset_type", type=str, choices=["lookit", "cali-bw", "senegal", "generic"], default="lookit",
                         help="the type of dataset to preprocess")
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
+    parser.add_argument("--num_cpus_saved", type=int, default=0,
+                        help="amount of cpus to not use in parallel processing")
+    parser.add_argument("--fd_batch_size", type=int, default=16,
+                        help="amount of frames fed into face detector at one time for batch inference")
+    parser.add_argument("--fd_confidence_threshold", type=float, default=0.9,
+                        help="the score confidence threshold that needs to be met for a face to be detected")
     args = parser.parse_args()
     args.model = Path(args.model)
     if not args.model.is_file():
