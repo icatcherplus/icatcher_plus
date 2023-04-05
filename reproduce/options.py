@@ -124,6 +124,9 @@ def parse_arguments_for_testing():
                         help="amount of frames fed into face detector at one time for batch inference")
     parser.add_argument("--fd_confidence_threshold", type=float, default=0.9,
                         help="the score confidence threshold that needs to be met for a face to be detected")
+    parser.add_argument("--fd_model", type=str, choices=["retinaface, opencv_dnn"], default="retinaface",
+                        help="the face detector model used. opencv_dnn may be more suitable for cpu usage if speed is priority over accuracy")
+    parser.add_argument("--fd_skip_frames", type=int, default=0, help="WHEN USING CPU: amount of frames to skip between each face detection")
     args = parser.parse_args()
     args.model = Path(args.model)
     if not args.model.is_file():
