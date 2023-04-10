@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from pathlib import Path
 from reproduce.face_detector import process_frames, find_bboxes, threshold_faces, extract_bboxes
 
@@ -44,13 +45,17 @@ def test_parallelize_face_detection():
 
 
 def test_extract_bboxes():
-    face_group_1 = [[[10, 20, 30, 40], "fake", 0.9], [[90, 20, 300, 240], "fake", 0.95]]
-    assert extract_bboxes(face_group_1) == [[10, 20, 20, 20], [90, 20, 210, 220]]
+    face_group_1 = [(np.array([166.71333, 154.89905, 277.6311 , 287.06418]), np.array([[180.20674, 221.42831],
+       [224.93073, 200.5159 ],
+       [197.3573 , 222.8472 ],
+       [192.64197, 260.84647],
+       [222.6668 , 244.67502]]), 0.9996675), (np.array([ 80.74863, 179.17978, 158.89856, 305.16626]), np.array([[149.29008, 234.86317],
+       [152.41891, 233.67021],
+       [160.06853, 260.93158],
+       [146.51126, 284.67035],
+       [150.32614, 283.61874]]), 0.96128803)]
+    assert extract_bboxes(face_group_1) == [np.array([166, 154, 110, 132]), np.array([ 80, 179,  78, 125])]
 
     # testing nothing in face_group
     face_group_2 = []
     assert extract_bboxes(face_group_2) is None
-
-    # testing with one face in group, floats, and tuple is face[0]
-    face_group_3 = [[([1.4, 9.3, 53.5, 93.9], "fake", 0.98)]]
-    assert extract_bboxes(face_group_3) == [[1, 9, 52, 84]]
