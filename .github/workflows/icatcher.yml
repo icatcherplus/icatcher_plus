@@ -17,6 +17,6 @@ jobs:
           python -m pip install ".[dev]"
 
       - name: Run tests
-        run:  pytest
+        run:  python -m pytest tests
         # if running out of memory in future, add markers in future
         # might want to have an action slow at some point if things are slow
