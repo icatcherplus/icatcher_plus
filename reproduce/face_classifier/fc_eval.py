@@ -1,8 +1,12 @@
 import os
-from torch.autograd import Variable
-# from torchvision import datasets, transforms
+from pathlib import Path
+
+import torch
 # from config import multi_face_folder
-from data import *
+# from data import *
+from torch.autograd import Variable
+from torchvision import transforms
+from tqdm import tqdm
 
 
 def get_fc_data_transforms(args, input_size, dt_key=None):
@@ -15,7 +19,7 @@ def get_fc_data_transforms(args, input_size, dt_key=None):
         ])}
 
     class AddGaussianNoise(object):
-        def __init__(self, mean=0., std=1.):
+        def __init__(self, mean=0., std=1.0):
             self.mean = mean
             self.std = std
 
@@ -58,6 +62,7 @@ def get_fc_data_transforms(args, input_size, dt_key=None):
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
     }
+    data_transforms["test"] = data_transforms["val"]
     return data_transforms
 
 
@@ -69,7 +74,7 @@ def evaluate(args, model, dataloader, criterion, return_prob=False, is_labelled=
     target_labels = []
 
     # Iterate over data.
-    for inputs, labels in dataloader:
+    for inputs, labels, _ in tqdm(dataloader):
         if generate_labels:
             target_labels.extend(list(labels.numpy()))  # -- 1d array
 
@@ -81,7 +86,7 @@ def evaluate(args, model, dataloader, criterion, return_prob=False, is_labelled=
             # Get model outputs and calculate loss
             outputs = model(inputs)
             if is_labelled:
-                loss = criterion(outputs, labels)
+                loss = criterion(outputs, labels).mean()
             _, preds = torch.max(outputs, 1)  # Make prediction
 
             if return_prob:
@@ -180,3 +185,71 @@ def predict_on_test(args, model, dataloaders, criterion):
         os.path.join(output_label_dir, '%s%d.json' % (output_test_labels, output_salt_number))))
 
     return
+
+
+if __name__ == "__main__":
+    from face_classifier.fc_train import seed_everything, get_args
+    from face_classifier.fc_data import get_dataset_dataloaders
+    from face_classifier.fc_model import init_face_classifier, get_loss
+    args = get_args()
+    
+    seed_everything(args.seed)
+    resume_from = None if args.resume == 'none' else args.resume
+    model, input_size = init_face_classifier(
+        args, model_name=args.model, num_classes=2, resume_from=resume_from
+    )
+    dataloaders = get_dataset_dataloaders(
+        args, input_size, args.bs, True
+    )
+    criterion = get_loss()
+
+    # Move the model to the gpu if needed
+    model = model.to(args.device)
+
+    generate_train_labels = False
+    generate_val_labels = True
+    
+    print()
+    train_loss, train_top1, train_labels, train_probs, _ = evaluate(
+        args,
+        model,
+        dataloaders["train"],
+        criterion,
+        is_labelled=True,
+        generate_labels=generate_train_labels,
+    )
+    print(f"train_loss: {train_loss:.4f}", f"train_top1: {train_top1:.4f}")
+
+    val_loss, val_top1, val_labels, val_probs, val_target_labels = evaluate(
+        args,
+        model,
+        dataloaders["val"],
+        criterion,
+        return_prob=False,
+        is_labelled=True,
+        generate_labels=generate_val_labels,
+    )
+    print(f"val_loss: {val_loss:.4f}", f"val_top1: {val_top1:.4f}")
+
+    test_loss, test_top1, test_labels, test_probs, test_target_labels = evaluate(
+        args,
+        model,
+        dataloaders["test"],
+        criterion,
+        return_prob=False,
+        is_labelled=True,
+        generate_labels=generate_val_labels,
+    )
+    print(f"test_loss: {test_loss:.4f}", f"test_top1: {test_top1:.4f}")
+    
+    eval_log_name = args.dataset_folder.split("dataset/")[-1].replace("/", "_")
+    path_to_log = f"eval_{eval_log_name}.log"
+    if resume_from:
+        path_to_log = Path(resume_from).parent / path_to_log
+    with open(path_to_log, "w+") as f:
+        f.write("\n".join([
+            f"train_loss: {train_loss:.4f}, train_top1: {train_top1:.4f}",
+            f"val_loss: {val_loss:.4f}, val_top1: {val_top1:.4f}",
+            f"test_loss: {test_loss:.4f}, test_top1: {test_top1:.4f}"
+        ]))
+    print("Saved results at", path_to_log)
