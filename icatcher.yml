@@ -1,0 +1,22 @@
+name: Build and Test iCatcher+
+on: [push]
+jobs:
+  build-project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Build project
+        run: |
+          python -m pip install ".[dev]"
+
+      - name: Run tests
+        run:  python -m pytest tests
+        # if running out of memory in future, add markers in future
+        # might want to have an action slow at some point if things are slow
