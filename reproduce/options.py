@@ -265,12 +265,15 @@ def parse_arguments_for_preprocess():
                         default="unique_only_in_val", help="some videos are of the same child, this policy dictates what to do with those.")
     parser.add_argument("--train_val_disjoint", action="store_true", help="if true, train and validation sets will never contain same child")
     parser.add_argument("--val_percent", type=float, default=0.2, help="desired percent of validation set")
-    parser.add_argument("--face_detector_confidence", type=float, default=0.7, help="confidence threshold for face detector")
+    parser.add_argument("--face_detector_confidence", type=float, default=0.7, help="confidence threshold for opencv_dnn face detector")
+    parser.add_argument("--retinaface_confidence", type=float, default=0.9, help="confidence threshold for retinaface detector")
     parser.add_argument("--gpu_id", type=int, default=-1, help="Which GPU to use (or -1 for cpu)")
     parser.add_argument("--log", help="if present, writes log to this path")
     parser.add_argument("--seed", type=int, default=43, help="random seed (controls split selection)")
     parser.add_argument("-v", "--verbosity", type=str, choices=["debug", "info", "warning"], default="info",
                         help="Selects verbosity level")
+    parser.add_argument("--fd_model", type=str, choices=["retinaface, opencv_dnn"], default="retinaface",
+                        help="the face detector model used. opencv_dnn may be more suitable for cpu usage if speed is priority over accuracy")
     args = parser.parse_args()
     args.raw_dataset_path = Path(args.raw_dataset_path)
     if not args.raw_dataset_path.is_dir():
@@ -299,8 +302,14 @@ def parse_arguments_for_preprocess():
     args.multi_face_folder = args.output_folder / "multi_face"
     args.face_data_folder = args.output_folder / "infant_vs_others"
     args.fc_model = Path(args.fc_model)
-    args.face_model_file = Path("models", "face_model.caffemodel")
-    args.config_file = Path("models", "config.prototxt")
+    if args.fd_model == "retinaface":
+        args.face_model_file = Path("models", "Resnet50_Final.pth")
+        args.network = "resnet50"
+    elif args.fd_model == "opencv_dnn":
+        args.face_model_file = Path("models", "face_model.caffemodel")
+        args.config_file = Path("models", "config.prototxt")
+    else:
+        raise NotImplementedError
     if args.gpu_id == -1:
         args.device = "cpu"
     else:

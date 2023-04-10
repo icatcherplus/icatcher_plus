@@ -16,6 +16,8 @@ import options
 import parsers
 import video
 import csv
+from face_detector import detect_face_opencv_dnn, extract_bboxes
+from face_detection import RetinaFace
 
 
 def create_annotation_split(args, csv_name):
@@ -424,34 +426,6 @@ def create_symbolic_links(train_set, val_set, args):
         os.symlink(str(src3), str(dst3))
 
 
-def detect_face_opencv_dnn(net, frame, conf_threshold):
-    """
-    Uses a pretrained face detection model to generate facial bounding boxes,
-    with the format [x, y, width, height] where [x, y] is the lower left coord
-    :param net:
-    :param frame:
-    :param conf_threshold:
-    :return:
-    """
-    frameHeight = frame.shape[0]
-    frameWidth = frame.shape[1]
-    blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300), [104, 117, 123], False, False)
-    net.setInput(blob)
-    detections = net.forward()
-    bboxes = []
-    for i in range(detections.shape[2]):
-        confidence = detections[0, 0, i, 2]
-        if confidence > conf_threshold:
-            x1 = max(int(detections[0, 0, i, 3] * frameWidth), 0)  # left side of box
-            y1 = max(int(detections[0, 0, i, 4] * frameHeight), 0)  # top side of box
-            if x1 >= frameWidth or y1 >= frameHeight:  # if they are larger than image size, bbox is invalid
-                continue
-            x2 = min(int(detections[0, 0, i, 5] * frameWidth), frameWidth)  # either right side of box or frame width
-            y2 = min(int(detections[0, 0, i, 6] * frameHeight), frameHeight)  # either the bottom side of box of frame height
-            bboxes.append([x1, y1, x2-x1, y2-y1])  # (left, top, width, height)
-    return bboxes
-
-
 def process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False):
     """
     process the dataset using the "lowest" face mechanism
@@ -466,7 +440,13 @@ def process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False
     """
     classes = {"away": 0, "left": 1, "right": 2}
     video_list = sorted(list(args.video_folder.glob("*")))
-    net = cv2.dnn.readNetFromCaffe(str(args.config_file), str(args.face_model_file))
+    # TODO: allow for training w/ retina face as well
+    if args.fd_model == "retinaface":
+        face_detector_model = RetinaFace(gpu_id=args.gpu_id, model_path=args.face_model_file, network=args.network)
+    elif args.fd_model == "opencv_dnn":
+        net = cv2.dnn.readNetFromCaffe(str(args.config_file), str(args.face_model_file))
+    else:
+        raise NotImplementedError
     for video_file in video_list:
         st_time = time.time()
         logging.info("[process_lkt_legacy] Proccessing %s" % video_file.name)
@@ -533,7 +513,15 @@ def process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False
                         assert gaze_class in classes
                         gaze_labels.append(classes[gaze_class])
                         if not gaze_labels_only:
-                            bbox = detect_face_opencv_dnn(net, frame, args.face_detector_confidence)
+                            # TODO: talk to Khaled about if parallelization is needed here... otherwise can do as implemented currently
+                            if args.fd_model == "retinaface":
+                                faces = face_detector_model(frame)
+                                faces = [face for face in faces if face[-1] >= args.retinaface_confidence]
+                                bbox = extract_bboxes(faces)
+                            elif args.fd_model == "opencv_dnn":
+                                bbox = detect_face_opencv_dnn(net, frame, args.face_detector_confidence)
+                            else:
+                                raise NotImplementedError
                             if not bbox:
                                 no_face_counter += 1
                                 face_labels.append(-2)

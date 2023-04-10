@@ -2,7 +2,7 @@ import cv2
 from PIL import Image
 from pathlib import Path
 import numpy as np
-from preprocess import build_lookit_video_dataset, build_marchman_video_dataset, detect_face_opencv_dnn
+from preprocess import build_lookit_video_dataset, build_marchman_video_dataset
 import options
 import visualize
 import logging
@@ -14,6 +14,7 @@ import video
 import time
 import collections
 from parsers import parse_illegal_transitions_file
+from face_detector import extract_bboxes, process_frames, find_bboxes, detect_face_opencv_dnn
 from face_detection import RetinaFace
 from pathos.pools import ProcessPool
 import multiprocessing as mp
@@ -192,6 +193,7 @@ def process_video(video_path, opt):
         w_end_at = raw_width
     return cap, framerate, resolution, h_start_at, w_start_at, w_end_at
 
+
 def load_models(opt):
     """
     loads all relevant neural network models to perform predictions
@@ -287,6 +289,7 @@ def get_video_paths(opt):
         raise NotImplementedError
     return video_paths, video_ids
 
+
 def create_output_streams(video_path, framerate, resolution, video_ids, opt):
     """
     creates output streams
@@ -318,7 +321,8 @@ def create_output_streams(video_path, framerate, resolution, video_ids, opt):
                 with open(prediction_output_file, "w", newline="") as f: # Write header
                     f.write("Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n")
     return video_output_file, prediction_output_file, skip
-    
+
+
 def cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt):
     if opt.show_output:
         cv2.destroyAllWindows()
@@ -335,43 +339,15 @@ def cleanup(video_output_file, prediction_output_file, answers, confidences, fra
     cap.release()
 
 
-def process_frames(cap, frames, h_start_at, w_start_at, w_end_at):
-    """
-    Takes in all frames of video and does some preprocessing before face detection.
-    """
-    processed_frames = []
-    for frame in frames:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
-        ret, image = cap.read()
-        if ret:
-            image = image[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
-            rgb_frame = image[:, :, ::-1]
-            processed_frames.append(rgb_frame)
-        else:
-            return processed_frames
-    return processed_frames
-
-
-def threshold_faces(all_faces: list, confidence_threshold: float):
-    for i, face_group in enumerate(all_faces):
-        face_group = [face for face in face_group if face[-1] >= confidence_threshold]
-        all_faces[i] = face_group
-    return all_faces
-
-
-def find_bboxes(face_detector, opt, processed_frames):
-    all_faces = []
-    batched_frames = [processed_frames[i:i + opt.fd_batch_size] for i in range(0, len(processed_frames), opt.fd_batch_size)]
-    for frame_group in batched_frames:
-        faces = face_detector(frame_group)
-        all_faces += faces
-
-    # threshold amount of faces, confidence level of 0.7
-    thresholded_faces = threshold_faces(all_faces, opt.fd_confidence_threshold)
-    return thresholded_faces
-
-
 def parallelize_face_detection(frames, face_detector, num_cpus, opt):
+    """
+    Parallelizes face detection among the amount of cpus specified
+    :param frames: list of images corresponding to video frames
+    :param face_detector: model used for face detection
+    :param num_cpus: number of cpus for parallelization
+    :param opt: options
+    :return: list of information regarding faces of each frame analyzed
+    """
 
     # create a process pool with the number of cpus specified
     pool = ProcessPool(ncpus=num_cpus)
@@ -393,25 +369,6 @@ def parallelize_face_detection(frames, face_detector, num_cpus, opt):
     return faces
 
 
-def extract_bboxes(face_group_entry):
-    """
-    Extracts the bounding box from the face detector output
-    """
-    bboxes = []
-    if face_group_entry:
-        for face in face_group_entry:
-            if type(face[0]) is tuple:
-                face = list(face[0])
-            bbox = face[0]
-            # change to width and height
-            bbox[2] -= bbox[0]
-            bbox[3] -= bbox[1]
-            bboxes.append(bbox.astype(int))
-    if not bboxes:
-        bboxes = None
-    return bboxes
-
-
 def predict_from_video(opt):
     """
     perform prediction on a stream or video file(s) using a network.
@@ -419,12 +376,6 @@ def predict_from_video(opt):
     :param opt: command line arguments
     :return:
     """
-    # check if cpu or gpu being used
-    if opt.gpu_id == -1:
-        use_cpu = True
-    else:
-        use_cpu = False
-
     # initialize
     loc = -5  # where in the sliding window to take the prediction (should be a function of opt.sliding_window_size)
     cursor = -5 # points to the frame we will write to output relative to current frame
@@ -440,6 +391,8 @@ def predict_from_video(opt):
         cursor -= max_illegal_transition_length
         if abs(cursor) > opt.sliding_window_size:
             raise ValueError("illegal_transitions_path contains transitions longer than the sliding window size")
+    # check if cpu or gpu being used
+    use_cpu = True if opt.gpu_id == -1 else False
     # loop over inputs
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
@@ -470,9 +423,12 @@ def predict_from_video(opt):
             # send all frames in to be preprocessed and have faces detected prior to running gaze detection
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             vid_frames = range(0, total_frames, 1 + opt.fd_skip_frames)  # adding step if frames are skipped
+
+            # TODO: do i need process frames here, can just make a part of parallelization? or might need to if cap can't be shared across cores
             processed_frames = process_frames(cap, vid_frames, h_start_at, w_start_at, w_end_at)
 
             # find faces and store in master
+            # TODO: can log size of batches being sent, say when a batch is completely through face detection etc.
             faces = parallelize_face_detection(processed_frames, face_detector_model, num_cpus, opt)
             processed_frames = None
 
