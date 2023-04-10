@@ -54,7 +54,8 @@ def test_extract_bboxes():
        [160.06853, 260.93158],
        [146.51126, 284.67035],
        [150.32614, 283.61874]]), 0.96128803)]
-    assert extract_bboxes(face_group_1) == [np.array([166, 154, 110, 132]), np.array([ 80, 179,  78, 125])]
+    face_bboxes = extract_bboxes(face_group_1)
+    assert np.array_equal(face_bboxes[0], np.array([166, 154, 110, 132])) and np.array_equal(face_bboxes[1], np.array([80, 179, 78, 125]))
 
     # testing nothing in face_group
     face_group_2 = []
