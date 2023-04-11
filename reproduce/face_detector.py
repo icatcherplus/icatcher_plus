@@ -1,4 +1,7 @@
 import cv2
+import numpy as np
+from pathos.pools import ProcessPool
+from functools import partial
 
 
 def threshold_faces(all_faces: list, confidence_threshold: float):
@@ -71,7 +74,7 @@ def find_bboxes(face_detector, opt, processed_frames):
         faces = face_detector(frame_group)
         all_faces += faces
 
-    # threshold amount of faces, confidence level of 0.7
+    # threshold amount of faces, confidence level based on user input
     thresholded_faces = threshold_faces(all_faces, opt.fd_confidence_threshold)
     return thresholded_faces
 
@@ -102,3 +105,28 @@ def detect_face_opencv_dnn(net, frame, conf_threshold):
             y2 = min(int(detections[0, 0, i, 6] * frameHeight), frameHeight)  # either the bottom side of box of frame height
             bboxes.append([x1, y1, x2-x1, y2-y1])  # (left, top, width, height)
     return bboxes
+
+
+def parallelize_face_detection(frames, face_detector, num_cpus, opt):
+    """
+    Parallelizes face detection among the amount of cpus specified
+    :param frames: list of images corresponding to video frames
+    :param face_detector: model used for face detection
+    :param num_cpus: number of cpus for parallelization
+    :param opt: options
+    :return: list of information regarding faces of each frame analyzed
+    """
+
+    # create a process pool with the number of cpus specified
+    pool = ProcessPool(ncpus=num_cpus)
+
+    # split the frames into even groups to distribute to each cpu
+    frame_batches = np.array_split(frames, num_cpus)
+
+    # create partial function and map it to the frame batches
+    find_bboxes_func = partial(find_bboxes, face_detector, opt)
+    faces = pool.map(find_bboxes_func, frame_batches)
+    pool.close()
+    pool.join()
+    pool.clear()
+    return faces

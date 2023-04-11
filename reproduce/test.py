@@ -14,9 +14,8 @@ import video
 import time
 import collections
 from parsers import parse_illegal_transitions_file
-from face_detector import extract_bboxes, process_frames, find_bboxes, detect_face_opencv_dnn
+from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
 from face_detection import RetinaFace
-from pathos.pools import ProcessPool
 import multiprocessing as mp
 
 class FPS:
@@ -339,36 +338,6 @@ def cleanup(video_output_file, prediction_output_file, answers, confidences, fra
     cap.release()
 
 
-def parallelize_face_detection(frames, face_detector, num_cpus, opt):
-    """
-    Parallelizes face detection among the amount of cpus specified
-    :param frames: list of images corresponding to video frames
-    :param face_detector: model used for face detection
-    :param num_cpus: number of cpus for parallelization
-    :param opt: options
-    :return: list of information regarding faces of each frame analyzed
-    """
-
-    # create a process pool with the number of cpus specified
-    pool = ProcessPool(ncpus=num_cpus)
-
-    # split the frames into even groups to distribute to each cpu
-    frame_batches = np.array_split(frames, num_cpus)
-
-    # create partial function and map it to the frame batches
-    # find_bboxes_func = partial(find_bboxes, face_detector, opt)
-    # faces = pool.map(find_bboxes_func, frame_batches)
-
-    # testing making detector into iterable
-    detectors = [face_detector] * num_cpus  #TODO: go back and try and experiment more w/ partial function so not taking up lots of memory here
-    opts = [opt] * num_cpus
-    faces = pool.map(find_bboxes, detectors, opts, frame_batches)
-    pool.close()
-    pool.join()
-    pool.clear()
-    return faces
-
-
 def predict_from_video(opt):
     """
     perform prediction on a stream or video file(s) using a network.
@@ -416,7 +385,7 @@ def predict_from_video(opt):
         last_class_text = ""  # Initialize so that we see the first class assignment as an event to record
 
         # if going to use cpu parallelization, don't allow for live stream video
-        if use_cpu and opt.fd_model == "retinaface":
+        if use_cpu and opt.fd_model == "retinaface":  # TODO: add output timing feature to show fps processing
             # figure out how many cpus can be used
             num_cpus = mp.cpu_count() - opt.num_cpus_saved
 
@@ -425,12 +394,14 @@ def predict_from_video(opt):
             vid_frames = range(0, total_frames, 1 + opt.fd_skip_frames)  # adding step if frames are skipped
 
             # TODO: do i need process frames here, can just make a part of parallelization? or might need to if cap can't be shared across cores
+            # (am i able to have multiple caps referring to the same video capture at once? will setting the frame in
+            # one change the frame of another? would guess no in mp since no shared memory.. need to test)
             processed_frames = process_frames(cap, vid_frames, h_start_at, w_start_at, w_end_at)
 
             # find faces and store in master
             # TODO: can log size of batches being sent, say when a batch is completely through face detection etc.
             faces = parallelize_face_detection(processed_frames, face_detector_model, num_cpus, opt)
-            processed_frames = None
+            del processed_frames
 
             # flatten the list
             faces = [item for sublist in faces for item in sublist]

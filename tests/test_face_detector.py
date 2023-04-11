@@ -1,24 +1,63 @@
 import cv2
 import numpy as np
+import multiprocessing as mp
 from pathlib import Path
-from reproduce.face_detector import process_frames, find_bboxes, threshold_faces, extract_bboxes
+from reproduce.face_detector import process_frames, parallelize_face_detection, threshold_faces, extract_bboxes
+from reproduce import video
+from face_detection import RetinaFace
+from PIL import Image
 
 
-# TODO: make a test video... maybe 100 frames? can read this in for process_frames and other tests
+def test_process_frames():
+    video_path = Path("video_test", "test_video.mp4")
+    test_cap = cv2.VideoCapture(str(video_path))
+    _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
 
-# def test_process_frames():
-#     video_path = Path("test_video.mp4")
-#     test_cap = cv2.VideoCapture(str(video_path))
-#     test_frames = range(0, 100)
-#     h_start_at, w_start_at, w_end_at = 0, 0, -1  # change this to be the max
-#
-#     processed_frames = process_frames(test_cap, test_frames, h_start_at, w_start_at, w_end_at)
-#
-#     image = []
-#     assert len(processed_frames) == 100
-#     assert type(processed_frames[0]) == type(image)  # whatever type an img is here, test to find out
-#
-#     # can test size of output images depending on crop
+    # get raw width for process_frames function
+    raw_width = meta_data["width"]
+    raw_height = meta_data["height"]
+    test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+    h_start_at, w_start_at, w_end_at = 0, 0, raw_width
+
+    processed_frames = process_frames(test_cap, test_frames, h_start_at, w_start_at, w_end_at)
+
+    assert len(processed_frames) == len(test_frames)  # testing that no frames were lost in process
+    assert isinstance(processed_frames[0], np.ndarray)  # testing that all processed image frames are np arrays
+    assert processed_frames[0].shape == (raw_height, raw_width, 3)  # test that size of image is same size if no crop
+
+
+def test_retina_face():
+    face_detector_model_file = Path(str(Path(__file__).parents[1]), "reproduce", "models", "Resnet50_Final.pth")
+    network_name = "resnet50"
+    face_detector_model = RetinaFace(gpu_id=-1, model_path=face_detector_model_file, network=network_name)
+
+    # bring in some example frames where faces are detected and not detected
+    image_list = []
+    for filename in ['frames_test/no_face.jpg', 'frames_test/one_face_normal.jpg', 'frames_test/three_faces.jpg']:
+        with Image.open(filename) as img:
+            # change back to format that cv2 processes when reading in video
+            img_np = np.array(img)
+            image_list.append(cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
+
+    no_face, one_face, three_faces = image_list
+
+    # testing image with no faces:
+    faces = face_detector_model(no_face)
+    faces = [face for face in faces if face[-1] >= 0.9]
+    bboxes = extract_bboxes(faces)
+    assert bboxes is None
+
+    # testing image with one face:
+    faces = face_detector_model(one_face)
+    faces = [face for face in faces if face[-1] >= 0.9]
+    bboxes = extract_bboxes(faces)
+    assert len(bboxes) == 1
+
+    # testing image with three faces:
+    faces = face_detector_model(three_faces)
+    faces = [face for face in faces if face[-1] >= 0.9]
+    bboxes = extract_bboxes(faces)
+    assert len(bboxes) == 3
 
 
 def test_threshold_faces():
@@ -36,12 +75,33 @@ def test_threshold_faces():
     assert threshold_faces(all_faces, 0.5) == all_faces
 
 
-def test_find_bboxes():
-    pass
-
-
 def test_parallelize_face_detection():
-    pass
+    video_path = Path("video_test", "test_video.mp4")
+    test_cap = cv2.VideoCapture(str(video_path))
+    _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
+    raw_width = meta_data["width"]
+    test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+    h_start_at, w_start_at, w_end_at = 0, 0, raw_width
+
+    processed_frames = process_frames(test_cap, test_frames, h_start_at, w_start_at, w_end_at)
+
+    # test for Retina Face
+    face_detector_model_file = Path(str(Path(__file__).parents[1]), "reproduce", "models", "Resnet50_Final.pth")
+    network_name = "resnet50"
+    face_detector_model = RetinaFace(gpu_id=-1, model_path=face_detector_model_file, network=network_name)
+
+    class Opt_Container:
+        def __init__(self):
+            self.fd_batch_size = 16
+            self.fd_confidence_threshold = 0.9
+
+    test_opt = Opt_Container()
+
+    # test with max available computers
+    num_cpus = mp.cpu_count()
+    faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
+    assert faces is not None
+    # insert comparison against ground truth manual annotation here
 
 
 def test_extract_bboxes():
