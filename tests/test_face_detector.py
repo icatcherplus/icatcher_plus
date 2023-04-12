@@ -21,7 +21,6 @@ all_faces = [
 def test_process_frames():
     video_path = os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
-    _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
 
     # testing that video is read in correctly
     ret, frame = test_cap.read()
@@ -79,10 +78,8 @@ def test_parallelize_face_detection():
     test_opt = Opt_Container()
 
     # test with max available computers
-    num_cpus = mp.cpu_count()
-    print(f'num cpus: {num_cpus}')
+    num_cpus = mp.cpu_count() - 1
     faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
-    print(len(faces))
     faces = [item for sublist in faces for item in sublist]
     master_bboxes = [extract_bboxes(face_group) for face_group in faces]
 
