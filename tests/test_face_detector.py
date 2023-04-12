@@ -69,10 +69,8 @@ def test_threshold_faces(confidence_threshold, output):
 def test_parallelize_face_detection():
     video_path = os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
-    _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
-    raw_width = meta_data["width"]
     test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-    h_start_at, w_start_at, w_end_at = 0, 0, raw_width
+    h_start_at, w_start_at, w_end_at = 0, 0, 640
 
     processed_frames = process_frames(test_cap, test_frames, h_start_at, w_start_at, w_end_at)
     face_detector_model = create_retina_model()
