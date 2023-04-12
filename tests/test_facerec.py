@@ -1,13 +1,13 @@
 import pytest
 import sys
+sys.path.append("./reproduce/")
 import requests
 import shutil
 import os
 from PIL import Image, ImageChops, ImageStat
 from io import BytesIO
 import face_recognition 
-
-from test import FaceRec
+from reproduce.test import FaceRec
 
 face_image_link = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=687&q=80"
 failure_mode_image_link= "https://www.cdc.gov/healthypets/images/pets/cute-dog-headshot.jpg"
