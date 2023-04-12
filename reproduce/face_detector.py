@@ -14,7 +14,7 @@ def download_from_gdrive(file_id, output_name):
         print(f"File with ID {file_id} already exists in the local directory.")
         return
 
-    os.mkdir(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'), exist_ok=True)
+    os.mkdir(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'))
     download_directory = os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
 
     # Download the file
