@@ -25,6 +25,7 @@ dependencies = [
     "face-detection@git+https://github.com/elliottzheng/face-detection.git",
     "pandas",
     "gdown",
+    "pathos",
 ]
 requires-python = ">=3.9"
 
