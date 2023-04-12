@@ -1,7 +1,40 @@
 import cv2
+import gdown
+import os
 import numpy as np
 from pathos.pools import ProcessPool
 from functools import partial
+from face_detection import RetinaFace
+from pathlib import Path
+
+
+def download_from_gdrive(file_id, download_directory, output_name):
+    # Check if the file already exists in the local directory
+    if os.path.exists(os.path.join(download_directory, output_name)):
+        print(f"File with ID {file_id} already exists in the local directory.")
+        return
+
+    # Download the file
+    url = f"https://drive.google.com/uc?id={file_id}"
+    output = os.path.join(download_directory, output_name)
+    gdown.download(url, output, quiet=False)
+
+    print(f"File with ID {file_id} has been downloaded to the local directory.")
+
+
+def create_retina_model(gpu_id=-1):
+    """
+    Downloads retina face weights if not already in models directory, creates retina face model.
+    :return: the face detector model
+    """
+    file_id = '14KX6VqF69MdSPk3Tr9PlDYbq7ArpdNUW'
+    output_name = 'Resnet50_Final.pth'
+    download_directory = os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
+    # download_directory = 'icatcher_plus/reproduce/models/'
+    download_from_gdrive(file_id, download_directory, output_name)
+    face_detector_model_file = Path(download_directory, output_name)
+    face_detector_model = RetinaFace(gpu_id=gpu_id, model_path=face_detector_model_file, network="resnet50")
+    return face_detector_model
 
 
 def threshold_faces(all_faces: list, confidence_threshold: float):

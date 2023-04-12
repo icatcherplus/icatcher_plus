@@ -21,3 +21,4 @@ dependencies:
   - pip:
     - opencv-python
     - git+https://github.com/elliottzheng/face-detection.git
+    - gdown

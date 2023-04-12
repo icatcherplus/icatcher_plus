@@ -1,17 +1,32 @@
+import pytest
+import os
 import cv2
 import numpy as np
 import multiprocessing as mp
+import pandas as pd
 from pathlib import Path
-from reproduce.face_detector import process_frames, parallelize_face_detection, threshold_faces, extract_bboxes
+from reproduce.face_detector import process_frames, parallelize_face_detection, threshold_faces, extract_bboxes, create_retina_model
 from reproduce import video
-from face_detection import RetinaFace
 from PIL import Image
 
+# def make_opt(**kwargs):  # dict(framerate=20, path=..., ...) -> opt
+#     return OptContainer ...
+
+# used for testing threshold faces
+all_faces = [
+    [(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)],
+    [(30, 30, 40, 40, 0.7), (40, 40, 50, 50, 0.6)]
+]
 
 def test_process_frames():
     video_path = Path("video_test", "test_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
+
+    # testing that video is read in correctly
+    ret, frame = test_cap.read()
+    assert ret
+    assert frame is not None
 
     # get raw width for process_frames function
     raw_width = meta_data["width"]
@@ -26,53 +41,28 @@ def test_process_frames():
     assert processed_frames[0].shape == (raw_height, raw_width, 3)  # test that size of image is same size if no crop
 
 
-def test_retina_face():
-    face_detector_model_file = Path(str(Path(__file__).parents[1]), "reproduce", "models", "Resnet50_Final.pth")
-    network_name = "resnet50"
-    face_detector_model = RetinaFace(gpu_id=-1, model_path=face_detector_model_file, network=network_name)
-
-    # bring in some example frames where faces are detected and not detected
-    image_list = []
-    for filename in ['frames_test/no_face.jpg', 'frames_test/one_face_normal.jpg', 'frames_test/three_faces.jpg']:
-        with Image.open(filename) as img:
-            # change back to format that cv2 processes when reading in video
-            img_np = np.array(img)
-            image_list.append(cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR))
-
-    no_face, one_face, three_faces = image_list
-
-    # testing image with no faces:
-    faces = face_detector_model(no_face)
+@pytest.mark.parametrize('filename,num_bounding_boxes', [
+    ('no_face.jpg', 0),
+    ('one_face_normal.jpg', 1),
+    ('three_faces.jpg', 3),
+])
+def test_retina_face(filename, num_bounding_boxes):
+    face_detector_model = create_retina_model()
+    with Image.open(os.path.join('frames_test', filename)) as img:  # change image to mirror cv2 frame
+        img_np = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    faces = face_detector_model(img_np)
     faces = [face for face in faces if face[-1] >= 0.9]
     bboxes = extract_bboxes(faces)
-    assert bboxes is None
-
-    # testing image with one face:
-    faces = face_detector_model(one_face)
-    faces = [face for face in faces if face[-1] >= 0.9]
-    bboxes = extract_bboxes(faces)
-    assert len(bboxes) == 1
-
-    # testing image with three faces:
-    faces = face_detector_model(three_faces)
-    faces = [face for face in faces if face[-1] >= 0.9]
-    bboxes = extract_bboxes(faces)
-    assert len(bboxes) == 3
+    assert (len(bboxes) == num_bounding_boxes) if num_bounding_boxes > 0 else bboxes is None
 
 
-def test_threshold_faces():
-    all_faces = [
-        [(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)],
-        [(30, 30, 40, 40, 0.7), (40, 40, 50, 50, 0.6)]
-    ]
-    confidence_threshold = 0.75
-    expected_output = [
-        [(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)],
-        []
-    ]
-    assert threshold_faces(all_faces, confidence_threshold) == expected_output
-    assert threshold_faces(all_faces, 0.9) == [[(0, 0, 10, 10, 0.9)], []]
-    assert threshold_faces(all_faces, 0.5) == all_faces
+@pytest.mark.parametrize('confidence_threshold,output', [
+    (0.75, [[(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)], []]),
+    (0.9, [[(0, 0, 10, 10, 0.9)], []]),
+    (0.5, all_faces),
+])
+def test_threshold_faces(confidence_threshold, output):
+    assert threshold_faces(all_faces, confidence_threshold) == output
 
 
 def test_parallelize_face_detection():
@@ -84,11 +74,7 @@ def test_parallelize_face_detection():
     h_start_at, w_start_at, w_end_at = 0, 0, raw_width
 
     processed_frames = process_frames(test_cap, test_frames, h_start_at, w_start_at, w_end_at)
-
-    # test for Retina Face
-    face_detector_model_file = Path(str(Path(__file__).parents[1]), "reproduce", "models", "Resnet50_Final.pth")
-    network_name = "resnet50"
-    face_detector_model = RetinaFace(gpu_id=-1, model_path=face_detector_model_file, network=network_name)
+    face_detector_model = create_retina_model()
 
     class Opt_Container:
         def __init__(self):
@@ -100,8 +86,19 @@ def test_parallelize_face_detection():
     # test with max available computers
     num_cpus = mp.cpu_count()
     faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
-    assert faces is not None
-    # insert comparison against ground truth manual annotation here
+    faces = [item for sublist in faces for item in sublist]
+    master_bboxes = [extract_bboxes(face_group) for face_group in faces]
+
+    # read in manual annotation
+    ground_truth = pd.read_csv(str(Path("video_test", "test_video_manual_annotation.csv")))
+    ground_truth = ground_truth.loc[0, :].values.flatten().tolist()
+    assert len(ground_truth) == len(master_bboxes)
+
+    # get face counts of retina face w/ parallelization
+    retina_face_counts = [len(face) if face is not None else 0 for face in master_bboxes]
+
+    matching_percentage = (sum(x == y for x, y in zip(ground_truth, retina_face_counts)) / len(retina_face_counts)) * 100
+    assert matching_percentage >= 95  # make sure retina face has at least 95% accuracy on face counts
 
 
 def test_extract_bboxes():
