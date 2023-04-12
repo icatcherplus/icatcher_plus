@@ -48,7 +48,8 @@ def test_process_frames():
 ])
 def test_retina_face(filename, num_bounding_boxes):
     face_detector_model = create_retina_model()
-    with Image.open(os.path.join('frames_test', filename)) as img:  # change image to mirror cv2 frame
+    os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
+    with Image.open(os.path.join(str(Path(__file__).parents[1]), 'tests', 'frames_test', filename)) as img:  # change image to mirror cv2 frame
         img_np = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     faces = face_detector_model(img_np)
     faces = [face for face in faces if face[-1] >= 0.9]
