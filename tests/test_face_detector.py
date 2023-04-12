@@ -89,7 +89,8 @@ def test_parallelize_face_detection():
     master_bboxes = [extract_bboxes(face_group) for face_group in faces]
 
     # read in manual annotation
-    ground_truth = pd.read_csv(str(Path("video_test", "test_video_manual_annotation.csv")))
+    os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video_manual_annotation.csv")
+    ground_truth = pd.read_csv(os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video_manual_annotation.csv"))
     ground_truth = ground_truth.loc[0, :].values.flatten().tolist()
     assert len(ground_truth) == len(master_bboxes)
 
