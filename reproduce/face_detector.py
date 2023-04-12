@@ -8,11 +8,14 @@ from face_detection import RetinaFace
 from pathlib import Path
 
 
-def download_from_gdrive(file_id, download_directory, output_name):
+def download_from_gdrive(file_id, output_name):
     # Check if the file already exists in the local directory
-    if os.path.exists(os.path.join(download_directory, output_name)):
+    if os.path.exists(os.path.join(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'), output_name)):
         print(f"File with ID {file_id} already exists in the local directory.")
         return
+
+    os.mkdir(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'), exist_ok=True)
+    download_directory = os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
 
     # Download the file
     url = f"https://drive.google.com/uc?id={file_id}"
@@ -29,10 +32,10 @@ def create_retina_model(gpu_id=-1):
     """
     file_id = '14KX6VqF69MdSPk3Tr9PlDYbq7ArpdNUW'
     output_name = 'Resnet50_Final.pth'
-    os.mkdir(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'))
-    download_directory = os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
+
     # download_directory = 'icatcher_plus/reproduce/models/'
-    download_from_gdrive(file_id, download_directory, output_name)
+    download_from_gdrive(file_id, output_name)
+    download_directory = os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
     face_detector_model_file = Path(download_directory, output_name)
     face_detector_model = RetinaFace(gpu_id=gpu_id, model_path=face_detector_model_file, network="resnet50")
     return face_detector_model
