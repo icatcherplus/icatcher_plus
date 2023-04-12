@@ -41,7 +41,7 @@ def test_process_frames():
     assert processed_frames[0].shape == (raw_height, raw_width, 3)  # test that size of image is same size if no crop
 
 
-@pytest.mark.parametrize('filename,num_bounding_boxes', [
+@pytest.mark.parametrize('filename, num_bounding_boxes', [
     ('no_face.jpg', 0),
     ('one_face_normal.jpg', 1),
     ('three_faces.jpg', 3),

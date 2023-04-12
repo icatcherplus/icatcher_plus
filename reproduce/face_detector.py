@@ -29,6 +29,7 @@ def create_retina_model(gpu_id=-1):
     """
     file_id = '14KX6VqF69MdSPk3Tr9PlDYbq7ArpdNUW'
     output_name = 'Resnet50_Final.pth'
+    os.mkdir(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'))
     download_directory = os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
     # download_directory = 'icatcher_plus/reproduce/models/'
     download_from_gdrive(file_id, download_directory, output_name)
