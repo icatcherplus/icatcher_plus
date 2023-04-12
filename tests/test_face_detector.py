@@ -78,7 +78,7 @@ def test_parallelize_face_detection():
     test_opt = Opt_Container()
 
     # test with max available computers
-    num_cpus = mp.cpu_count() - 1
+    num_cpus = mp.cpu_count()
     faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
     faces = [item for sublist in faces for item in sublist]
     master_bboxes = [extract_bboxes(face_group) for face_group in faces]
