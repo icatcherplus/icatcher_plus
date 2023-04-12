@@ -23,7 +23,8 @@ dependencies = [
     "ffmpeg-python",
     "opencv-python",
     "pooch",
-    "face-recognition"
+    "face-recognition",
+    "tqdm"
 ]
 requires-python = ">=3.9"
 
