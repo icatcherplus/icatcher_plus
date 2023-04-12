@@ -23,8 +23,8 @@ dependencies = [
     "opencv-python",
     "pooch",
     "face-detection@git+https://github.com/elliottzheng/face-detection.git",
-    "pandas"
-    "scipy"
+    "pandas",
+    "scipy",
     "tqdm"
 ]
 requires-python = ">=3.9"
