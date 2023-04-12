@@ -19,7 +19,7 @@ all_faces = [
 ]
 
 def test_process_frames():
-    video_path = Path("video_test", "test_video.mp4")
+    video_path = os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
 
@@ -67,7 +67,7 @@ def test_threshold_faces(confidence_threshold, output):
 
 
 def test_parallelize_face_detection():
-    video_path = Path("video_test", "test_video.mp4")
+    video_path = os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     _, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
     raw_width = meta_data["width"]
