@@ -22,7 +22,6 @@ dependencies = [
     "ffmpeg-python",
     "opencv-python",
     "pooch",
-    "face-detection@git+https://github.com/elliottzheng/face-detection.git"
 ]
 requires-python = ">=3.9"
 
