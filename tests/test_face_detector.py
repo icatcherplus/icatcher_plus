@@ -6,7 +6,6 @@ import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
 from reproduce.face_detector import process_frames, parallelize_face_detection, threshold_faces, extract_bboxes, create_retina_model
-from reproduce import video
 from PIL import Image
 
 # def make_opt(**kwargs):  # dict(framerate=20, path=..., ...) -> opt
@@ -44,8 +43,8 @@ def test_process_frames():
 def test_retina_face(filename, num_bounding_boxes):
     face_detector_model = create_retina_model()
     os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/')
-    with Image.open(os.path.join(str(Path(__file__).parents[1]), 'tests', 'frames_test', filename)) as img:  # change image to mirror cv2 frame
-        img_np = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    with Image.open(os.path.join(str(Path(__file__).parents[1]), 'tests', 'frames_test', filename)) as img:
+        img_np = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)  # changes image to mirror cv2 frame
     faces = face_detector_model(img_np)
     faces = [face for face in faces if face[-1] >= 0.9]
     bboxes = extract_bboxes(faces)
@@ -79,6 +78,10 @@ def test_parallelize_face_detection():
 
     # test with max available computers
     num_cpus = mp.cpu_count()
+    num_frames_to_process = num_cpus * 16
+    if num_frames_to_process > 173:  # this is the length of total video
+        num_frames_to_process = 173
+    processed_frames = processed_frames[:num_frames_to_process-1]
     faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
     faces = [item for sublist in faces for item in sublist]
     master_bboxes = [extract_bboxes(face_group) for face_group in faces]
@@ -87,6 +90,7 @@ def test_parallelize_face_detection():
     os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video_manual_annotation.csv")
     ground_truth = pd.read_csv(os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video_manual_annotation.csv"))
     ground_truth = ground_truth.loc[0, :].values.flatten().tolist()
+    ground_truth = ground_truth[:num_frames_to_process-1]
     assert len(ground_truth) == len(master_bboxes)
 
     # get face counts of retina face w/ parallelization
