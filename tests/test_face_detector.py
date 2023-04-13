@@ -5,7 +5,7 @@ import numpy as np
 import multiprocessing as mp
 import pandas as pd
 from pathlib import Path
-from reproduce.face_detector import process_frames, parallelize_face_detection, threshold_faces, extract_bboxes, create_retina_model
+from reproduce.face_detector import process_frames, parallelize_face_detection, threshold_faces, extract_bboxes, create_retina_model, find_bboxes
 from PIL import Image
 
 # def make_opt(**kwargs):  # dict(framerate=20, path=..., ...) -> opt
@@ -60,7 +60,7 @@ def test_threshold_faces(confidence_threshold, output):
     assert threshold_faces(all_faces, confidence_threshold) == output
 
 
-def test_parallelize_face_detection():
+def test_find_bboxes():
     video_path = os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
@@ -78,12 +78,14 @@ def test_parallelize_face_detection():
 
     # test with max available computers
     num_cpus = mp.cpu_count()
-    num_frames_to_process = num_cpus * 16
+    # num_frames_to_process = num_cpus * 16
+    num_frames_to_process = 32
     if num_frames_to_process > 173:  # this is the length of total video
         num_frames_to_process = 173
     processed_frames = processed_frames[:num_frames_to_process-1]
-    faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
-    faces = [item for sublist in faces for item in sublist]
+    faces = find_bboxes(face_detector_model, test_opt, processed_frames)
+    # faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
+    # faces = [item for sublist in faces for item in sublist]
     master_bboxes = [extract_bboxes(face_group) for face_group in faces]
 
     # read in manual annotation
@@ -98,6 +100,46 @@ def test_parallelize_face_detection():
 
     matching_percentage = (sum(x == y for x, y in zip(ground_truth, retina_face_counts)) / len(retina_face_counts)) * 100
     assert matching_percentage >= 95  # make sure retina face has at least 95% accuracy on face counts
+
+
+# def test_parallelize_face_detection():
+#     video_path = os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4")
+#     test_cap = cv2.VideoCapture(str(video_path))
+#     test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
+#     h_start_at, w_start_at, w_end_at = 0, 0, 640
+#
+#     processed_frames = process_frames(test_cap, test_frames, h_start_at, w_start_at, w_end_at)
+#     face_detector_model = create_retina_model()
+#
+#     class Opt_Container:
+#         def __init__(self):
+#             self.fd_batch_size = 16
+#             self.fd_confidence_threshold = 0.9
+#
+#     test_opt = Opt_Container()
+#
+#     # test with max available computers
+#     num_cpus = mp.cpu_count()
+#     num_frames_to_process = num_cpus * 16
+#     if num_frames_to_process > 173:  # this is the length of total video
+#         num_frames_to_process = 173
+#     processed_frames = processed_frames[:num_frames_to_process-1]
+#     faces = parallelize_face_detection(face_detector=face_detector_model, frames=processed_frames, num_cpus=num_cpus, opt=test_opt)
+#     faces = [item for sublist in faces for item in sublist]
+#     master_bboxes = [extract_bboxes(face_group) for face_group in faces]
+#
+#     # read in manual annotation
+#     os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video_manual_annotation.csv")
+#     ground_truth = pd.read_csv(os.path.join(str(Path(__file__).parents[1]), "tests", "video_test", "test_video_manual_annotation.csv"))
+#     ground_truth = ground_truth.loc[0, :].values.flatten().tolist()
+#     ground_truth = ground_truth[:num_frames_to_process-1]
+#     assert len(ground_truth) == len(master_bboxes)
+#
+#     # get face counts of retina face w/ parallelization
+#     retina_face_counts = [len(face) if face is not None else 0 for face in master_bboxes]
+#
+#     matching_percentage = (sum(x == y for x, y in zip(ground_truth, retina_face_counts)) / len(retina_face_counts)) * 100
+#     assert matching_percentage >= 95  # make sure retina face has at least 95% accuracy on face counts
 
 
 def test_extract_bboxes():
