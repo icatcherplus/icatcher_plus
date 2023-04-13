@@ -14,7 +14,7 @@ import video
 import time
 import collections
 from parsers import parse_illegal_transitions_file
-from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
+from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn, create_retina_model
 from face_detection import RetinaFace
 import multiprocessing as mp
 
@@ -96,6 +96,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt):
         bbox = min(bboxes, key=lambda x: x[3] - x[1])
     return bbox
 
+
 def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions):
     """
     this method fixes illegal transitions happening in answers at [loc-max_trans_len+1, loc] inclusive
@@ -110,6 +111,7 @@ def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corr
             for spot in buffer_splits[0].tolist():
                 confidences[loc - len_trans + 1 + spot] = -1
     return answers, confidences
+
 
 def extract_crop(frame, bbox, opt):
     """
@@ -154,7 +156,6 @@ def process_video(video_path, opt):
     """
     cap = cv2.VideoCapture(str(video_path))
     # Get some basic info about the video
-
     vfr, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
     framerate = video.get_fps(video_path)
     if vfr:
@@ -200,9 +201,7 @@ def load_models(opt):
     :return all nn models
     """
     if opt.fd_model == "retinaface":  # option for retina face vs. previous opencv dnn model
-        face_detector_model_file = Path("models", "Resnet50_Final.pth")
-        network_name = "resnet50"
-        face_detector_model = RetinaFace(gpu_id=opt.gpu_id, model_path=face_detector_model_file, network=network_name)
+        face_detector_model = create_retina_model(gpu_id=opt.gpu_id)
     elif opt.fd_model == "opencv_dnn":
         face_detector_model_file = Path("models", "face_model.caffemodel")
         config_file = Path("models", "config.prototxt")
@@ -388,22 +387,16 @@ def predict_from_video(opt):
         if use_cpu and opt.fd_model == "retinaface":  # TODO: add output timing feature to show fps processing
             # figure out how many cpus can be used
             num_cpus = mp.cpu_count() - opt.num_cpus_saved
+            assert num_cpus > 0
 
             # send all frames in to be preprocessed and have faces detected prior to running gaze detection
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             vid_frames = range(0, total_frames, 1 + opt.fd_skip_frames)  # adding step if frames are skipped
-
-            # TODO: do i need process frames here, can just make a part of parallelization? or might need to if cap can't be shared across cores
-            # (am i able to have multiple caps referring to the same video capture at once? will setting the frame in
-            # one change the frame of another? would guess no in mp since no shared memory.. need to test)
             processed_frames = process_frames(cap, vid_frames, h_start_at, w_start_at, w_end_at)
-
-            # find faces and store in master
-            # TODO: can log size of batches being sent, say when a batch is completely through face detection etc.
             faces = parallelize_face_detection(processed_frames, face_detector_model, num_cpus, opt)
             del processed_frames
 
-            # flatten the list
+            # flatten the list and extract bounding boxes
             faces = [item for sublist in faces for item in sublist]
             master_bboxes = [extract_bboxes(face_group) for face_group in faces]
 
@@ -411,10 +404,9 @@ def predict_from_video(opt):
             if opt.fd_skip_frames > 0:
                 master_bboxes = np.repeat(master_bboxes, opt.fd_skip_frames + 1)
 
-            # reset frames to 0
-            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # reset frames to 0
 
-        # loop over frames (refactor !)
+        # loop over frames
         ret_val, frame = cap.read()
         while frame is not None:
             frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
@@ -428,7 +420,6 @@ def predict_from_video(opt):
                 faces = face_detector_model(frame)
                 faces = [face for face in faces if face[-1] >= opt.fd_confidence_threshold]
                 bboxes = extract_bboxes(faces)
-
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
             # if len(cv2_bboxes) > 2:
             #     visualize.temp_hook(frame, cv2_bboxes, frame_count)
