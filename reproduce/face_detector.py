@@ -1,14 +1,21 @@
+import os
+from functools import partial
+from pathlib import Path
 import cv2
 import gdown
-import os
 import numpy as np
 from pathos.pools import ProcessPool
-from functools import partial
 from face_detection import RetinaFace
-from pathlib import Path
 
 
-def download_from_gdrive(file_id, output_name):
+def download_from_gdrive(file_id: str, output_name: str):
+    """
+    Checks if the model weights have been downloaded and, if not, downloads from google drive into the
+    correct directory.
+    :param file_id: id associated with the download file
+    :param output_name: the name this file should be saved under
+    :return: None
+    """
     # Check if the file already exists in the local directory
     if os.path.exists(os.path.join(os.path.join(str(Path(__file__).parents[1]), 'reproduce/models/'), output_name)):
         print(f"File with ID {file_id} already exists in the local directory.")
@@ -63,7 +70,7 @@ def extract_bboxes(face_group_entry):
     bboxes = []
     if face_group_entry:
         for face in face_group_entry:
-            if type(face[0]) is tuple:
+            if isinstance(face[0], tuple):
                 face = list(face[0])
             bbox = face[0]
             # change to width and height
@@ -125,8 +132,8 @@ def detect_face_opencv_dnn(net, frame, conf_threshold):
     :param conf_threshold:
     :return:
     """
-    frameHeight = frame.shape[0]
-    frameWidth = frame.shape[1]
+    frame_height = frame.shape[0]
+    frame_width = frame.shape[1]
     blob = cv2.dnn.blobFromImage(frame, 1.0, (300, 300), [104, 117, 123], False, False)
     net.setInput(blob)
     detections = net.forward()
@@ -134,12 +141,12 @@ def detect_face_opencv_dnn(net, frame, conf_threshold):
     for i in range(detections.shape[2]):
         confidence = detections[0, 0, i, 2]
         if confidence > conf_threshold:
-            x1 = max(int(detections[0, 0, i, 3] * frameWidth), 0)  # left side of box
-            y1 = max(int(detections[0, 0, i, 4] * frameHeight), 0)  # top side of box
-            if x1 >= frameWidth or y1 >= frameHeight:  # if they are larger than image size, bbox is invalid
+            x1 = max(int(detections[0, 0, i, 3] * frame_width), 0)  # left side of box
+            y1 = max(int(detections[0, 0, i, 4] * frame_height), 0)  # top side of box
+            if x1 >= frame_width or y1 >= frame_height:  # if they are larger than image size, bbox is invalid
                 continue
-            x2 = min(int(detections[0, 0, i, 5] * frameWidth), frameWidth)  # either right side of box or frame width
-            y2 = min(int(detections[0, 0, i, 6] * frameHeight), frameHeight)  # either the bottom side of box of frame height
+            x2 = min(int(detections[0, 0, i, 5] * frame_width), frame_width)  # either right side of box or frame width
+            y2 = min(int(detections[0, 0, i, 6] * frame_height), frame_height)  # either the bottom side of box of frame height
             bboxes.append([x1, y1, x2-x1, y2-y1])  # (left, top, width, height)
     return bboxes
 
