@@ -24,8 +24,10 @@ dependencies = [
     "pooch",
     "face-detection@git+https://github.com/elliottzheng/face-detection.git",
     "pandas",
+    "gdown",
+    "pathos",
     "scipy",
-    "tqdm"
+    "tqdm",
 ]
 requires-python = ">=3.9"
 

@@ -2,7 +2,7 @@ import cv2
 from PIL import Image
 from pathlib import Path
 import numpy as np
-from preprocess import detect_face_opencv_dnn, build_lookit_video_dataset, build_marchman_video_dataset
+from preprocess import build_lookit_video_dataset, build_marchman_video_dataset
 import options
 import visualize
 import logging
@@ -14,6 +14,9 @@ import video
 import time
 import collections
 from parsers import parse_illegal_transitions_file
+from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn, create_retina_model
+from face_detection import RetinaFace
+import multiprocessing as mp
 
 class FPS:
     """
@@ -46,7 +49,7 @@ class FaceClassifierArgs:
         self.dropout = 0.0
 
 
-def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
+def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt):
     """
     selects a correct face from candidates bbox in frame
     :param bboxes: the bounding boxes of candidates
@@ -55,6 +58,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
     :param fc_data_transforms: the transformations to apply to the images before fc_model sees them
     :param hor: the last known horizontal correct face location
     :param ver: the last known vertical correct face location
+    :param opt: used to pull the device id
     :return: the cropped face and its bbox data
     """
     if fc_model:
@@ -74,7 +78,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
             img = fc_data_transforms['val'](img)
             faces.append(img)
         centers = np.stack(centers)
-        faces = torch.stack(faces).to(fc_model.device)
+        faces = torch.stack(faces).to(opt.device)
         output = fc_model(faces)
         _, preds = torch.max(output, 1)
         preds = preds.cpu().numpy()
@@ -92,6 +96,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver):
         bbox = min(bboxes, key=lambda x: x[3] - x[1])
     return bbox
 
+
 def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions):
     """
     this method fixes illegal transitions happening in answers at [loc-max_trans_len+1, loc] inclusive
@@ -107,6 +112,7 @@ def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corr
                 confidences[loc - len_trans + 1 + spot] = -1
     return answers, confidences
 
+
 def extract_crop(frame, bbox, opt):
     """
     extracts a crop from a frame using bbox, and transforms it
@@ -117,6 +123,10 @@ def extract_crop(frame, bbox, opt):
     """
     if bbox is None:
         return None, None
+
+    # make sure no negatives being fed into extract crop
+    bbox = [0 if x < 0 else x for x in bbox]
+
     img_shape = np.array(frame.shape)
     face_box = np.array([bbox[1], bbox[1] + bbox[3], bbox[0], bbox[0] + bbox[2]])
     crop = frame[bbox[1]:bbox[1] + bbox[3], bbox[0]:bbox[0] + bbox[2]]
@@ -146,7 +156,6 @@ def process_video(video_path, opt):
     """
     cap = cv2.VideoCapture(str(video_path))
     # Get some basic info about the video
-
     vfr, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
     framerate = video.get_fps(video_path)
     if vfr:
@@ -184,14 +193,21 @@ def process_video(video_path, opt):
         w_end_at = raw_width
     return cap, framerate, resolution, h_start_at, w_start_at, w_end_at
 
+
 def load_models(opt):
     """
     loads all relevant neural network models to perform predictions
     :param opt: command line options
     :return all nn models
     """
-    face_detector_model_file = Path("models", "face_model.caffemodel")
-    config_file = Path("models", "config.prototxt")
+    if opt.fd_model == "retinaface":  # option for retina face vs. previous opencv dnn model
+        face_detector_model = create_retina_model(gpu_id=opt.gpu_id)
+    elif opt.fd_model == "opencv_dnn":
+        face_detector_model_file = Path("models", "face_model.caffemodel")
+        config_file = Path("models", "config.prototxt")
+        face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))
+    else:
+        raise NotImplementedError
     path_to_gaze_model = opt.model
     if opt.architecture == "icatcher+":
         gaze_model = models.GazeCodingModel(opt).to(opt.device)
@@ -228,8 +244,6 @@ def load_models(opt):
     else:
         face_classifier_model = None
         face_classifier_data_transforms = None
-    # load face extractor model
-    face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))    
     return gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms
 
 def get_video_paths(opt):
@@ -273,6 +287,7 @@ def get_video_paths(opt):
         raise NotImplementedError
     return video_paths, video_ids
 
+
 def create_output_streams(video_path, framerate, resolution, video_ids, opt):
     """
     creates output streams
@@ -304,7 +319,8 @@ def create_output_streams(video_path, framerate, resolution, video_ids, opt):
                 with open(prediction_output_file, "w", newline="") as f: # Write header
                     f.write("Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n")
     return video_output_file, prediction_output_file, skip
-    
+
+
 def cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt):
     if opt.show_output:
         cv2.destroyAllWindows()
@@ -319,6 +335,7 @@ def cleanup(video_output_file, prediction_output_file, answers, confidences, fra
         elif opt.output_format == "compressed":
             np.savez(prediction_output_file, answers, confidences)
     cap.release()
+
 
 def predict_from_video(opt):
     """
@@ -342,6 +359,8 @@ def predict_from_video(opt):
         cursor -= max_illegal_transition_length
         if abs(cursor) > opt.sliding_window_size:
             raise ValueError("illegal_transitions_path contains transitions longer than the sliding window size")
+    # check if cpu or gpu being used
+    use_cpu = True if opt.gpu_id == -1 else False
     # loop over inputs
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
@@ -363,16 +382,48 @@ def predict_from_video(opt):
         hor, ver = 0.5, 1  # initial guess for face location
         cur_fps = FPS()  # for debugging purposes
         last_class_text = ""  # Initialize so that we see the first class assignment as an event to record
-        # loop over frames (refactor !)
+
+        # if going to use cpu parallelization, don't allow for live stream video
+        if use_cpu and opt.fd_model == "retinaface":  # TODO: add output timing feature to show fps processing
+            # figure out how many cpus can be used
+            num_cpus = mp.cpu_count() - opt.num_cpus_saved
+            assert num_cpus > 0
+
+            # send all frames in to be preprocessed and have faces detected prior to running gaze detection
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            vid_frames = range(0, total_frames, 1 + opt.fd_skip_frames)  # adding step if frames are skipped
+            processed_frames = process_frames(cap, vid_frames, h_start_at, w_start_at, w_end_at)
+            faces = parallelize_face_detection(processed_frames, face_detector_model, num_cpus, opt)
+            del processed_frames
+
+            # flatten the list and extract bounding boxes
+            faces = [item for sublist in faces for item in sublist]
+            master_bboxes = [extract_bboxes(face_group) for face_group in faces]
+
+            # if frames were skipped, need to repeat binding boxes for that many skips
+            if opt.fd_skip_frames > 0:
+                master_bboxes = np.repeat(master_bboxes, opt.fd_skip_frames + 1)
+
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # reset frames to 0
+
+        # loop over frames
         ret_val, frame = cap.read()
-        while ret_val:
+        while frame is not None:
             frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
             frames.append(frame)
-            cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
+
+            if use_cpu and opt.fd_model == "retinaface":  # if using cpu, just pull from master
+                bboxes = master_bboxes[frame_count]
+            elif opt.fd_model == "opencv_dnn":
+                bboxes = detect_face_opencv_dnn(face_detector_model, frame, opt.fd_confidence_threshold)
+            else:  # if using gpu, able to find face as frame is processed... don't need batch inference
+                faces = face_detector_model(frame)
+                faces = [face for face in faces if face[-1] >= opt.fd_confidence_threshold]
+                bboxes = extract_bboxes(faces)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
             # if len(cv2_bboxes) > 2:
             #     visualize.temp_hook(frame, cv2_bboxes, frame_count)
-            if not cv2_bboxes and (last_known_valid_bbox is None or not opt.track_face):
+            if not bboxes and (last_known_valid_bbox is None or not opt.track_face):
                 answers.append(classes['noface'])  # if face detector fails, treat as away and mark invalid
                 confidences.append(-1)
                 image = np.zeros((1, opt.image_size, opt.image_size, 3), np.float64)
@@ -382,12 +433,12 @@ def predict_from_video(opt):
                 bbox_sequence.append(None)
                 from_tracker.append(False)
             else:
-                if cv2_bboxes:
+                if bboxes:
                     from_tracker.append(False)
                 else:
                     from_tracker.append(True)
-                    cv2_bboxes = [last_known_valid_bbox]
-                selected_bbox = select_face(cv2_bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver)
+                    bboxes = [last_known_valid_bbox]
+                selected_bbox = select_face(bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver, opt)
                 crop, my_box = extract_crop(frame, selected_bbox, opt)
                 if selected_bbox is None:
                     answers.append(classes['nobabyface'])  # if selecting face fails, treat as away and mark invalid
