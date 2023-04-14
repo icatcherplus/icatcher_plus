@@ -1,3 +1,4 @@
+name: icatcher
 channels:
   - pytorch
   - anaconda
@@ -16,5 +17,8 @@ dependencies:
   - pytest
   - ffmpeg-python
   - pingouin
+  - pathos
   - pip:
     - opencv-python
+    - git+https://github.com/elliottzheng/face-detection.git
+    - gdown

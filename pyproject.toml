@@ -25,6 +25,8 @@ dependencies = [
     "pooch",
     "face-detection@git+https://github.com/elliottzheng/face-detection.git",
     "pandas",
+    "gdown",
+    "pathos",
     "scipy",
     "tqdm",
     "face-recognition"
