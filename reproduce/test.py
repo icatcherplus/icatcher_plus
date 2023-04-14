@@ -18,6 +18,7 @@ from parsers import parse_illegal_transitions_file
 from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn, create_retina_model
 from face_detection import RetinaFace
 import multiprocessing as mp
+from face_rec import FaceRec
 
 
 class FPS:
@@ -56,7 +57,7 @@ class FaceClassifierArgs:
         self.dropout = 0.0
 
 
-def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt):
+def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt, fr):
     """
     selects a correct face from candidates bbox in frame
     :param bboxes: the bounding boxes of candidates
@@ -66,6 +67,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt):
     :param hor: the last known horizontal correct face location
     :param ver: the last known vertical correct face location
     :param opt: used to pull the device id
+    :param fr: face recognition, used only in the case where it's flagged and no faces were found selected
     :return: the cropped face and its bbox data
     """
     if fc_model:
@@ -107,6 +109,8 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt):
             # hor, ver = centers[i]
     else:  # select lowest face in image, probably belongs to kid
         bbox = min(bboxes, key=lambda x: x[3] - x[1])
+    if bbox is None and opt.use_facerec is not None:
+        bbox = fr.facerec_check(frame)
     return bbox
 
 
@@ -487,6 +491,15 @@ def predict_from_video(opt):
                 master_bboxes = np.repeat(master_bboxes, opt.fd_skip_frames + 1)
 
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # reset frames to 0
+
+        #Set up face recognition for use
+        if opt.use_facerec != None:
+            fr = FaceRec()
+            if opt.facerec == "reference":
+                fr.get_ref_image(opt.facerec_ref)
+            elif opt.facerec == "bbox":
+                #Could build this part out in the User Input portion of design, will detail how the user wants to generate their face
+                pass
 
         # loop over frames
         ret_val, frame = cap.read()

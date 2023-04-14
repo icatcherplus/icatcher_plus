@@ -127,6 +127,9 @@ def parse_arguments_for_testing():
     parser.add_argument("--fd_model", type=str, choices=["retinaface, opencv_dnn"], default="retinaface",
                         help="the face detector model used. opencv_dnn may be more suitable for cpu usage if speed is priority over accuracy")
     parser.add_argument("--fd_skip_frames", type=int, default=0, help="WHEN USING CPU: amount of frames to skip between each face detection")
+    parser.add_argument("--use_facerec", type=str, default=None, choices=[None, "reference", "bbox"], help="Flag to use face recognition using either a reference image or bounding box annotation")
+    parser.add_argument("--facerec_ref", type=str, default=None, help="Path to annotation or reference image")
+
     args = parser.parse_args()
     args.model = Path(args.model)
     if not args.model.is_file():

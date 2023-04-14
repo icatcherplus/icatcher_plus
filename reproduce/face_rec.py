@@ -11,11 +11,10 @@ class FaceRec:
     def __init__(self):
         self.ref_img_path = None
         self.known_faces = list()
-        pass
 
     def get_ref_image(self, img_path):
         """
-        If the user passes a reference image path to the command line, it will be grabbed from here
+        If the user passes a reference image file path to the command line, it will be grabbed from here
         param img_path: Path to the reference image to be used by face recognition
         """
         img = face_recognition.load_image_file(img_path)
@@ -23,7 +22,7 @@ class FaceRec:
 
     def generate_ref_image(self, bbox, frame):
         """
-        Save a location as a reference image
+        Save a bounded location as a reference image
 
         param bbox: The bounding box that contains the user's reference image
         param frame: The frame that the bounding box is being used in
@@ -43,12 +42,22 @@ class FaceRec:
         face_encodings = face_recognition.face_encodings(frame, face_locations)
 
         for face_encoding in face_encodings:
-            # See if the face is a match for the known face(s)
+            # See if the face is a match for the known face(s), note that tolerance is low
             match = face_recognition.compare_faces(
                 self.known_faces, face_encoding, tolerance=0.10
             )
 
             if match[0]:
-                return face_locations[0]
+                #returns in [top, right, bottom, left] format
+                top = face_locations[0][0]
+                right = face_locations[0][1]
+                bottom = face_locations[0][2]
+                left = face_locations[0][3]
+                
+                h = top - bottom
+                w =  right - left
+                
+                #We want left, top, width, height
+                return (top, left, w, h)
             else:
                 return None

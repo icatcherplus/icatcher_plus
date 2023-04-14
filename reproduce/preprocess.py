@@ -18,6 +18,7 @@ import video
 import csv
 from face_detector import detect_face_opencv_dnn, extract_bboxes
 from face_detection import RetinaFace
+from face_rec import FaceRec
 
 
 def create_annotation_split(args, csv_name):
@@ -441,6 +442,10 @@ def process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False
     classes = {"away": 0, "left": 1, "right": 2}
     video_list = sorted(list(args.video_folder.glob("*")))
     # TODO: allow for training w/ retina face as well
+    if args.use_facerec:
+        fr = FaceRec()
+        if args.use_facerec == "reference":
+            fr.get_ref_image(args.facerec_ref)
     if args.fd_model == "retinaface":
         face_detector_model = RetinaFace(gpu_id=args.gpu_id, model_path=args.face_model_file, network=args.network)
     elif args.fd_model == "opencv_dnn":
@@ -520,6 +525,8 @@ def process_dataset_lowest_face(args, gaze_labels_only=False, force_create=False
                                 bbox = extract_bboxes(faces)
                             elif args.fd_model == "opencv_dnn":
                                 bbox = detect_face_opencv_dnn(net, frame, args.face_detector_confidence)
+                            if not bbox and args.use_facerec:
+                                bbox = [fr.facerec_check(frame)]
                             else:
                                 raise NotImplementedError
                             if not bbox:
