@@ -136,7 +136,7 @@ def make_optimizer_and_scheduler(args, model):
 
 def get_loss():
     # Create an instance of the loss function
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(reduction='none')
     return criterion
 
 # class FaceClassifierModel(nn.Module):
