@@ -12,6 +12,23 @@ class FaceRec:
         self.ref_img_path = None
         self.known_faces = list()
 
+    def convert_bounding_box(bbox):
+        """
+        Converts pipeline bounding box for use in face recognition
+        param bbox: bounding box in [left, top, width, height]
+        :return: bbox in [top, right, bottom, left]
+        """
+        left = bbox[0]
+        top = bbox[1]
+        w = bbox[2]
+        h = bbox[3]
+                    
+        right = w + left
+        bottom = top - h
+
+        return [top, right, bottom, left]
+        
+
     def get_ref_image(self, img_path):
         """
         If the user passes a reference image file path to the command line, it will be grabbed from here
@@ -27,9 +44,9 @@ class FaceRec:
         param bbox: The bounding box that contains the user's reference image
         param frame: The frame that the bounding box is being used in
         """
-
+        new_bbox = self.convert_bounding_box(bbox)
         self.known_faces.append(
-            face_recognition.face_encodings(frame, known_face_locations=[bbox])[0]
+            face_recognition.face_encodings(frame, known_face_locations=[new_bbox])[0]
         )
 
     def facerec_check(self, frame, device="cpu"):
@@ -61,3 +78,36 @@ class FaceRec:
                 return (top, left, w, h)
             else:
                 return None
+    
+    def select_face(self, bboxes, frame):
+        """
+        selects a correct face from candidates bbox in frame
+        :param bboxes: the bounding boxes of candidates
+        :param frame: the frame
+        :return: the cropped face and its bbox data
+        """
+        
+        face = None
+        faces = []
+        #Need [top, right, bottom, left] format
+
+        for bbox in bboxes:
+            faces.append(self.convert_bounding_box(bbox))
+
+            #encode new bounding boxes
+        face_encodings = face_recognition.face_encodings(frame, known_face_locations=faces)
+            
+            #compare against faces
+        matches = face_recognition.compare_faces(
+                self.known_faces, face_encodings, tolerance=0.10
+            )
+            
+            #if any of them hit a match, return the bounding box
+        for i, match in enumerate(matches):
+            if match == True:
+                #We want left, top, width, height
+                face = bboxes[i]
+                break
+        
+        return face
+                

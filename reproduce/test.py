@@ -57,7 +57,7 @@ class FaceClassifierArgs:
         self.dropout = 0.0
 
 
-def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt, fr):
+def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt):
     """
     selects a correct face from candidates bbox in frame
     :param bboxes: the bounding boxes of candidates
@@ -109,8 +109,6 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, opt, fr):
             # hor, ver = centers[i]
     else:  # select lowest face in image, probably belongs to kid
         bbox = min(bboxes, key=lambda x: x[3] - x[1])
-    if bbox is None and opt.use_facerec is not None:
-        bbox = fr.facerec_check(frame)
     return bbox
 
 
@@ -497,9 +495,6 @@ def predict_from_video(opt):
             fr = FaceRec()
             if opt.facerec == "reference":
                 fr.get_ref_image(opt.facerec_ref)
-            elif opt.facerec == "bbox":
-                #Could build this part out in the User Input portion of design, will detail how the user wants to generate their face
-                pass
 
         # loop over frames
         ret_val, frame = cap.read()
@@ -533,7 +528,14 @@ def predict_from_video(opt):
                 else:
                     from_tracker.append(True)
                     bboxes = [last_known_valid_bbox]
-                selected_bbox = select_face(bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver, opt)
+                
+                if opt.use_facerec and last_known_valid_bbox: #Only use facerec if its ready
+                    if opt.facerec == "bbox" and len(fr.known_faces) == 0: #If no known faces, generate a reference image
+                        fr.generate_ref_image(last_known_valid_bbox, frame)
+                    selected_bbox = fr.select_face(bboxes, frame)
+                else:
+                    selected_bbox = select_face(bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver, opt)
+                
                 crop, my_box = extract_crop(frame, selected_bbox, opt)
                 if selected_bbox is None:
                     answers.append(
