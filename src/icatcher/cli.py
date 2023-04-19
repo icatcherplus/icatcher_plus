@@ -156,16 +156,11 @@ def process_video(video_path, opt):
     """
     cap = cv2.VideoCapture(str(video_path))
     # Get some basic info about the video
-
     vfr, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
-    framerate = video.get_fps(video_path)
+    framerate = video.get_fps(video_path, vfr)
     if vfr:
-        logging.warning("video file: {} has variable frame rate".format(str(video_path.name)))
+        logging.warning("video file: {} has variable frame rate, iCatcher+ underperforms for vfr videos.".format(str(video_path.name)))
         logging.info(str(meta_data))
-        if opt.output_video_path:
-            # todo: support this by extracting frame timestamps
-            # i.e.: frame_info, vfr_frame_counter, _ = video.get_frame_information(video_path)
-            logging.warning("output_video_path argument passed, but input video is VFR !")
     else:
         logging.info("video fps: {}".format(framerate))
     raw_width = meta_data["width"]
