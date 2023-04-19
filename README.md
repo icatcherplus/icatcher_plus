@@ -167,7 +167,27 @@ We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported re
     ├── tests                   # tests for package
     ├── reproduce               # all code used for producing paper results, including training and visualizations.
     
-# Contributions
-Feel free to contribute by submitting a pull request. Make sure to run all tests under /tests
+# Troubleshooting Issues
+Please open a github issue for any question or problem you encounter. We kindly ask to first skim through closed issues to see if your problem was already addressed.
+
+# Citation
+```
+@article{doi:10.1177/25152459221147250,
+author = {Yotam Erel and Katherine Adams Shannon and Junyi Chu and Kim Scott and Melissa Kline Struhl and Peng Cao and Xincheng Tan and Peter Hart and Gal Raz and Sabrina Piccolo and Catherine Mei and Christine Potter and Sagi Jaffe-Dax and Casey Lew-Williams and Joshua Tenenbaum and Katherine Fairchild and Amit Bermano and Shari Liu},
+title ={iCatcher+: Robust and Automated Annotation of Infants’ and Young Children’s Gaze Behavior From Videos Collected in Laboratory, Field, and Online Studies},
+journal = {Advances in Methods and Practices in Psychological Science},
+volume = {6},
+number = {2},
+pages = {25152459221147250},
+year = {2023},
+doi = {10.1177/25152459221147250},
+URL = { 
+        https://doi.org/10.1177/25152459221147250
+},
+eprint = { 
+        https://doi.org/10.1177/25152459221147250 
+}
+}
+```
 
 

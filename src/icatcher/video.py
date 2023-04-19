@@ -25,14 +25,21 @@ def get_video_stream_meta_data(video_file_path):
     return video_info
 
 
-def get_fps(video_file_path):
+def get_fps(video_file_path, is_vfr=False):
+    """
+    get the fps of a video using ffmpeg
+    """
     meta_data = get_video_stream_meta_data(video_file_path)
-    return int(meta_data['r_frame_rate'].split('/')[0]) / int(meta_data['r_frame_rate'].split('/')[1])
+    if is_vfr:
+        fps = int(meta_data['avg_frame_rate'].split('/')[0]) / int(meta_data['avg_frame_rate'].split('/')[1])
+    else:
+        fps = int(meta_data['r_frame_rate'].split('/')[0]) / int(meta_data['r_frame_rate'].split('/')[1])
+    return fps
 
 
 def is_video_vfr(video_file_path, get_meta_data=False):
     """
-    checks if video is vfr
+    checks if video is vfr using ffmpeg
     """
     # these three cases cover windows linux and MacOS hopefully
     ENVBIN = Path(sys.exec_prefix, "bin", "ffmpeg")
