@@ -112,13 +112,12 @@ def test_face_selection():
     """
     fr = FaceRec()
     generated_image = download_file(face_image_link)
-    failure_image = download_file(failure_mode_image_link)
 
     fr.get_ref_image(generated_image)
+    test_img = face_recognition.load_image_file(generated_image)
 
-    bbox = fr.facerec_check(generated_image)
+    bbox = fr.facerec_check(test_img)
 
-    bbox = convert_bbox(bbox)
-    selected_bbox = fr.select_face([bbox], generated_image)
+    selected_bbox = fr.select_face([bbox], test_img, tolerance=0.9)
 
     assert bbox == selected_bbox
