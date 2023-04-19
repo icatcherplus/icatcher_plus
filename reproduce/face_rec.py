@@ -44,9 +44,8 @@ class FaceRec:
         param bbox: The bounding box that contains the user's reference image
         param frame: The frame that the bounding box is being used in
         """
-        new_bbox = self.convert_bounding_box(bbox)
         self.known_faces.append(
-            face_recognition.face_encodings(frame, known_face_locations=[new_bbox])[0]
+            face_recognition.face_encodings(frame, known_face_locations=[bbox])[0]
         )
 
     def facerec_check(self, frame, device="cpu"):

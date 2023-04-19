@@ -531,7 +531,8 @@ def predict_from_video(opt):
                 
                 if opt.use_facerec and last_known_valid_bbox: #Only use facerec if its ready
                     if opt.facerec == "bbox" and len(fr.known_faces) == 0: #If no known faces, generate a reference image
-                        fr.generate_ref_image(last_known_valid_bbox, frame)
+                        
+                        fr.generate_ref_image(fr.convert_bounding_box(last_known_valid_bbox), frame)
                     selected_bbox = fr.select_face(bboxes, frame)
                 else:
                     selected_bbox = select_face(bboxes, frame, face_classifier_model, face_classifier_data_transforms, hor, ver, opt)
