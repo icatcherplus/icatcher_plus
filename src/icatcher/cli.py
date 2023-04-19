@@ -291,7 +291,6 @@ def create_output_streams(video_path, framerate, resolution, opt):
     :param video_path: path to video
     :param framerate: video framerate
     :param resolution: video resolution
-    :param video_ids: list of video ids
     :param opt: options
     :return: video_output_file, prediction_output_file, skip = prediction file already exists
     """
