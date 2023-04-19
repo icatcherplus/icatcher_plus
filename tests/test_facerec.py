@@ -22,6 +22,23 @@ def download_file(url):
             
         return '/tmp/%s' % filename
 
+def convert_bbox(bbox):
+    """
+    Converts face recognition bounding box to the pipeline's
+    param bbox: bounding box in [top, right, bottom, left] 
+    :return: bbox in [left, top, width, height]
+    """
+    top = bbox[0]
+    right = bbox[1]
+    bottom = bbox[2]
+    left = bbox[3]
+                    
+    w = right - left
+    h = top - bottom
+
+    return [left, top, w, h]
+
+
 def test_image_generation():
     """
     Test that an image can be generated given a bounding box and a frame/image file
@@ -89,4 +106,19 @@ def test_facerec_fail():
     locs = fr.facerec_check(test_img)
     assert locs == None
 
+def test_face_selection():
+    """
+    Test the face selection method that utilizes face recognition
+    """
+    fr = FaceRec()
+    generated_image = download_file(face_image_link)
+    failure_image = download_file(failure_mode_image_link)
 
+    fr.get_ref_image(generated_image)
+
+    bbox = fr.facerec_check(generated_image)
+
+    bbox = convert_bbox(bbox)
+    selected_bbox = fr.select_face([bbox], generated_image)
+
+    assert bbox == selected_bbox
