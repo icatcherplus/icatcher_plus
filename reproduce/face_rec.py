@@ -1,3 +1,4 @@
+import numpy as np
 import face_recognition
 
 class FaceRec:
@@ -104,3 +105,37 @@ class FaceRec:
 
         return None
                 
+    def select_face_preprocessing(self, bbox, frame):
+        
+        faces = self.convert_bounding_boxes(bbox)
+        face_encodings = face_recognition.face_encodings(frame, known_face_locations=faces)
+
+        matches = face_recognition.compare_faces(self.known_faces, face_encodings)
+
+        for i in range(len(matches)):
+            if matches[i] == True:
+                selected_face = i
+                face = bbox[i]
+
+        crop_img = frame[face[1]:face[1] + face[3], face[0]:face[0] + face[2]]
+                                        # resized_img = cv2.resize(crop_img, (100, 100))
+        resized_img = crop_img  # do not lose information in pre-processing step!
+        face_box = np.array([face[1], face[1] + face[3], face[0], face[0] + face[2]])
+        img_shape = np.array(frame.shape)
+        ratio = np.array([face_box[0] / img_shape[0], face_box[1] / img_shape[0],
+                    face_box[2] / img_shape[1], face_box[3] / img_shape[1]])
+        face_size = (ratio[1] - ratio[0]) * (ratio[3] - ratio[2])
+        face_ver = (ratio[0] + ratio[1]) / 2
+        face_hor = (ratio[2] + ratio[3]) / 2
+        face_height = ratio[1] - ratio[0]
+        face_width = ratio[3] - ratio[2]
+        feature_dict = {
+            'face_box': face_box,
+            'img_shape': img_shape,
+            'face_size': face_size,
+            'face_ver': face_ver,
+            'face_hor': face_hor,
+            'face_height': face_height,
+            'face_width': face_width
+            }
+        return selected_face, feature_dict, resized_img
