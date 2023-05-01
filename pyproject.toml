@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "icatcher"
-version = "0.0.10"
+version = "0.0.6"
 description = "iCatcher+: Robust and automated annotation of infant gaze from videos collected in laboratory, field, and online studies."
 readme = "README.md"
 authors = [{ name = "Yotam Erel", email = "erelyotam@gmail.com" }]
@@ -19,6 +19,7 @@ dependencies = [
     "torchvision>=0.12",
     "numpy",
     "Pillow", 
+    "scipy",
     "ffmpeg-python",
     "opencv-python",
     "pooch",
@@ -28,6 +29,7 @@ dependencies = [
     "pathos",
     "scipy",
     "tqdm",
+    "face-recognition"
 ]
 requires-python = ">=3.9"
 
@@ -42,7 +44,7 @@ dev = ["bumpver", "pytest"]
 Homepage = "https://github.com/yoterel/icatcher_plus"
 
 [tool.bumpver]
-current_version = "0.0.10"
+current_version = "0.0.6"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = false
