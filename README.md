@@ -16,7 +16,13 @@ We strongly recommend using a virtual environment such as [Miniconda](https://co
 
 `pip install icatcher`
 
-You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available. When using for the first time, neural network model files will automatically be downloaded to a local cache folder. To control where they are downloaded to set the "ICATCHER_DATA_DIR" environment variable.
+You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available (if you used conda, you can quickly install it with `conda install -c conda-forge ffmpeg`).
+
+Note1:
+If you require speedy performance, prior to installing icatcher you should install [PyTorch](https://pytorch.org/) with GPU support (see [here](https://pytorch.org/get-started/locally/) for instructions). This assumes you have a supported GPU on your machine.
+
+Note2:
+When using iCatcher+ for the first time, neural network model files will automatically be downloaded to a local cache folder. To control where they are downloaded to set the "ICATCHER_DATA_DIR" environment variable.
 
 ## Installation for reproduction of original research results
 This options allows you to reproduce the paper results, train icatcher on your own dataset, compare and measure performance and visualize results as well.

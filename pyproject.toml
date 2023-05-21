@@ -21,6 +21,7 @@ dependencies = [
     "Pillow", 
     "ffmpeg-python",
     "opencv-python",
+    "tqdm",
     "pooch",
 ]
 requires-python = ">=3.9"
