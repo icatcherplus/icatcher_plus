@@ -30,8 +30,8 @@ requires-python = ">=3.9"
 icatcher = "icatcher.cli:main"
 
 [project.optional-dependencies]
-build = ["build", "twine"]
-dev = ["bumpver", "pytest"]
+build = ["bumpver", "build", "twine"]
+dev = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/yoterel/icatcher_plus"
