@@ -2,7 +2,12 @@ import argparse
 from pathlib import Path
 from . import version
 
-def parse_arguments():
+def parse_arguments(my_string=None):
+    """
+    parse command line arguments
+    :param my_string: if provided, will parse this string instead of command line arguments
+    :return: parsed arguments
+    """
     parser = argparse.ArgumentParser(prog='icatcher')
     parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
     parser.add_argument("--model", type=str, help="path to model that will be used for predictions "
@@ -49,7 +54,10 @@ def parse_arguments():
                         help="the type of dataset to preprocess")
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
     parser.add_argument('--version', action='version', version="%(prog)s "+version)
-    args = parser.parse_args()
+    if my_string is not None:
+        args = parser.parse_args(my_string.split())
+    else:
+        args = parser.parse_args()
     if args.model:
         args.model = Path(args.model)
     # if not args.model.is_file():
