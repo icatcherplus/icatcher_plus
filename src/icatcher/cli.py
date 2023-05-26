@@ -4,13 +4,8 @@ import numpy as np
 import cv2
 from PIL import Image
 from pathlib import Path
-from . import options
-from . import draw
-from . import video
-from . import models
-from . import parsers
-from . import version
 import pooch
+from icatcher import version, classes, reverse_classes, options, draw, video, models, parsers
 
 def detect_face_opencv_dnn(net, frame, conf_threshold):
     """
@@ -38,23 +33,6 @@ def detect_face_opencv_dnn(net, frame, conf_threshold):
             y2 = min(int(detections[0, 0, i, 6] * frameHeight), frameHeight)  # either the bottom side of box of frame height
             bboxes.append([x1, y1, x2-x1, y2-y1])  # (left, top, width, height)
     return bboxes
-
-class FaceClassifierArgs:
-    """
-    encapsulates face classifier arguments
-    """
-    def __init__(self, device):
-        self.device = device
-        self.rotation = False
-        self.cropping = False
-        self.hor_flip = False
-        self.ver_flip = False
-        self.color = False
-        self.erasing = False
-        self.noise = False
-        self.model = "vgg16"
-        self.dropout = 0.0
-
 
 def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
     """
@@ -104,7 +82,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
 
 def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions):
     """
-    this method fixes illegal transitions happening in answers at [loc-max_trans_len+1, loc] inclusive
+    fixes illegal transitions happening in answers at [loc-max_trans_len+1, loc] inclusive
     """
     for i, transition in enumerate(illegal_transitions):
         len_trans = len(transition)
@@ -145,50 +123,6 @@ def extract_crop(frame, bbox, opt):
     face_width = ratio[3] - ratio[2]
     my_box = np.array([face_size, face_ver, face_hor, face_height, face_width])
     return crop, my_box
-
-
-def process_video(video_path, opt):
-    """
-    give a video path, process it and return a generator to iterate over frames
-    :param video_path: the video path
-    :param opt: command line options
-    :return: a generator to iterate over frames, framerate, resolution, and height/width pixel coordinates to crop from
-    """
-    cap = cv2.VideoCapture(str(video_path))
-    # Get some basic info about the video
-    vfr, meta_data = video.is_video_vfr(video_path, get_meta_data=True)
-    framerate = video.get_fps(video_path, vfr)
-    if vfr:
-        logging.warning("video file: {} has variable frame rate, iCatcher+ underperforms for vfr videos.".format(str(video_path.name)))
-        logging.info(str(meta_data))
-    else:
-        logging.info("video fps: {}".format(framerate))
-    raw_width = meta_data["width"]
-    raw_height = meta_data["height"]
-    resolution = (int(raw_width), int(raw_height))
-    cropped_height = raw_height
-    if "top" in opt.crop_mode:
-        cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # x% of the video from the top
-    cropped_width = raw_width
-    if "left" and "right" in opt.crop_mode:
-        cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # x% of the video from both left/right
-    elif "left" in opt.crop_mode or "right" in opt.crop_mode:
-        cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))  # x% of the video from both left/right
-    h_start_at = (raw_height - cropped_height)
-    h_end_at = raw_height
-    if "left" and "right" in opt.crop_mode:
-        w_start_at = (raw_width - cropped_width)//2
-        w_end_at = w_start_at + cropped_width
-    elif "left" in opt.crop_mode:
-        w_start_at = (raw_width - cropped_width)
-        w_end_at = raw_width
-    elif "right" in opt.crop_mode:
-        w_start_at = 0
-        w_end_at = cropped_width
-    elif "top" in opt.crop_mode:
-        w_start_at = 0
-        w_end_at = raw_width
-    return cap, framerate, resolution, h_start_at, h_end_at, w_start_at, w_end_at
 
 def load_models(opt):
     """
@@ -261,30 +195,6 @@ def load_models(opt):
     face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))    
     return gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms
 
-def get_video_paths(opt):
-    """
-    obtain the video paths (and possibly video ids) from the source argument
-    :param opt: command line options
-    :return: a list of video paths and a list of video ids
-    """
-    if opt.source_type == 'file':
-        video_path = Path(opt.source)
-        if video_path.is_dir():
-            logging.warning("Video folder provided as source. Make sure it contains video files only.")
-            video_paths = list(video_path.glob("*"))
-            if opt.video_filter:
-                filter_files = [x.stem for x in opt.video_filter.glob("*")]
-                video_paths = [x for x in video_paths if x.stem in filter_files]
-            video_paths = [str(x) for x in video_paths]
-        elif video_path.is_file():
-            video_paths = [str(video_path)]
-        else:
-            raise FileNotFoundError("Couldn't find a file or a directory at {}".format(video_path))
-    else:
-        # video_paths = [int(opt.source)]
-        raise NotImplementedError
-    return video_paths
-
 def create_output_streams(video_path, framerate, resolution, opt):
     """
     creates output streams
@@ -311,21 +221,6 @@ def create_output_streams(video_path, framerate, resolution, opt):
                     f.write("Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n")
     return video_output_file, prediction_output_file, skip
     
-def cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt):
-    if opt.show_output:
-        cv2.destroyAllWindows()
-    if opt.output_video_path:
-        video_output_file.release()
-    if opt.output_annotation:  # write footer to file
-        if opt.output_format == "PrefLookTimestamp":
-            start_ms = int((1000. / framerate) * (opt.sliding_window_size // 2))
-            end_ms = int((1000. / framerate) * frame_count)
-            with open(prediction_output_file, "a", newline="") as f:
-                f.write("{},{},codingactive\n".format(start_ms, end_ms))
-        elif opt.output_format == "compressed":
-            np.savez(prediction_output_file, answers, confidences)
-    cap.release()
-
 def predict_from_video(opt):
     """
     perform prediction on a stream or video file(s) using a network.
@@ -336,23 +231,21 @@ def predict_from_video(opt):
     # initialize
     loc = -5  # where in the sliding window to take the prediction (should be a function of opt.sliding_window_size)
     cursor = -5 # points to the frame we will write to output relative to current frame
-    classes = {'noface': -2, 'nobabyface': -1, 'away': 0, 'left': 1, 'right': 2}
-    reverse_classes = {-2: 'noface', -1: 'nobabyface', 0: 'away', 1: 'left', 2: 'right'}
     logging.info("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
     logging.info("using the following values for per-channel std: {}".format(opt.per_channel_std))
     gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms = load_models(opt)
-    video_paths = get_video_paths(opt)
+    video_paths = video.get_video_paths(opt)
     if opt.illegal_transitions_path:
         illegal_transitions, corrected_transitions = parsers.parse_illegal_transitions_file(opt.illegal_transitions_path)
         max_illegal_transition_length = max([len(transition) for transition in illegal_transitions])
-        cursor -= max_illegal_transition_length
+        cursor -= max_illegal_transition_length  # slide cursor back so all illegal transitions can be fixed on the fly
         if abs(cursor) > opt.sliding_window_size:
             raise ValueError("illegal_transitions_path contains transitions longer than the sliding window size")
     # loop over inputs
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
         logging.info("predicting on : {}".format(video_path))
-        cap, framerate, resolution, h_start_at, h_end_at, w_start_at, w_end_at = process_video(video_path, opt)
+        cap, framerate, resolution, h_start_at, h_end_at, w_start_at, w_end_at = video.process_video(video_path, opt)
         video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, opt)
         if skip:
             continue
@@ -477,6 +370,21 @@ def predict_from_video(opt):
             frame_count += 1
         # finished processing a video file, cleanup
         cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt)
+
+def cleanup(video_output_file, prediction_output_file, answers, confidences, framerate, frame_count, cap, opt):
+    if opt.show_output:
+        cv2.destroyAllWindows()
+    if opt.output_video_path:
+        video_output_file.release()
+    if opt.output_annotation:  # write footer to file
+        if opt.output_format == "PrefLookTimestamp":
+            start_ms = int((1000. / framerate) * (opt.sliding_window_size // 2))
+            end_ms = int((1000. / framerate) * frame_count)
+            with open(prediction_output_file, "a", newline="") as f:
+                f.write("{},{},codingactive\n".format(start_ms, end_ms))
+        elif opt.output_format == "compressed":
+            np.savez(prediction_output_file, answers, confidences)
+    cap.release()
 
 def main():
     args = options.parse_arguments()

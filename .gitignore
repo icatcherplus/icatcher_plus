@@ -1,8 +1,8 @@
 .idea/
+.vscode/
 *.pyc
 models/
-*.mp4
-.vscode
 datasets/
 src/icatcher.egg-info/
 dist/
+build/
