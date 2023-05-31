@@ -1,4 +1,4 @@
-name: Upload iCatcher+ to pypi
+name: Publish iCatcher+
 on:
   release:
     types: [published]
