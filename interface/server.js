@@ -5,7 +5,9 @@ const app = express();
 const port = 5000;
 const hostname = "127.0.0.1";
 
-app.use('/results/', express.static(path.resolve(__dirname, "frontend", "results_tool")))
+app.use('/results/', express.static(path.resolve(__dirname, "frontend", "results_tool", "build")))
+app.use('/results/', express.static(path.resolve(__dirname, "frontend", "results_tool", "build", "static", "css")))
+app.use('/results/', express.static(path.resolve(__dirname, "frontend", "results_tool", "build", "static", "js")))
 app.use('/preprocessing/', express.static(path.resolve(__dirname, "frontend", "preprocessing_tool")))
 
 
@@ -17,13 +19,14 @@ app.get('/', (req, res) => {
     }
 });
 
-app.get('/results', (req, res) => {
-    try {
-        res.sendFile(path.resolve(__dirname, 'frontend', 'results_tool', 'index.html'));
-    } catch (err) {
-        res.status(500).json({message: err.message})
-    }
-})
+// app.get('/results', (req, res) => {
+//     try {
+
+//         res.sendFile(path.resolve(__dirname, 'frontend', 'results_tool', 'build', 'index.html'));
+//     } catch (err) {
+//         res.status(500).json({message: err.message})
+//     }
+// })
 
 app.get('/preprocessing', (req, res) => {
     try {

@@ -4,6 +4,8 @@
   "description": "All GUIs for iCatcher+",
   "main": "server.js",
   "scripts": {
+    "postinstall": "cd ./frontend/results_tool && npm install",
+    "prestart": "cd ./frontend/results_tool && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

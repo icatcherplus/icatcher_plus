@@ -1,0 +1,36 @@
+.app {
+  text-align: center;
+  min-width: 100vh;
+  min-height: 100vh;
+  display: flex;
+}
+
+.mainpage {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 100%;
+  min-height: 100%;
+  gap: 10px;
+}
+
+.instructionContainer {
+  min-height: 75px;
+  max-height: 100px;
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #428bca;
+  overflow: hidden;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-end;
+  justify-content: center;
+  background-color: #eeeeee;
+}
+
+.instructions {
+  margin:0;
+}
+
+
