@@ -5,8 +5,9 @@ const app = express();
 const port = 5000;
 const hostname = "127.0.0.1";
 
-app.use('/results/js', express.static(path.resolve(__dirname, "frontend", "results_tool", "js")))
-app.use('/preprocessing/js', express.static(path.resolve(__dirname, "frontend", "preprocessing_tool", "js")))
+app.use('/results/', express.static(path.resolve(__dirname, "frontend", "results_tool")))
+app.use('/preprocessing/', express.static(path.resolve(__dirname, "frontend", "preprocessing_tool")))
+
 
 app.get('/', (req, res) => {
     try {
@@ -34,5 +35,5 @@ app.get('/preprocessing', (req, res) => {
 
 
 app.listen(port, hostname, 511, () => {
-    console.log(`Serving app on ${port}`);
+    console.log(`Serving app at http://${hostname}:${port}`);
 });
