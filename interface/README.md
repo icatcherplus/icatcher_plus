@@ -31,7 +31,7 @@ The iCatcher+ app is a tool that allows users to interact with iCatcher+ in the 
 
 * Install [Node.js](https://nodejs.org/en/download).
 
-Once you have Node.js working in your command line, you can install the project dependencies from the `/interface` directory by running `npm install`. From there, you can serve the app using `npm start`. Once the app is launched, you can find it in the browser at `http://localhost:5000/` or `127.0.0.1:5000`.
+Once you have Node.js working in your command line, you can install the project dependencies from the `/interface` directory by running `npm ci`. From there, you can serve the app using `npm start`. Once the app is launched, you can find it in the browser at `http://localhost:5000/` or `127.0.0.1:5000`. To use a custom port, start the app using `PORT=XXXX npm start`.
 
 The recommended development workflow is to run the results_tool frontend code in development mode. To do so, navigate to `interface/frontend/results_tool` and run `npm start`.  Once launched, you can find this code at `http://localhost:3000/`. This will serve only the code in the `results_tool` directory, and will update automatically when changes to files are saved.
 
