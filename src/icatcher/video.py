@@ -50,7 +50,7 @@ def is_video_vfr(video_file_path, get_meta_data=False):
     args = [str(ENVBIN)+" ",
             "-i \"{}\"".format(str(video_file_path)),
             "-vf vfrdet",
-            "-f null -"]
+            "-f null -max_muxing_queue_size 9999 -"]  # 
     p = subprocess.Popen(" ".join(args), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, err = p.communicate()
     if p.returncode != 0:

@@ -26,7 +26,7 @@ def test_process_video():
     source = Path(opt.source)
     cap, framerate, resolution, \
     h_start_at, h_end_at, w_start_at, w_end_at = icatcher.video.process_video(source, opt)
-    
+    assert True
 
 def test_mask():
     image = np.random.random((256, 512, 3))
