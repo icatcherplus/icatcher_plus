@@ -83,7 +83,7 @@ def prepare_frame(frame, bbox, show_bbox=True, show_arrow=False, conf=None, clas
     :return:
     """
     if show_arrow:
-        if class_text is not None:
+        if class_text is not None and bbox is not None:
             if class_text == "right" or class_text == "left":
                 frame = put_arrow(frame, class_text, bbox)
     if conf and bbox is not None:

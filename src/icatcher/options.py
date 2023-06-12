@@ -21,7 +21,7 @@ def parse_arguments(my_string=None):
                         help="selects source of stream to use.")
     parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
     parser.add_argument("--crop_mode", type=str, choices=["top", "left", "right"], nargs="+", default=["top"], help="where to crop video from, multi-choice.")
-    parser.add_argument("--track_face", action="store_true", help="if detectin is lost, will keep track of face using last known position.")
+    parser.add_argument("--track_face", action="store_true", help="if detection is lost, will keep track of face using last known position.")
     parser.add_argument("--show_output", action="store_true", help="show results online in a separate window")
     parser.add_argument("--output_annotation", type=str, help="folder to output annotations to")
     parser.add_argument("--on_off", action="store_true",
@@ -69,7 +69,8 @@ def parse_arguments(my_string=None):
             raise ValueError("crop_video must be a percent between 0 - 49 when cropping both sides")
     if args.video_filter:
         args.video_filter = Path(args.video_filter)
-        assert args.video_filter.is_file() or args.video_filter.is_dir()
+        if not args.video_filter.is_file() and not args.video_filter.is_dir():
+            raise FileNotFoundError("Video filter is not a file or a folder")
     if args.raw_dataset_path:
         args.raw_dataset_path = Path(args.raw_dataset_path)
     if args.output_annotation:
@@ -82,8 +83,7 @@ def parse_arguments(my_string=None):
         args.log = Path(args.log)
     if args.on_off:
         if args.output_format != "raw_output":
-            print("On off mode can only be used with raw output format. Pass raw_output with the --output_format flag.")
-            raise AssertionError
+            raise ValueError("On off mode can only be used with raw output format. Pass raw_output with the --output_format flag.")
     if not args.per_channel_mean:
         args.per_channel_mean = [0.485, 0.456, 0.406]
     if not args.per_channel_std:

@@ -266,7 +266,6 @@ def predict_from_video(opt):
         ret_val, frame = cap.read()
         while ret_val:
             frame = draw.mask_regions(frame, h_start_at, h_end_at, w_start_at, w_end_at)  # mask roi
-            # frame = frame[h_start_at:, w_start_at:w_end_at, :]  # crop x% of the video from the top
             frames.append(frame)
             cv2_bboxes = detect_face_opencv_dnn(face_detector_model, frame, 0.7)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # network was trained on RGB images.
@@ -296,7 +295,8 @@ def predict_from_video(opt):
                     box_sequence.append(my_box)
                     bbox_sequence.append(None)
                 else:
-                    assert crop.size != 0  # what just happened?
+                    if crop.size == 0:
+                        raise ValueError("crop size is 0, what just happend?")
                     answers.append(classes['left'])  # if face detector succeeds, treat as left and mark valid
                     confidences.append(-1)
                     image_sequence.append((crop, False))
