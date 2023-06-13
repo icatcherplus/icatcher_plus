@@ -1,0 +1,19 @@
+.conatiner {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;    
+}
+.videoHeader {
+    background-color: #eeeeee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    max-width: 640px;
+    min-width: 640px;
+    min-height: 40px;
+}
+.placeholder {
+    min-height: 40px;
+}

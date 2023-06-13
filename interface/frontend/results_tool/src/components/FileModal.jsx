@@ -10,7 +10,7 @@ import { useVideoData, useVideoDataDispatch, METADATA_FIELD_MAPPING } from '../s
 /* Expected props:
   none
 */
-function FileModal(props) {
+function FileModal() {
 
   const videoData = useVideoData();
   const dispatchSnack = useSnackDispatch();
@@ -26,10 +26,11 @@ function FileModal(props) {
 
   const handleDirSelect = (e) => {
     inputDirectory.current = [...e.target.files]
+    console.log(inputDirectory.current)
   }
 
   const handleSubmitClick = (e) => {
-    console.time('Submit Timer')
+    // console.time('Submit Timer')
     if (inputDirectory.current === undefined || inputDirectory.current.length === 0) {
       dispatchSnack({
         type: 'pushSnack', 
@@ -39,13 +40,14 @@ function FileModal(props) {
       return;
     }
 
+
     if (findFiles() === false) {
       return;
     }
     setModalOpen(false);
     // set loading == true
     processInputFiles();
-    console.timeEnd('Submit Timer')
+    // console.timeEnd('Submit Timer')
 
   }
 
@@ -129,10 +131,6 @@ function FileModal(props) {
     return validInput;
   }
 
-  useEffect(()=>{
-    console.log("state", videoData)
-  }, [videoData])
-
   const processInputFiles = () => {
     processMetadataFile();
     processAnnotationsFile();
@@ -167,6 +165,7 @@ function FileModal(props) {
             } else { tempMetadata[key] = parsedFile[METADATA_FIELD_MAPPING[key]] }
         });
       }
+      // console.log("parsed Metadata", tempMetadata)
       if (validMetadata) {
         dispatchVideoData({
           type: "setMetadata",
@@ -214,6 +213,7 @@ function FileModal(props) {
           type: "setAnnotations",
           annotations: tempAnnotations
         })
+        console.log("Annotations:", tempAnnotations)
       }
     });
     reader.readAsText(annotationsFile.current);
@@ -227,14 +227,15 @@ function FileModal(props) {
       }
       return frame;
     });
-    console.time('Sort time')
+    // console.time('Sort time')
     tempFrames = tempFrames.sort((a,b) => a.frameNumber - b.frameNumber);
-    console.timeEnd('Sort time')
+    // console.timeEnd('Sort time')
+    console.log("file", tempFrames[5])
     dispatchVideoData({
       type:"setFrames",
       frames: tempFrames
     });
-    console.log("Exit loading video frames: ", tempFrames );
+    // console.log("Exit loading video frames: ", tempFrames );
     // downloadState.current.timer = setTimeout(loadVideoFrame, 1)
   }
 

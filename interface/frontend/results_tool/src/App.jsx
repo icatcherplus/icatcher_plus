@@ -9,8 +9,11 @@ function App() {
     <div className={styles.app}>
       <div className={styles.mainpage}>
         <div className={styles.instructionContainer}>
-          <h4 className={styles.instructions}>An Instruction Heading</h4>
-          <p className={styles.instructions}>The instructions</p>
+          <h4 className={styles.instructionsHeader}>Welcome to iCatcher+</h4>
+          <p className={styles.instructions}>Click the video or press SPACE to start play</p>
+          <p className={styles.instructions}>Use the 'r' key to play the video in reverse</p>
+          <p className={styles.instructions}>Use the left and right arrow keys to page through the video frames</p>
+          <p className={styles.instructions}>Jump to a specific frame using the input box above the video</p>
         </div>
         <VideoFrame />
       </div>

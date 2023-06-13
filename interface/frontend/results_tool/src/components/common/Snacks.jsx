@@ -17,7 +17,6 @@ function Snacks() {
 
   useEffect (() => {
     setOpen(snacks.length !== 0)
-    console.log('hi')
   }, [ snacks ])
 
   const handleClose = (e, reason) => {
