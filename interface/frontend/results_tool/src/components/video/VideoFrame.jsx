@@ -8,7 +8,6 @@ import styles from './VideoFrame.module.css';
 
 import { useSnackDispatch } from '../../state/SnackContext';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
-import KeystrokeMonitor from './KeystrokeMonitor';
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
 import HeatmapBar from './HeatmapBar';
@@ -171,7 +170,6 @@ function VideoFrame(props) {
 
   return (
     <React.Fragment>
-      {/* <KeystrokeMonitor handleKeyDown={onKeyDown} handleKeyUp={onKeyUp}> */}
         <div
           className={styles.videoFrame}
         >
@@ -193,7 +191,6 @@ function VideoFrame(props) {
           <HeatmapBar id="labelsMap"/>
           <HeatmapBar id="confidenceMap"/>
         </ScrubBar> */}
-      {/* </KeystrokeMonitor> */}
     </React.Fragment>
   );
 }

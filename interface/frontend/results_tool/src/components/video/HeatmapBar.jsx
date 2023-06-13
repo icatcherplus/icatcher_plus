@@ -6,7 +6,6 @@ import {
 import { useEffect, useState } from 'react';
 import { useSnackDispatch } from '../../state/SnackContext';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
-import KeystrokeMonitor from './KeystrokeMonitor';
 
   
 /* Expected props:

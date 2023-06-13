@@ -1,0 +1,22 @@
+.controlsBar {
+    display: flex;
+    flex: row nowrap;
+    align-items: center;
+    background-color: blue;
+    opacity: 0.33;
+    transition: opacity .25s ease-in-out;
+    -moz-transition: opacity .25s ease-in-out;
+    -webkit-transition: opacity .25s ease-in-out;
+    width: 854px; 
+    height: 30px;
+
+}
+.controlsBar:hover {
+    opacity: 0.66
+}
+.button {
+    color: white;
+}
+.button:hover {
+
+}

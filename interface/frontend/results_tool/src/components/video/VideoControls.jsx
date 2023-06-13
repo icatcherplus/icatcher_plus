@@ -1,11 +1,14 @@
 import { 
-  Dialog,
-  DialogTitle,
-  DialogContent
+  IconButton
 } from '@mui/material';
+import { 
+  PlayArrow
+} from '@mui/icons-material';
 import { useEffect } from 'react';
 import { useSnackDispatch } from '../../state/SnackContext';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
+import styles from './VideoControls.module.css';
+
 
   
 /* Expected props:
@@ -18,10 +21,21 @@ function VideoControls(props) {
   const dispatchVideoData = useVideoDataDispatch();
   const dispatchSnack = useSnackDispatch();
 
+  const handlePlayClick = (e) => {
+    console.log("click")
+  }
 
   return (
     <div>
-      <div id="videoControlBar" width="854" height="50">
+      <div className={styles.controlsBar}>
+        <IconButton >
+          <PlayArrow 
+            color="primary"
+            fontSize="medium"
+            onClick={handlePlayClick}
+          />
+        </IconButton>
+        
       </div>
     </div>
   );
