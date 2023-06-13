@@ -16,5 +16,8 @@ dependencies:
   - pytest
   - ffmpeg-python
   - pingouin
+  - pathos
   - pip:
     - opencv-python
+    - gdown
+    - git+https://github.com/elliottzheng/batch-face.git@master
