@@ -1,3 +1,4 @@
+name: icatcher_env
 channels:
   - pytorch
   - anaconda
