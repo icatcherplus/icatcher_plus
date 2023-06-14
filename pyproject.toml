@@ -23,7 +23,7 @@ dependencies = [
     "opencv-python",
     "tqdm",
     "pooch",
-    "git+https://github.com/elliottzheng/batch-face.git",
+    "batch-face@git+https://github.com/elliottzheng/batch-face.git",
     "pandas",
     "gdown",
     "pathos",
