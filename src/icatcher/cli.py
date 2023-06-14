@@ -76,8 +76,23 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
             # crop_img = faces[idxs[i]]
             bbox = bboxes[idxs[i]]
             # hor, ver = centers[i]
-    else:   # select lowest face in image, probably belongs to kid
-        bbox = min(bboxes, key=lambda x: x[3] - x[1])
+    else:   # select face based on a mix of the lowest face and the width ratio of the face
+        bbox = None
+        prev_score = 0
+        for box in bboxes:
+            top_left_x, top_left_y, width, height = box
+            width_ratio = width / height
+            height_ratio = height / width
+            min_ratio = 1 / max(width_ratio, height_ratio)
+
+            box_bottom = top_left_y + height
+
+            box_score = min_ratio * box_bottom
+
+            # check if score outweighs previous bounding boxes
+            if box_score > prev_score:
+                prev_score = box_score
+                bbox = box
     return bbox
 
 def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions):
