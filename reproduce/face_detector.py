@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from pathos.pools import ProcessPool
 from batch_face import RetinaFace
-from util import download_from_gdrive
+from reproduce.util import download_from_gdrive
 
 
 def create_retina_model(gpu_id=-1):
