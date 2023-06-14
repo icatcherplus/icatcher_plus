@@ -21,4 +21,4 @@ dependencies:
   - pip:
     - opencv-python
     - gdown
-    - git+https://github.com/elliottzheng/batch-face.git@master
+    - git+https://github.com/elliottzheng/batch-face.git
