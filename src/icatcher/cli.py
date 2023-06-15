@@ -87,9 +87,7 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
             else:
                 # find min ratio of width and height which will weight box score
                 min_ratio = min(width, height) / max(width, height)
-    
                 box_bottom = top_left_y + height
-    
                 box_score = min_ratio * box_bottom
     
                 # check if score outweighs previous bounding boxes
