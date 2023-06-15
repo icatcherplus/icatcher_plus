@@ -81,18 +81,21 @@ def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
         prev_score = 0
         for box in bboxes:
             top_left_x, top_left_y, width, height = box
-            width_ratio = width / height
-            height_ratio = height / width
-            min_ratio = 1 / max(width_ratio, height_ratio)
-
-            box_bottom = top_left_y + height
-
-            box_score = min_ratio * box_bottom
-
-            # check if score outweighs previous bounding boxes
-            if box_score > prev_score:
-                prev_score = box_score
-                bbox = box
+            # make sure not dividing by zero
+            if width == 0 or height == 0:
+                continue
+            else:
+                # find min ratio of width and height which will weight box score
+                min_ratio = min(width, height) / max(width, height)
+    
+                box_bottom = top_left_y + height
+    
+                box_score = min_ratio * box_bottom
+    
+                # check if score outweighs previous bounding boxes
+                if box_score > prev_score:
+                    prev_score = box_score
+                    bbox = box
     return bbox
 
 def fix_illegal_transitions(loc, answers, confidences, illegal_transitions, corrected_transitions):
