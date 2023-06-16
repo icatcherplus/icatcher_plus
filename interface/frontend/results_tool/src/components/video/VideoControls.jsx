@@ -1,43 +1,201 @@
 import { 
   ButtonGroup,
-  IconButton
+  IconButton,
+  Switch,
+  Tooltip
 } from '@mui/material';
-import { 
-  PlayArrow
+import {
+  FastForwardRounded,
+  FastRewindRounded,
+  PauseRounded,
+  PlayArrowRounded,
+  SkipNextRounded,
+  SkipPreviousRounded,
+  SlowMotionVideoRounded
 } from '@mui/icons-material';
-import { useEffect } from 'react';
-import { useSnackDispatch } from '../../state/SnackContext';
-import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
 import styles from './VideoControls.module.css';
 
   
-/* Expected props:
-tbd
-*/
 function VideoControls(props) {
   
-  const { tbd } = props;
-  const videoData = useVideoData();
-  const dispatchVideoData = useVideoDataDispatch();
-  const dispatchSnack = useSnackDispatch();
+  const { 
+    togglePlay,
+    pause, 
+    toggleRev,
+    toggleSlowMotion,    
+    showFrame,
+    currentFrame,
+    isPlaying,
+    isForward,
+    isSlowMotion
+  } = props;
 
-  const handlePlayClick = (e) => {
-    console.log("click")
+
+  const buttonStyling = {
+    default: {
+      color: 'white',
+      borderRadius: 1,
+      '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+        borderRadius: 1,
+        backgroundColor: 'lightgray',
+      }
+    },
+    toggled: {
+      color: 'white',
+      fillOpacity: .66,
+      borderRadius: 1,
+      '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+        borderRadius: 1,
+      }
+    }
   }
 
+  const switchStyling = {
+    '.MuiSwitch-switchBase': {
+      margin: '8px',
+      color: 'white',
+      backgroundColor: 'black',
+      width: '20px',
+      height: '20px',
+      '&.Mui-checked': {
+        color: 'black',
+        backgroundColor: 'white',
+        '& + .MuiSwitch-track': {
+          backgroundColor: 'white'
+        },
+        '&:hover': {
+          backgroundColor: 'white'
+        }
+      }
+    }
+  }
+
+
+  const handlePlayPauseClick = (e) => {
+    console.log("play/pause")
+    togglePlay()
+  }
+
+  const handleStepBackClick = (e) => {
+    pause();
+    showFrame(currentFrame - 1)    
+    console.log("set frame - 1")
+  }
+
+  const handleStepForwardClick = (e) => {
+    pause();
+    showFrame(currentFrame + 1)
+    console.log("set frame + 1")
+  }
+
+  const handleReverseClick = (e) => {
+    toggleRev();
+    console.log("reverse reverse!")
+  }
+
+  const handleSlowMotionClick = (e) => {
+    toggleSlowMotion();
+    
+    console.log("toggle slow motion")
+  }
+
+
   return (
-    <div>
-      <div className={styles.controlsBar}>
-        <ButtonGroup>
-          <IconButton >
-            <PlayArrow 
-              color="primary"
-              fontSize="medium"
-              onClick={handlePlayClick}
+    <div className={styles.controlsBar}>
+      <ButtonGroup className={styles.buttonGroup} >
+        <Tooltip 
+          title={isPlaying? "Pause (space)": "Play (Space)"} 
+          placement="top" 
+        >
+          <IconButton
+            id="playPause"
+            aria-label="toggle play"
+            sx={buttonStyling.default}
+            onClick={handlePlayPauseClick}
+          >
+            { isPlaying
+              ? <PauseRounded 
+                  fontSize={'large'}
+                  className={styles.icon}
+                /> 
+              : <PlayArrowRounded  
+                  fontSize={'large'}
+                  className={styles.icon}
+                /> 
+            }
+          </IconButton>
+        </Tooltip>
+        <Tooltip 
+          title={"Step Back (<)"} 
+          placement="top" 
+        >
+          <IconButton
+            id="stepReverse"
+            aria-label="step back one frame"
+            sx={buttonStyling.default}
+            onClick={handleStepForwardClick}
+          >
+            <SkipPreviousRounded 
+              fontSize={'large'}
+              className={styles.icon}
             />
           </IconButton>
+        </Tooltip>
+        <Tooltip 
+          title={"Step Forward (>)"} 
+          placement="top" 
+        >
+          <IconButton
+            id="stepForward"
+            aria-label="step forward one frame"
+            sx={buttonStyling.default}
+            onClick={handleStepBackClick}
+          >
+            <SkipNextRounded 
+              fontSize={'large'}
+              className={styles.icon}
+            />
+          </IconButton>
+        </Tooltip>
+      </ButtonGroup>
+
+      <ButtonGroup className={styles.buttonGroup} >
+        <Tooltip 
+          title={"Slow motion mode"} 
+          placement="top" 
+        >
+          <IconButton
+              id="slowMotion"
+              aria-label="toggle slow motion play"
+              sx={isSlowMotion? buttonStyling.toggled : buttonStyling.default}
+              onClick={handleSlowMotionClick}
+            >
+              <SlowMotionVideoRounded 
+              className={styles.icon} 
+              fontSize="large" 
+              />
+            </IconButton>
+          </Tooltip>
+          <Tooltip 
+            title={`Reverse ${isForward ? "off": "on"} (r)`} 
+            placement="top" 
+          >
+            <Switch
+              id="reverseSwitch"
+              aria-label="toggle reversed playback"
+              sx={switchStyling}
+              icon={
+                <FastForwardRounded fontSize="16px"/>
+              }
+              checkedIcon={
+                <FastRewindRounded fontSize="16px"/>
+            }
+              checked={!isForward}
+              onChange={handleReverseClick}
+            >
+            </Switch>
+          </Tooltip>
         </ButtonGroup>
-      </div>
     </div>
   );
 }

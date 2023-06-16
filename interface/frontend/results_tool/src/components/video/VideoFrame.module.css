@@ -2,3 +2,21 @@
 .videoFrame {
     flex: 7;
 }
+.controlsBackground {
+    padding: 0 10px;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    justify-content: flex-end;
+    background-image: linear-gradient(to top, black, transparent);
+    opacity: 0.5;
+    transition: opacity .25s ease-in-out;
+    -moz-transition: opacity .25s ease-in-out;
+    -webkit-transition: opacity .25s ease-in-out;
+    width: 854px; 
+    height: 80px;
+}
+
+.controlsBackground:hover {
+    opacity: 0.5
+}

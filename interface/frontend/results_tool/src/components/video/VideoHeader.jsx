@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoHeader.module.css';
-import { useSnackDispatch } from '../../state/SnackContext';
-import { useVideoData } from '../../state/VideoDataContext';
+import { useSnackDispatch } from '../../state/SnackProvider';
+import { useVideoData } from '../../state/VideoDataProvider';
 
   
 /* Expected props:

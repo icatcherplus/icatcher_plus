@@ -4,8 +4,8 @@ import {
     DialogContent
   } from '@mui/material';
   import { useEffect } from 'react';
-  import { useSnackDispatch } from '../../state/SnackContext';
-  import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
+  import { useSnackDispatch } from '../../state/SnackProvider';
+  import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
   
     
   /* Expected props:

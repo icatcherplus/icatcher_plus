@@ -1,13 +1,11 @@
-import { 
-  Dialog,
-  DialogTitle,
-  DialogContent
-} from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoFrame.module.css';
+import { AspectRatio } from '@mui/joy';
 
-import { useSnackDispatch } from '../../state/SnackContext';
-import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
+
+import { useSnackDispatch } from '../../state/SnackProvider';
+import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
+import ProgressBar from './ProgressBar'
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
 import HeatmapBar from './HeatmapBar';
@@ -172,6 +170,7 @@ function VideoFrame(props) {
     <React.Fragment>
         <div
           className={styles.videoFrame}
+
         >
           <VideoHeader
             currentFrameIndex={currentFrame}
@@ -180,11 +179,24 @@ function VideoFrame(props) {
             handleJumpToFrame={(i) => showFrame(Number(i))}
           />
           <VideoCanvas 
-            frameToDraw={frameImages.current[currentFrame]} 
+            frameToDraw={frameImages.current[currentFrame]}
             handleClick={() => togglePlay(true)}
             handleKeyDown={handleCanvasKeyDown}  
           />
-          <VideoControls />
+          <div className={styles.controlsBackground}>
+            <ProgressBar />
+            <VideoControls 
+              togglePlay={togglePlay}
+              pause={pause}
+              toggleRev={()=>{playState.current.forward = !playState.current.forward}}
+              toggleSlowMotion={()=> {console.log('todo: implement toggle slow-mo')}} 
+              showFrame={showFrame}
+              currentFrame={currentFrame}
+              isPlaying={playState.current.timer != null}
+              isForward={playState.current.forward === true}
+              isSlowMotion={false}
+            />
+          </div>
         </div>
         {/* <ScrubBar>
           <HeatmapBar id="editsMap"/>

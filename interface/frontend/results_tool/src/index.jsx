@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { SnackProvider } from './state/SnackContext';
-import { VideoDataProvider } from './state/VideoDataContext';
+import { SnackProvider } from './state/SnackProvider';
+import { VideoDataProvider } from './state/VideoDataProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

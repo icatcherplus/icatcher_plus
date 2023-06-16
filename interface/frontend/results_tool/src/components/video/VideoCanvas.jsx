@@ -5,8 +5,8 @@ import {
 } from '@mui/material';
 import { useRef, useEffect } from 'react';
 import styles from './VideoCanvas.module.css';
-import { useSnackDispatch } from '../../state/SnackContext';
-import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataContext';
+import { useSnackDispatch } from '../../state/SnackProvider';
+import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 
   
 /* Expected props:

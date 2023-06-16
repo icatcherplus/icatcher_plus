@@ -4,7 +4,7 @@ import {
   Snackbar
 } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { useSnacks, useSnackDispatch } from '../../state/SnackContext';
+import { useSnacks, useSnackDispatch } from '../../state/SnackProvider';
 
 /* Expected props:
     none
