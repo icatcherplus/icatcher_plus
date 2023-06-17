@@ -23,6 +23,8 @@ dependencies = [
     "opencv-python",
     "tqdm",
     "pooch",
+    "batch-face@git+https://github.com/elliottzheng/batch-face.git",
+    "pathos"
 ]
 requires-python = ">=3.9"
 
