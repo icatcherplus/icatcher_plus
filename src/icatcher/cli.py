@@ -8,6 +8,7 @@ import pooch
 from icatcher import version, classes, reverse_classes, options, draw, video, models, parsers
 from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
 from pathos.helpers import cpu_count
+from batch_face import RetinaFace
 
 
 def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
@@ -134,9 +135,10 @@ def load_models(opt):
                                progressbar=True)
     file_names = [Path(x).name for x in file_paths]
     if opt.fd_model == "retinaface":  # option for retina face vs. previous opencv dnn model
-        # face_detector_model = create_retina_model(gpu_id=opt.gpu_id)
-        # TODO: have pooch fetch retina face model from here as well
-        face_detector_model = None
+        face_detector_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
+        face_detector_model = RetinaFace(
+            gpu_id=opt.gpu_id, model_path=face_detector_model_file, network="resnet50"
+        )
     elif opt.fd_model == "opencv_dnn":
         face_detector_model_file = file_paths[file_names.index("face_model.caffemodel")]
         config_file = file_paths[file_names.index("config.prototxt")]
