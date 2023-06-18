@@ -69,14 +69,3 @@ export const METADATA_FIELD_MAPPING = {
   numFrames: "numFrames",
   frameOffset: "frameOffset"
 }
-
-/* Example metadata:
-    {   ...
-        "baseFramePath": "./ic_test_output_jpeg",
-        "baseFileName": "frm",
-        "numDigitsFrame": 3,
-        "frameExt": ".jpeg"
-    }
-    would point to frames starting at './ic_test_output_jpeg/frm_001.jpeg'
- */
-
