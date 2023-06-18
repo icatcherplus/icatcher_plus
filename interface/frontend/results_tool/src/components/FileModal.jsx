@@ -4,7 +4,7 @@ import {
   DialogContent
 } from '@mui/material';
 import { useState, useRef, useEffect } from 'react';
-import { useSnackDispatch } from '../state/SnackProvider';
+import { useSnacksDispatch } from '../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch, METADATA_FIELD_MAPPING } from '../state/VideoDataProvider'
 
 /* Expected props:
@@ -13,7 +13,7 @@ import { useVideoData, useVideoDataDispatch, METADATA_FIELD_MAPPING } from '../s
 function FileModal() {
 
   const videoData = useVideoData();
-  const dispatchSnack = useSnackDispatch();
+  const dispatchSnack = useSnacksDispatch();
   const dispatchVideoData = useVideoDataDispatch();
   
   const [ modalOpen, setModalOpen ] = useState(true);

@@ -3,17 +3,17 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { SnackProvider } from './state/SnackProvider';
+import { SnacksProvider } from './state/SnacksProvider';
 import { VideoDataProvider } from './state/VideoDataProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <SnackProvider>
+    <SnacksProvider>
       <VideoDataProvider>
         <App />
       </VideoDataProvider>
-    </SnackProvider>
+    </SnacksProvider>
   </React.StrictMode>
 );
 

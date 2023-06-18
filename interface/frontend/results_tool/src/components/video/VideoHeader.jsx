@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoHeader.module.css';
-import { useSnackDispatch } from '../../state/SnackProvider';
+import { useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 
   
@@ -12,7 +12,7 @@ function VideoHeader(props, {children}) {
   
   const { currentFrameIndex, width, height, handleJumpToFrame } = props;
   const videoData = useVideoData();
-  const dispatchSnack = useSnackDispatch();
+  const dispatchSnack = useSnacksDispatch();
   const smpteOffset = useRef(0);
   const currFramerate = useRef(0);
   const currInput = useRef();

@@ -4,7 +4,7 @@ import {
     DialogContent
   } from '@mui/material';
   import { useEffect } from 'react';
-  import { useSnackDispatch } from '../../state/SnackProvider';
+  import { useSnacksDispatch } from '../../state/SnacksProvider';
   import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
   
     
@@ -16,7 +16,7 @@ import {
     const { currentFrame } = props;
     const videoData = useVideoData();
     const dispatchVideoData = useVideoDataDispatch();
-    const dispatchSnack = useSnackDispatch();
+    const dispatchSnack = useSnacksDispatch();
   
     useEffect(() => {
         // var elem = document.getElementById('myPos');

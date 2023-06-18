@@ -4,7 +4,7 @@ import {
   DialogContent
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useSnackDispatch } from '../../state/SnackProvider';
+import { useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 
   
@@ -16,7 +16,7 @@ function HeatmapBar(props) {
   const { tbd } = props;
   const videoData = useVideoData();
   const dispatchVideoData = useVideoDataDispatch();
-  const dispatchSnack = useSnackDispatch();
+  const dispatchSnack = useSnacksDispatch();
   const [ width, setWidth ] = useState(0);
 
   useEffect(() => {

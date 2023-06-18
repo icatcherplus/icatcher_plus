@@ -4,7 +4,7 @@ import {
   Snackbar
 } from '@mui/material';
 import { useState, useEffect } from 'react';
-import { useSnacks, useSnackDispatch } from '../../state/SnackProvider';
+import { useSnacks, useSnacksDispatch } from '../../state/SnacksProvider';
 
 /* Expected props:
     none
@@ -12,7 +12,7 @@ import { useSnacks, useSnackDispatch } from '../../state/SnackProvider';
 function Snacks() {
 
   const snacks = useSnacks();
-  const dispatch = useSnackDispatch();
+  const dispatch = useSnacksDispatch();
   const [ open, setOpen ] = useState()
 
   useEffect (() => {

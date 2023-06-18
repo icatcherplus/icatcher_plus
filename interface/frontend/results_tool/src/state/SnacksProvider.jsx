@@ -1,30 +1,30 @@
 import { createContext, useContext, useReducer } from 'react';
 
-const SnackContext = createContext(null);
+const SnacksContext = createContext(null);
 
-const SnackDispatchContext = createContext(null);
+const SnacksDispatchContext = createContext(null);
 
-export function SnackProvider({ children }) {
+export function SnacksProvider({ children }) {
   const [snacks, dispatch] = useReducer(
-    snackReducer,
+    snacksReducer,
     initialSnacks
   );
 
   return (
-    <SnackContext.Provider value={snacks}>
-      <SnackDispatchContext.Provider value={dispatch}>
+    <SnacksContext.Provider value={snacks}>
+      <SnacksDispatchContext.Provider value={dispatch}>
         {children}
-      </SnackDispatchContext.Provider>
-    </SnackContext.Provider>
+      </SnacksDispatchContext.Provider>
+    </SnacksContext.Provider>
   );
 }
 
 export function useSnacks() {
-  return useContext(SnackContext);
+  return useContext(SnacksContext);
 }
 
-export function useSnackDispatch() {
-  return useContext(SnackDispatchContext);
+export function useSnacksDispatch() {
+  return useContext(SnacksDispatchContext);
 }
 
 const SNACK_SEVERITY = [
@@ -34,7 +34,7 @@ const SNACK_SEVERITY = [
   'warning'
 ]
 
-function snackReducer(snacks, action) {
+function snacksReducer(snacks, action) {
   switch (action.type) {
     case 'pushSnack': {
       let severity = action.severity

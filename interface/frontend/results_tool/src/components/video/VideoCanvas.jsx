@@ -3,10 +3,8 @@ import {
   DialogTitle,
   DialogContent
 } from '@mui/material';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import styles from './VideoCanvas.module.css';
-import { useSnackDispatch } from '../../state/SnackProvider';
-import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 
   
 /* Expected props:
@@ -44,7 +42,7 @@ function VideoCanvas(props) {
 
   
   return (
-    <div>
+    // <div>
       <canvas 
         id="videoCanvas" 
         width="854" 
@@ -54,9 +52,8 @@ function VideoCanvas(props) {
         onClick={handleClick}
         onKeyDown = {onKeyDown}
         tabIndex={0}
-      >
-      </canvas>
-    </div>
+      />
+    // {/* </div> */}
   );
 }
   
