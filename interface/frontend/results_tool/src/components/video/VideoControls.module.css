@@ -3,8 +3,6 @@
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
-    width: 854px; 
-    /* max-height: 60px; */
 }
 
 .icon {

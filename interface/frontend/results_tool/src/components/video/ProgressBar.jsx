@@ -17,6 +17,9 @@ function ProgressBar(props, {children}) {
   const sliderStyling = {
     color: 'red',
     height: 4,
+    padding: 0,
+    paddingBottom: 0.5,
+    zIndex: 1,
     '& .MuiSlider-thumb': {
       width: 8,
       height: 8,

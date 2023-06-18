@@ -69,8 +69,10 @@ function VideoFrame(props) {
         frameImages.current[thisImg.frameNumber] = thisImg;
         //add to state?
         if(thisImg.frameNumber === firstFrameIndex.current) {
-          // console.log("showing first frame", thisImg.frameNumber)
           showFrame(thisImg.frameNumber);
+          let firstImg = frameImages.current[thisImg.frameNumber]
+          console.log("Setting aspect ratio: ", firstImg.width, firstImg.height)
+          setAspectRatio(firstImg.width/firstImg.height)
         }
       }
       img.src = f.src;
@@ -86,7 +88,7 @@ function VideoFrame(props) {
 
         return frame;
       }
-      // console.log('update')
+      // console.table('update', frameImages.current[index])
       return index;
     });
   }
@@ -169,26 +171,44 @@ function VideoFrame(props) {
     }
   }
 
+  const getWidth = () => {
+    let videoWidth = (window.innerHeight * .7) * aspectRatio
+    if (videoWidth > (0.8 * window.innerWidth)) {
+      videoWidth = (0.8 * window.innerWidth)
+    }
+    console.log("running getHeight", videoWidth)
+    return videoWidth
+  }
+
+  let width = getWidth();
+
   return (
     <React.Fragment>
       <div className={styles.mainpage}>
         <div
           className={styles.videoFrame}
-          // height={"854"}
-          // width={"480"}
+          style={{width: width}}
         >
           <VideoHeader
             currentFrameIndex={currentFrame}
             handleJumpToFrame={(i) => showFrame(Number(i))}
+            width={width}
           />
           <VideoCanvas 
             className={styles.videoCanvas}
             frameToDraw={frameImages.current[currentFrame]}
             handleClick={() => togglePlay(true)}
-            handleKeyDown={handleCanvasKeyDown}  
+            handleKeyDown={handleCanvasKeyDown}
+            width={width}
+            aspectRatio={aspectRatio}
           />
-          {/* <div className={styles.controlsBox}> */}
-            <div className={styles.controlsBackground}>
+          <div 
+            className={styles.controlsBox}
+            style={{width: width}}
+          >
+            <div 
+              className={styles.controlsBackground}
+            >
               <ProgressBar />
               <VideoControls 
                 togglePlay={togglePlay}
@@ -200,10 +220,12 @@ function VideoFrame(props) {
                 isPlaying={playState.current.timer != null}
                 isForward={playState.current.forward === true}
                 isSlowMotion={false}
+                width={width}
               />
             </div>
-          {/* </div> */}
-        </div>
+          </div>
+          
+          </div>
         {/* <ScrubBar>
           <HeatmapBar id="editsMap"/>
           <HeatmapBar id="labelsMap"/>

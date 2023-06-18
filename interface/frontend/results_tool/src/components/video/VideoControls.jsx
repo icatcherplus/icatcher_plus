@@ -54,11 +54,17 @@ function VideoControls(props) {
     '.MuiSwitch-switchBase': {
       margin: '8px',
       color: 'white',
-      backgroundColor: 'black',
+      backgroundColor: 'gray',
       width: '20px',
       height: '20px',
+      '&:hover': {
+        backgroundColor: 'gray'
+      },
+      '& + .MuiSwitch-track': {
+        backgroundColor: 'gray'
+      },
       '&.Mui-checked': {
-        color: 'black',
+        color: 'gray',
         backgroundColor: 'white',
         '& + .MuiSwitch-track': {
           backgroundColor: 'white'
@@ -106,6 +112,7 @@ function VideoControls(props) {
         <Tooltip 
           title={isPlaying? "Pause (space)": "Play (Space)"} 
           placement="top" 
+          disableInteractive
         >
           <IconButton
             id="playPause"
@@ -127,7 +134,8 @@ function VideoControls(props) {
         </Tooltip>
         <Tooltip 
           title={"Step Back (<)"} 
-          placement="top" 
+          placement="top"
+          disableInteractive
         >
           <IconButton
             id="stepReverse"
@@ -143,7 +151,8 @@ function VideoControls(props) {
         </Tooltip>
         <Tooltip 
           title={"Step Forward (>)"} 
-          placement="top" 
+          placement="top"
+          disableInteractive
         >
           <IconButton
             id="stepForward"
@@ -162,7 +171,8 @@ function VideoControls(props) {
       <ButtonGroup className={styles.buttonGroup} >
         <Tooltip 
           title={"Slow motion mode"} 
-          placement="top" 
+          placement="top"
+          disableInteractive
         >
           <IconButton
               id="slowMotion"
@@ -178,7 +188,8 @@ function VideoControls(props) {
           </Tooltip>
           <Tooltip 
             title={`Reverse ${isForward ? "off": "on"} (r)`} 
-            placement="top" 
+            placement="top"
+            disableInteractive
           >
             <Switch
               id="reverseSwitch"

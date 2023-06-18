@@ -10,7 +10,7 @@ handleJumpToFrame: callback
 */
 function VideoHeader(props, {children}) {
   
-  const { currentFrameIndex, width, height, handleJumpToFrame } = props;
+  const { currentFrameIndex, handleJumpToFrame, width } = props;
   const videoData = useVideoData();
   const dispatchSnack = useSnacksDispatch();
   const smpteOffset = useRef(0);
@@ -84,15 +84,13 @@ function VideoHeader(props, {children}) {
 
   return (
     <React.Fragment>
-      <div className={styles.conatiner} >
+      <div >
         <div />
         { visible ?
           <div
             className={styles.videoHeader}
-            width={width}
-            height={height}
+            style={{width: width}}
           >
-            
             {/* <div> UTC Time: {utcTime} </div> */}
             {/* <div> SMPTE Time {smpteString}</div> */}
             <div> Frame Number: {currentFrameIndex} </div>
@@ -104,7 +102,10 @@ function VideoHeader(props, {children}) {
             </div>
           </div>
         :
-          <div className={styles.placeholder} />
+          <div 
+            className={styles.videoHeader} 
+            style={{width: width}}
+          />
         }
         <div />
       </div>
