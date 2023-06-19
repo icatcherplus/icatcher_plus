@@ -2213,8 +2213,8 @@ def print_stats(sorted_ids, all_metrics, hvm, args):
         for ID in sorted_ids:
             raw2 = all_metrics[ID][choice1]["raw_coding2"]
             invalids = raw2[raw2 < 0]
-            invalid_no_face += np.count_nonzero(invalids == -1)
-            invalid_no_infant_face += np.count_nonzero(invalids == -2)
+            invalid_no_face += np.count_nonzero(invalids == -2)
+            invalid_no_infant_face += np.count_nonzero(invalids == -1)
             invalid_unable_to_predict += np.count_nonzero(invalids == -3)
             invalid_n += len(invalids)
         invalid_no_face = 100 * invalid_no_face / invalid_n
