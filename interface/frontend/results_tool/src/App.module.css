@@ -15,26 +15,3 @@
   gap: 10px;
 }
 
-.instructionContainer {
-  min-height: 75px;
-  max-height: 100px;
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #428bca;
-  overflow: hidden;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: flex-end;
-  justify-content: center;
-  background-color: #eeeeee;
-}
-.instructionsHeader {
-  margin:0;
-}
-
-.instructions {
-  margin:0;
-  font-size: 10px;
-}
-
-
