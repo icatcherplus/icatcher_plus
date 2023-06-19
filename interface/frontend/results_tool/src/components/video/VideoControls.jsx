@@ -31,51 +31,51 @@ function VideoControls(props) {
   } = props;
 
 
-  const buttonStyling = {
-    default: {
-      color: 'white',
-      borderRadius: 1,
-      '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+  const styleOverrides = {
+    button: {
+      default: {
+        color: 'white',
         borderRadius: 1,
-        backgroundColor: 'lightgray',
+        '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+          borderRadius: 1,
+          backgroundColor: 'lightgray',
+        }
+      },
+      toggled: {
+        color: 'white',
+        fillOpacity: .66,
+        borderRadius: 1,
+        '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+          borderRadius: 1,
+        }
       }
     },
-    toggled: {
-      color: 'white',
-      fillOpacity: .66,
-      borderRadius: 1,
-      '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
-        borderRadius: 1,
-      }
-    }
-  }
-
-  const switchStyling = {
-    '.MuiSwitch-switchBase': {
-      margin: '8px',
-      color: 'white',
-      backgroundColor: 'gray',
-      width: '20px',
-      height: '20px',
-      '&:hover': {
-        backgroundColor: 'gray'
-      },
-      '& + .MuiSwitch-track': {
-        backgroundColor: 'gray'
-      },
-      '&.Mui-checked': {
-        color: 'gray',
-        backgroundColor: 'white',
-        '& + .MuiSwitch-track': {
-          backgroundColor: 'white'
-        },
+    switch: {
+      '.MuiSwitch-switchBase': {
+        margin: '8px',
+        color: 'white',
+        backgroundColor: 'gray',
+        width: '20px',
+        height: '20px',
         '&:hover': {
-          backgroundColor: 'white'
+          backgroundColor: 'gray'
+        },
+        '& + .MuiSwitch-track': {
+          backgroundColor: 'gray'
+        },
+        '&.Mui-checked': {
+          color: 'gray',
+          backgroundColor: 'white',
+          '& + .MuiSwitch-track': {
+            backgroundColor: 'white'
+          },
+          '&:hover': {
+            backgroundColor: 'white'
+          }
         }
       }
     }
   }
-
 
   const handlePlayPauseClick = (e) => {
     console.log("play/pause")
@@ -117,7 +117,7 @@ function VideoControls(props) {
           <IconButton
             id="playPause"
             aria-label="toggle play"
-            sx={buttonStyling.default}
+            sx={styleOverrides.button.default}
             onClick={handlePlayPauseClick}
           >
             { isPlaying
@@ -140,7 +140,7 @@ function VideoControls(props) {
           <IconButton
             id="stepReverse"
             aria-label="step back one frame"
-            sx={buttonStyling.default}
+            sx={styleOverrides.button.default}
             onClick={handleStepForwardClick}
           >
             <SkipPreviousRounded 
@@ -157,7 +157,7 @@ function VideoControls(props) {
           <IconButton
             id="stepForward"
             aria-label="step forward one frame"
-            sx={buttonStyling.default}
+            sx={styleOverrides.button.default}
             onClick={handleStepBackClick}
           >
             <SkipNextRounded 
@@ -177,7 +177,7 @@ function VideoControls(props) {
           <IconButton
               id="slowMotion"
               aria-label="toggle slow motion play"
-              sx={isSlowMotion? buttonStyling.toggled : buttonStyling.default}
+              sx={isSlowMotion? styleOverrides.button.toggled : styleOverrides.button.default}
               onClick={handleSlowMotionClick}
             >
               <SlowMotionVideoRounded 
@@ -194,7 +194,7 @@ function VideoControls(props) {
             <Switch
               id="reverseSwitch"
               aria-label="toggle reversed playback"
-              sx={switchStyling}
+              sx={styleOverrides.switch}
               icon={
                 <FastForwardRounded fontSize="16px"/>
               }

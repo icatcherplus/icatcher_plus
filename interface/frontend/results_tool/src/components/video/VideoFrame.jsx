@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoFrame.module.css';
-import { AspectRatio } from '@mui/joy';
-
 
 import { useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
@@ -9,7 +7,7 @@ import ProgressBar from './ProgressBar'
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
 import HeatmapBar from './HeatmapBar';
-import ScrubBar from './ScrubBar';
+import InfoBars from './InfoBars';
 import VideoHeader from './VideoHeader';
 
   
@@ -44,12 +42,6 @@ function VideoFrame(props) {
       // expandMetadata(0); <-creates array of utc and smtpe timestamps for frames + optional cue frame info
     }
   }, [videoData.frames, videoData.metadata])
-
-  // useEffect (()=> {
-  //   if (playState.current.timer == null) {
-  //     playState.current.forward = true;
-  //   }
-  // }, [playState.current.timer])
 
   const loadFrames = () => {
     videoData.frames.forEach((f, index) => {
@@ -172,7 +164,7 @@ function VideoFrame(props) {
   }
 
   const getWidth = () => {
-    let videoWidth = (window.innerHeight * .7) * aspectRatio
+    let videoWidth = (window.innerHeight * .5) * aspectRatio
     if (videoWidth > (0.8 * window.innerWidth)) {
       videoWidth = (0.8 * window.innerWidth)
     }
@@ -223,14 +215,13 @@ function VideoFrame(props) {
                 width={width}
               />
             </div>
-          </div>
-          
-          </div>
-        {/* <ScrubBar>
+          </div>  
+        </div>
+        {/* <InfoBars>
           <HeatmapBar id="editsMap"/>
           <HeatmapBar id="labelsMap"/>
           <HeatmapBar id="confidenceMap"/>
-        </ScrubBar> */}
+        </InfoBars> */}
       </div>
     </React.Fragment>
   );

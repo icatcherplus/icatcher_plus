@@ -11,7 +11,7 @@ import {
   /* Expected props:
   tbd
   */
-  function VideoCanvas(props, {children}) {
+  function InfoBars(props, {children}) {
     
     const { currentFrame } = props;
     const videoData = useVideoData();
@@ -35,4 +35,4 @@ import {
     );
   }
     
-  export default VideoCanvas;
+  export default InfoBars;
