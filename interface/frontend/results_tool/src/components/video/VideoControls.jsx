@@ -141,7 +141,7 @@ function VideoControls(props) {
             id="stepReverse"
             aria-label="step back one frame"
             sx={styleOverrides.button.default}
-            onClick={handleStepForwardClick}
+            onClick={handleStepBackClick}
           >
             <SkipPreviousRounded 
               fontSize={'large'}
@@ -158,7 +158,7 @@ function VideoControls(props) {
             id="stepForward"
             aria-label="step forward one frame"
             sx={styleOverrides.button.default}
-            onClick={handleStepBackClick}
+            onClick={handleStepForwardClick}
           >
             <SkipNextRounded 
               fontSize={'large'}
@@ -169,7 +169,7 @@ function VideoControls(props) {
       </ButtonGroup>
 
       <ButtonGroup className={styles.buttonGroup} >
-        <Tooltip 
+        {/* <Tooltip 
           title={"Slow motion mode"} 
           placement="top"
           disableInteractive
@@ -185,7 +185,7 @@ function VideoControls(props) {
               fontSize="large" 
               />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
           <Tooltip 
             title={`Reverse ${isForward ? "off": "on"} (r)`} 
             placement="top"
