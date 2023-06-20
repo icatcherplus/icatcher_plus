@@ -42,12 +42,13 @@ function ProgressBar(props, {children}) {
 
   const handleSliderChange = (e, value, activeThumb) => {
     setFrameRange(value)
-    console.log(`Slider change: ${value}, ${activeThumb}`)
+    // console.log(`Slider change: ${value}, ${activeThumb}`)
   }
 
   return (
     <Slider
-      aria-label="video scrub bar"
+      getAriaLabel={() => 'video scrub bar'}
+      getAriaValueText={(v) => `frame ${v}`}
       size="small"
       value={frameRange}
       min={videoData.metadata.frameOffset}
@@ -55,6 +56,7 @@ function ProgressBar(props, {children}) {
       max={videoData.metadata.numFrames}
       onChange={handleSliderChange}
       sx={sliderStyling}
+      valueLabelDisplay="auto"
     />
   );
 }
