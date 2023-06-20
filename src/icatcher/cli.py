@@ -6,7 +6,7 @@ from PIL import Image
 from pathlib import Path
 import pooch
 from icatcher import version, classes, reverse_classes, options, draw, video, models, parsers
-from face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
+from src.icatcher.face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
 from pathos.helpers import cpu_count
 from batch_face import RetinaFace
 
