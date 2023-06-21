@@ -53,7 +53,7 @@ def test_process_frames():
     ],
 )
 def test_retina_face(filename, num_bounding_boxes):
-    face_detector_model = retina_model()
+    face_detector_model = retina_model
     with Image.open(
         os.path.join(str(Path(__file__).parents[1]), "tests", "frames_test", filename)
     ) as img:
@@ -99,7 +99,7 @@ def test_find_bboxes():
         processed_frames[0].shape[0],
         processed_frames[0].shape[1],
     )
-    face_detector_model = retina_model()
+    face_detector_model = retina_model
 
     class OptContainer:
         def __init__(self):
