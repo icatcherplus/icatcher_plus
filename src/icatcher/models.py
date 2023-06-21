@@ -6,13 +6,17 @@ from torchvision import transforms
 
 
 def get_fc_data_transforms(input_size, dt_key=None):
-    if dt_key is not None and dt_key != 'train':
-        return {dt_key: transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Resize((input_size, input_size), antialias=True),
-            transforms.CenterCrop(input_size),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])}
+    if dt_key is not None and dt_key != "train":
+        return {
+            dt_key: transforms.Compose(
+                [
+                    transforms.ToTensor(),
+                    transforms.Resize((input_size, input_size), antialias=True),
+                    transforms.CenterCrop(input_size),
+                    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                ]
+            )
+        }
     # Apply data augmentation
     aug_list = []
     aug_list.append(transforms.ToTensor())
@@ -22,13 +26,15 @@ def get_fc_data_transforms(input_size, dt_key=None):
 
     # Define data transformation on train, val, test set respectively
     data_transforms = {
-        'train': aug_transform,
-        'val': transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Resize((input_size, input_size), antialias=True),
-            transforms.CenterCrop(input_size),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
+        "train": aug_transform,
+        "val": transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Resize((input_size, input_size), antialias=True),
+                transforms.CenterCrop(input_size),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            ]
+        ),
     }
     return data_transforms
 
@@ -44,28 +50,36 @@ def init_face_classifier(device, num_classes=2, resume_from=None):
     return model, input_size
 
 
-
 class DataTransforms:
     def __init__(self, img_size, mean, std):
         self.transformations = {
-            'train': transforms.Compose([
-                transforms.Resize((img_size, img_size)),
-                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05),
-                transforms.ToTensor(),
-                transforms.Normalize(mean, std)
-                # transforms.RandomErasing()
-            ]),
-            'val': transforms.Compose([
-                transforms.Resize((img_size, img_size)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean, std)
-            ]),
-            'test': transforms.Compose([
-                transforms.Resize((img_size, img_size)),
-                transforms.ToTensor(),
-                transforms.Normalize(mean, std)
-            ])
+            "train": transforms.Compose(
+                [
+                    transforms.Resize((img_size, img_size)),
+                    transforms.ColorJitter(
+                        brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05
+                    ),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean, std)
+                    # transforms.RandomErasing()
+                ]
+            ),
+            "val": transforms.Compose(
+                [
+                    transforms.Resize((img_size, img_size)),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean, std),
+                ]
+            ),
+            "test": transforms.Compose(
+                [
+                    transforms.Resize((img_size, img_size)),
+                    transforms.ToTensor(),
+                    transforms.Normalize(mean, std),
+                ]
+            ),
         }
+
 
 class Predictor_fc(torch.nn.Module):
     def __init__(self, n, add_box):
@@ -87,6 +101,7 @@ class Predictor_fc(torch.nn.Module):
         x = self.fc3(x)
         return x
 
+
 class Encoder_box(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -102,6 +117,7 @@ class Encoder_box(torch.nn.Module):
 
         return x
 
+
 class GazeCodingModel(torch.nn.Module):
     def __init__(self, args, add_box=True):
         super().__init__()
@@ -113,8 +129,8 @@ class GazeCodingModel(torch.nn.Module):
         self.predictor = Predictor_fc(self.n, add_box).to(self.args.device)
 
     def forward(self, data):
-        imgs = data['imgs']  # bs x n x 3 x 100 x 100
-        boxs = data['boxs']  # bs x n x 5
+        imgs = data["imgs"]  # bs x n x 3 x 100 x 100
+        boxs = data["boxs"]  # bs x n x 5
         embedding = self.encoder_img(imgs.view(-1, 3, 100, 100)).view(-1, self.n, 256)
         if self.add_box:
             box_embedding = self.encoder_box(boxs.view(-1, 5)).view(-1, self.n, 256)
