@@ -119,14 +119,14 @@ def load_models(opt):
     :return all nn models
     """
     GOODBOY = pooch.create(path=pooch.os_cache("icatcher_plus"),
-                           base_url="https://osf.io/ycju8/download",
+                           base_url="https://osf.io/h7svp/download",
                            version=version,
                            version_dev="main",
                            env="ICATCHER_DATA_DIR",
-                           registry={"zip_content.txt": "d81bfb5a183edea6dc74f7f342d516a9843865570b9ecfbf481209ec5114110a",
-                                     "icatcher+_models.zip": "d78385b3a08f3d55ce75249142d15549e4c5552d5e1231cad3b69063bb778ce9"},
+                           registry={"zip_content.txt": None,
+                                     "icatcher+_models.zip": None},
                            urls={"zip_content.txt":"https://osf.io/v4w53/download",
-                                 "icatcher+_models.zip":"https://osf.io/ycju8/download"})
+                                 "icatcher+_models.zip":"https://osf.io/h7svp/download"})
     # zip_content_file = GOODBOY.fetch("zip_content.txt")
     # with open(zip_content_file, "r") as f:
         # zip_content = [x.strip() for x in f]
