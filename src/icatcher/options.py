@@ -2,12 +2,24 @@ import argparse
 from pathlib import Path
 from . import version
 
+
 def parse_arguments(my_string=None):
     """
     parse command line arguments
     :param my_string: if provided, will parse this string instead of command line arguments
     :return: parsed arguments
     """
+
+    
+    # update face detection confidence threshold based off of face detection model used
+    class UpdateDefaultValueAction(argparse.Action):
+        def __call__(self, parser, namespace, values, option_string=None):
+            if values == "retinaface":
+                parser.get_default('fd_confidence_threshold').default = 0.9
+            elif values == "opencv_dnn":
+                parser.get_default('fd_confidence_threshold').default = 0.7
+            setattr(namespace, self.dest, values)
+
     parser = argparse.ArgumentParser(prog='icatcher')
     parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
     parser.add_argument("--model", type=str, help="path to model that will be used for predictions "
@@ -55,14 +67,14 @@ def parse_arguments(my_string=None):
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
     parser.add_argument('--version', action='version', version="%(prog)s "+version)
     # face detection options:
+    parser.add_argument("--fd_model", type=str, choices=["retinaface", "opencv_dnn"], default="retinaface",
+                        help="the face detector model used. opencv_dnn may be more suitable for cpu usage if speed is priority over accuracy")
     parser.add_argument("--num_cpus_saved", type=int, default=0,
                         help="amount of cpus to not use in parallel processing of face detection")
     parser.add_argument("--fd_batch_size", type=int, default=16,
                         help="amount of frames fed into face detector at one time for batch inference")
     parser.add_argument("--fd_confidence_threshold", type=float, default=0.9,
                         help="the score confidence threshold that needs to be met for a face to be detected")
-    parser.add_argument("--fd_model", type=str, choices=["retinaface", "opencv_dnn"], default="retinaface",
-                        help="the face detector model used. opencv_dnn may be more suitable for cpu usage if speed is priority over accuracy")
     parser.add_argument("--fd_skip_frames", type=int, default=0,
                         help="WHEN USING CPU: amount of frames to skip between each face detection (previous bbox will be used)")
     if my_string is not None:
