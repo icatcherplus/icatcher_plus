@@ -1,4 +1,3 @@
-import os
 import csv
 from pathlib import Path
 import pytest
@@ -44,9 +43,7 @@ def retina_model():
 
 
 def test_process_frames():
-    video_path = os.path.join(
-        str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4"
-    )
+    video_path = Path("tests", "test_data", "fd_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     ret, frame = test_cap.read()
     assert ret
@@ -76,9 +73,7 @@ def test_process_frames():
 )
 def test_retina_face(filename, num_bounding_boxes, retina_model):
     face_detector_model = retina_model
-    with Image.open(
-        os.path.join(str(Path(__file__).parents[1]), "tests", "frames_test", filename)
-    ) as img:
+    with Image.open(Path("tests", "test_data", filename)) as img:
         img_np = cv2.cvtColor(
             np.array(img), cv2.COLOR_RGB2BGR
         )  # changes image to mirror cv2 frame
@@ -121,9 +116,7 @@ def test_threshold_faces(confidence_threshold, output, all_faces, request):
 
 def test_find_bboxes(retina_model):
     # Note: keeping in commented parallelization code for now until discussed with Katherine
-    video_path = os.path.join(
-        str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4"
-    )
+    video_path = Path("tests", "test_data", "fd_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
     h_start_at, w_start_at, w_end_at = 0, 0, 640
@@ -159,11 +152,7 @@ def test_find_bboxes(retina_model):
     ]
 
     # read in manual annotation
-    with open(os.path.join(
-            str(Path(__file__).parents[1]),
-            "tests",
-            "video_test",
-            "test_video_manual_annotation.csv",), 'r') as file:
+    with open(Path("tests", "test_data", "test_video_manual_annotation.csv"), 'r') as file:
         reader = csv.reader(file)
         next(reader)  # skip the first line
         second_line = next(reader)  # get the second line
