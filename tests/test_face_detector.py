@@ -50,9 +50,9 @@ def test_process_frames():
     assert frame is not None  # testing that video is read in correctly
 
     test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-    h_start_at, w_start_at, w_end_at = 0, 0, 640
+    h_start_at, w_start_at, w_end_at, h_end_at = 0, 0, 640, 480
     processed_frames = process_frames(
-        test_cap, test_frames, h_start_at, w_start_at, w_end_at
+        test_cap, test_frames, h_start_at, h_end_at, w_start_at, w_end_at
     )
 
     assert len(processed_frames) == len(
@@ -115,14 +115,13 @@ def test_threshold_faces(confidence_threshold, output, all_faces, request):
 
 
 def test_find_bboxes(retina_model):
-    # Note: keeping in commented parallelization code for now until discussed with Katherine
     video_path = Path("tests", "test_data", "fd_video.mp4")
     test_cap = cv2.VideoCapture(str(video_path))
     test_frames = range(0, int(test_cap.get(cv2.CAP_PROP_FRAME_COUNT)))
-    h_start_at, w_start_at, w_end_at = 0, 0, 640
+    h_start_at, w_start_at, w_end_at, h_end_at = 0, 0, 640, 480
 
     processed_frames = process_frames(
-        test_cap, test_frames, h_start_at, w_start_at, w_end_at
+        test_cap, test_frames, h_start_at, h_end_at, w_start_at, w_end_at
     )
     frame_height, frame_width = (
         processed_frames[0].shape[0],
