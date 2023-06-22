@@ -262,7 +262,7 @@ def predict_from_video(opt):
             # send all frames in to be preprocessed and have faces detected prior to running gaze detection
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             vid_frames = range(0, total_frames, 1 + opt.fd_skip_frames)  # adding step if frames are skipped
-            processed_frames = process_frames(cap, vid_frames, h_start_at, w_start_at, w_end_at)
+            processed_frames = process_frames(cap, vid_frames, h_start_at, h_end_at, w_start_at, w_end_at)
             frame_height, frame_width = processed_frames[0].shape[0], processed_frames[0].shape[1]
             faces = parallelize_face_detection(processed_frames, face_detector_model, num_cpus, opt)
             del processed_frames
