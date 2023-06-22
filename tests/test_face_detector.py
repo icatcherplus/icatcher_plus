@@ -4,21 +4,43 @@ from pathlib import Path
 import pytest
 import cv2
 import numpy as np
-from src.icatcher.face_detector import (
+from icatcher import version
+from icatcher.face_detector import (
     process_frames,
     threshold_faces,
     extract_bboxes,
     find_bboxes,
 )
 from PIL import Image
-from . import retina_model
+import pooch
+from batch_face import RetinaFace
 
 
-# used for testing threshold faces
-all_faces = [
-    [(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)],
-    [(30, 30, 40, 40, 0.7), (40, 40, 50, 50, 0.6)],
-]
+@pytest.fixture
+def retina_model():
+    #download models that will be tested. these will be cached
+    GOODBOY = pooch.create(path=pooch.os_cache("icatcher_plus"),
+                               base_url="https://osf.io/h7svp/download",
+                               version=version,
+                               version_dev="main",
+                               env="ICATCHER_DATA_DIR",
+                               registry={"zip_content.txt": None,
+                                         "icatcher+_models.zip": None},
+                               urls={"zip_content.txt":"https://osf.io/v4w53/download",
+                                     "icatcher+_models.zip":"https://osf.io/h7svp/download"})
+
+    file_paths = GOODBOY.fetch("icatcher+_models.zip",
+                               processor=pooch.Unzip(),
+                               progressbar=True)
+
+    file_names = [Path(x).name for x in file_paths]
+
+    # load whatever models that need to be tested here
+    retina_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
+    model = RetinaFace(
+        gpu_id=-1, model_path=retina_model_file, network="resnet50"
+    )
+    return model
 
 
 def test_process_frames():
@@ -52,7 +74,7 @@ def test_process_frames():
         ("three_faces.jpg", 3),
     ],
 )
-def test_retina_face(filename, num_bounding_boxes):
+def test_retina_face(filename, num_bounding_boxes, retina_model):
     face_detector_model = retina_model
     with Image.open(
         os.path.join(str(Path(__file__).parents[1]), "tests", "frames_test", filename)
@@ -71,19 +93,33 @@ def test_retina_face(filename, num_bounding_boxes):
     )
 
 
+# used for testing threshold faces
+@pytest.fixture
+def faces1():
+    return [[(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)], []]
+@pytest.fixture
+def faces2():
+    return [[(0, 0, 10, 10, 0.9)], []]
+@pytest.fixture
+def all_faces():
+    return [
+        [(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)],
+        [(30, 30, 40, 40, 0.7), (40, 40, 50, 50, 0.6)],
+    ]
+
 @pytest.mark.parametrize(
     "confidence_threshold,output",
     [
-        (0.75, [[(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)], []]),
-        (0.9, [[(0, 0, 10, 10, 0.9)], []]),
-        (0.5, all_faces),
+        (0.75, 'faces1'),
+        (0.9, 'faces2'),
+        (0.5, 'all_faces'),
     ],
 )
-def test_threshold_faces(confidence_threshold, output):
-    assert threshold_faces(all_faces, confidence_threshold) == output
+def test_threshold_faces(confidence_threshold, output, all_faces, request):
+    assert threshold_faces(all_faces, confidence_threshold) == request.getfixturevalue(output)
 
 
-def test_find_bboxes():
+def test_find_bboxes(retina_model):
     # Note: keeping in commented parallelization code for now until discussed with Katherine
     video_path = os.path.join(
         str(Path(__file__).parents[1]), "tests", "video_test", "test_video.mp4"
