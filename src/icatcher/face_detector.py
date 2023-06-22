@@ -1,31 +1,8 @@
-# import os
 from functools import partial
-# from pathlib import Path
 import cv2
 import numpy as np
 from pathos.pools import ProcessPool
-# from batch_face import RetinaFace
-# from reproduce.util import download_from_gdrive
-
-
-# def create_retina_model(gpu_id=-1):
-#     """
-#     Downloads retina face weights if not already in models directory, creates retina face model.
-#     :return: the face detector model
-#     """
-#     file_id = "14KX6VqF69MdSPk3Tr9PlDYbq7ArpdNUW"
-#     output_name = "Resnet50_Final.pth"
-#
-#     # download_directory = 'icatcher_plus/reproduce/models/'
-#     download_from_gdrive(file_id, output_name)
-#     download_directory = os.path.join(
-#         str(Path(__file__).parents[1]), "reproduce/models/"
-#     )
-#     face_detector_model_file = Path(download_directory, output_name)
-#     face_detector_model = RetinaFace(
-#         gpu_id=gpu_id, model_path=face_detector_model_file, network="resnet50"
-#     )
-#     return face_detector_model
+from icatcher import draw
 
 
 def threshold_faces(all_faces: list, confidence_threshold: float):
@@ -73,12 +50,13 @@ def extract_bboxes(face_group_entry, frame_height, frame_width):
     return bboxes
 
 
-def process_frames(cap, frames, h_start_at, w_start_at, w_end_at):
+def process_frames(cap, frames, h_start_at, h_end_at, w_start_at, w_end_at):
     """
     Takes in all desired frames of video and does some preprocessing and outputs images before face detection.
     :param cap: the video capture
     :param frames: list of numbers corresponding to frames
     :param h_start_at: optional crop coordinate
+    :param h_end_at: optional crop coordinate
     :param w_start_at: optional crop coordinate
     :param w_end_at: optional crop coordinate
     :return: list of images corresponding to video frames
@@ -88,9 +66,7 @@ def process_frames(cap, frames, h_start_at, w_start_at, w_end_at):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
         ret, image = cap.read()
         if ret:
-            image = image[
-                h_start_at:, w_start_at:w_end_at, :
-            ]  # crop x% of the video from the top
+            image = draw.mask_regions(image, h_start_at, h_end_at, w_start_at, w_end_at)
             processed_frames.append(image)
         else:
             return processed_frames
