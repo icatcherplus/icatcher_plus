@@ -67,7 +67,7 @@ def parse_arguments(my_string=None):
     parser.add_argument("--illegal_transitions_path", type=str, help="path to CSV with illegal transitions to 'smooth' over")
     parser.add_argument('--version', action='version', version="%(prog)s "+version)
     # face detection options:
-    parser.add_argument("--fd_model", type=str, choices=["retinaface", "opencv_dnn"], default="retinaface",
+    parser.add_argument("--fd_model", action=UpdateDefaultValueAction, type=str, choices=["retinaface", "opencv_dnn"], default="retinaface",
                         help="the face detector model used. opencv_dnn may be more suitable for cpu usage if speed is priority over accuracy")
     parser.add_argument("--num_cpus_saved", type=int, default=0,
                         help="amount of cpus to not use in parallel processing of face detection")
