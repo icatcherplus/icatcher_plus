@@ -1,4 +1,3 @@
-### define version
 __version__ = "0.0.13"
 version = __version__
 ### define classes
