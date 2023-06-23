@@ -79,10 +79,10 @@ def process_video(video_path, opt):
     framerate = get_fps(video_path, vfr)
     if vfr:
         logging.warning("video file: {} has variable frame rate, iCatcher+ underperforms for vfr videos.".format(str(video_path.name)))
-        logging.info("printing video metadata...")
-        logging.info(str(meta_data))
+        logging.debug("printing video metadata...")
+        logging.debug(str(meta_data))
     else:
-        logging.info("video fps: {}".format(framerate))
+        logging.debug("video fps: {}".format(framerate))
     raw_width = meta_data["width"]
     raw_height = meta_data["height"]
     resolution = (int(raw_width), int(raw_height))
@@ -90,13 +90,13 @@ def process_video(video_path, opt):
     if "top" in opt.crop_mode:
         cropped_height = int(raw_height * (1 - (opt.crop_percent / 100)))  # x% of the video from the top
     cropped_width = raw_width
-    if "left" and "right" in opt.crop_mode:
+    if "left" in opt.crop_mode and "right" in opt.crop_mode:
         cropped_width = int(raw_width * (1 - (2*opt.crop_percent / 100)))  # x% of the video from both left/right
     elif "left" in opt.crop_mode or "right" in opt.crop_mode:
         cropped_width = int(raw_width * (1 - (opt.crop_percent / 100)))  # x% of the video from both left/right
     h_start_at = (raw_height - cropped_height)
     h_end_at = raw_height
-    if "left" and "right" in opt.crop_mode:
+    if "left" in opt.crop_mode and "right" in opt.crop_mode:
         w_start_at = (raw_width - cropped_width)//2
         w_end_at = w_start_at + cropped_width
     elif "left" in opt.crop_mode:

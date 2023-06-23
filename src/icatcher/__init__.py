@@ -11,5 +11,6 @@ from . import (
     parsers,
     video,
     models,
-    cli
+    cli,
+    face_detector,
 )
