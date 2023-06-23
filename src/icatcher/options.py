@@ -119,4 +119,7 @@ def parse_arguments(my_string=None):
         import os
         os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
         args.device = "cuda:{}".format(0)
+        import torch
+        if not torch.cuda.is_available():
+            raise ValueError("GPU is not available. Was torch compiled with CUDA?")
     return args
