@@ -5,8 +5,8 @@ import cv2
 from PIL import Image
 from pathlib import Path
 import pooch
-from . import version, classes, reverse_classes, options, draw, video, models, parsers
-from .face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
+from icatcher import version, classes, reverse_classes, options, draw, video, models, parsers
+from icatcher.face_detector import extract_bboxes, process_frames, parallelize_face_detection, detect_face_opencv_dnn
 from pathos.helpers import cpu_count
 from batch_face import RetinaFace
 
@@ -219,8 +219,8 @@ def predict_from_video(opt):
     # initialize
     loc = -5  # where in the sliding window to take the prediction (should be a function of opt.sliding_window_size)
     cursor = -5 # points to the frame we will write to output relative to current frame
-    logging.info("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
-    logging.info("using the following values for per-channel std: {}".format(opt.per_channel_std))
+    logging.debug("using the following values for per-channel mean: {}".format(opt.per_channel_mean))
+    logging.debug("using the following values for per-channel std: {}".format(opt.per_channel_std))
     gaze_model, face_detector_model, face_classifier_model, face_classifier_data_transforms = load_models(opt)
     video_paths = video.get_video_paths(opt)
     if opt.illegal_transitions_path:
@@ -234,7 +234,7 @@ def predict_from_video(opt):
     # loop over inputs
     for i in range(len(video_paths)):
         video_path = Path(str(video_paths[i]))
-        logging.info("predicting on : {}".format(video_path))
+        logging.debug("predicting on : {}".format(video_path))
         cap, framerate, resolution, h_start_at, h_end_at, w_start_at, w_end_at = video.process_video(video_path, opt)
         video_output_file, prediction_output_file, skip = create_output_streams(video_path, framerate, resolution, opt)
         if skip:
@@ -254,7 +254,7 @@ def predict_from_video(opt):
         last_class_text = ""  # Initialize so that we see the first class assignment as an event to record
 
         # if going to use cpu parallelization, don't allow for live stream video
-        if use_cpu and opt.fd_model == "retinaface":
+        if use_cpu and opt.fd_model == "retinaface" and not opt.dont_buffer:
             # figure out how many cpus can be used
             num_cpus = cpu_count() - opt.num_cpus_saved
             assert num_cpus > 0
@@ -264,6 +264,7 @@ def predict_from_video(opt):
             vid_frames = range(0, total_frames, 1 + opt.fd_skip_frames)  # adding step if frames are skipped
             processed_frames = process_frames(cap, vid_frames, h_start_at, h_end_at, w_start_at, w_end_at)
             frame_height, frame_width = processed_frames[0].shape[0], processed_frames[0].shape[1]
+            logging.debug("face detection on buffered frames ...")
             faces = parallelize_face_detection(processed_frames, face_detector_model, num_cpus, opt)
             del processed_frames
 
@@ -284,7 +285,7 @@ def predict_from_video(opt):
             frame = draw.mask_regions(frame, h_start_at, h_end_at, w_start_at, w_end_at)  # mask roi
             frames.append(frame)
 
-            if use_cpu and opt.fd_model == "retinaface":  # if using cpu, just pull from master
+            if use_cpu and opt.fd_model == "retinaface" and not opt.dont_buffer:  # if using cpu, just pull from master
                 bboxes = master_bboxes[frame_count]
             elif opt.fd_model == "opencv_dnn":
                 bboxes = detect_face_opencv_dnn(face_detector_model, frame, opt.fd_confidence_threshold)
@@ -370,7 +371,7 @@ def predict_from_video(opt):
                     if is_from_tracker and opt.track_face:
                         rect_color = (0, 0, 255)
                     else:
-                        rect_color = (0, 255, 0) 
+                        rect_color = (0, 255, 0)
                     draw.prepare_frame(cur_frame, cur_bbox, show_arrow=True, rect_color=rect_color,
                                          conf=confidences[cursor], class_text=class_text,
                                          frame_number=frame_count, pic_in_pic=opt.pic_in_pic)
