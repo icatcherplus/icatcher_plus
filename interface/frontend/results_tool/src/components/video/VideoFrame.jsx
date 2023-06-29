@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoFrame.module.css';
 
-import { useSnacksDispatch } from '../../state/SnacksProvider';
+// import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 import ProgressBar from './ProgressBar'
 import VideoCanvas from './VideoCanvas';
@@ -18,21 +18,21 @@ function VideoFrame(props) {
 
   const { tbd } = props;
   const videoData = useVideoData();
-  const dispatchVideoData = useVideoDataDispatch();
-  const dispatchSnack = useSnacksDispatch();
+  // const dispatchSnack = useSnacksDispatch();
 
-  const [ currentFrame, setCurrentFrame ] = useState();
-  const [ aspectRatio, setAspectRatio ] = useState(16/9);
+  const [ playState, setPlayState ] = useState({
+    currentFrame: null,
+    forwardPlay: true,
+    paused: true,
+    aspectRatio: 16/9,
+    slowMotion: false
+  })
 
-
+  const playTimer = useRef(null);
   const startedLoad = useRef(false);
   const frameImages = useRef([]);
   const totalLoaded = useRef(0);
   const firstFrameIndex = useRef();
-  const playState = useRef({
-    forward: true,
-    timer: null
-  })
   
   useEffect(() => {
 
@@ -50,8 +50,6 @@ function VideoFrame(props) {
       img.loaded = false;
       if (index === 0) {
         firstFrameIndex.current = img.frameNumber
-        // console.log('hit load, setting first frame index', firstFrameIndex.current)
-        // console.log(videoData.metadata.frameOffset)
       }
       
       img.onload = (e) => {
@@ -63,8 +61,12 @@ function VideoFrame(props) {
         if(thisImg.frameNumber === firstFrameIndex.current) {
           showFrame(thisImg.frameNumber);
           let firstImg = frameImages.current[thisImg.frameNumber]
-          console.log("Setting aspect ratio: ", firstImg.width, firstImg.height)
-          setAspectRatio(firstImg.width/firstImg.height)
+          setPlayState(p => {
+            return {
+              ...p,
+              aspectRatio: firstImg.width/firstImg.height
+            }
+          })
         }
       }
       img.src = f.src;
@@ -72,67 +74,107 @@ function VideoFrame(props) {
   }
 
   const showFrame = (index) => {
-    // console.log('show frame', index)
     pause();
-    setCurrentFrame((frame) => {
+    setPlayState((p) => {
       if ((typeof (frameImages.current[index]) === 'undefined') || (frameImages.current[index].loaded === false)) {
-        // console.log('bad', frameImages.current)
-
-        return frame;
+        return p;
       }
-      // console.table('update', frameImages.current[index])
-      return index;
+      return { ...p, currentFrame: index};
     });
   }
-
+  
   const showNextFrame = () => {
-    setCurrentFrame((frame) => {
-      let nextFrame = playState.current.forward ? frame + 1 : frame - 1;
+    setPlayState((p) => {
+      console.log('interval run')
+      let nextFrame = p.forwardPlay ? p.currentFrame + 1 : p.currentFrame - 1;
       if ((typeof (frameImages.current[nextFrame]) === 'undefined') || (frameImages.current[nextFrame].loaded === false)) {
-        pause();
-        return frame;
+        return { ...p, paused: true };
       }
-      return nextFrame;
+      return { ...p, currentFrame: nextFrame };
     });
-
   }
   
   const pause = () => {
-    // console.log('pause func')
-    if (playState.current.timer !== null) {
-      clearInterval(playState.current.timer)
-      playState.current.timer = null;
-    }
+    setPlayState(p => {
+      return {
+        ...p, 
+        paused: true
+      }
+    })
   }
 
-  const play = (forward) => {
+  const play = () => {
     if (videoData.frames.length === 0) {
       return;
     }
-    playState.current.forward = forward;
-    if (playState.current.timer === null) {
-      playState.current.timer = setInterval(showNextFrame, (1/videoData.metadata.framesPerSecond)*1000)
+    if (playState.currentFrame === firstFrameIndex.current && playState.forwardPlay === false) {
+      return;
+    }
+    if (playState.currentFrame === frameImages.current.length - 1 && playState.forwardPlay === true) {
+      return;
+    }
+    if (playTimer.current === null) {
+      playTimer.current = setInterval(
+        showNextFrame, 
+        playState.slowMotion 
+        ? (1/videoData.metadata.framesPerSecond)*3000 
+        : (1/videoData.metadata.framesPerSecond)*1000
+      )
+      setPlayState((p) => {
+        return {
+          ...p,
+          paused: false 
+        }
+      })
     }
   }
 
-  const togglePlay = (forward) => {
-    playState.current.timer === null || playState.current.forward !== forward ? 
-      play(forward) : pause();
+  const togglePlay = () => {
+    playTimer.current === null ? 
+      play() : pause();
+  }
+
+  const toggleReverse = () => {
+    setPlayState(p => {
+      return {
+        ...p,
+        forwardPlay: !p.forwardPlay
+      }
+    })
+  }
+
+  const toggleSlowMotion = () => {
+    if (playState.paused === false) {
+      let tempSlowMotion = playState.slowMotion;
+      clearInterval(playTimer.current)
+      playTimer.current = playTimer.current = setInterval(
+        showNextFrame, 
+        !tempSlowMotion 
+        ? (1/videoData.metadata.framesPerSecond)*3000 
+        : (1/videoData.metadata.framesPerSecond)*1000
+      )
+    }
+    setPlayState((p) => {
+      return {
+        ...p,
+        slowMotion: !p.slowMotion
+      }
+    })
   }
 
   const handleCanvasKeyDown = (e) => {
-    // console.log("Key down:", e.keyCode)
+    console.log('key down')
     let keyCode = e.keyCode;
     switch (keyCode) {
       case 32: { //Space
-        togglePlay(true);
+        togglePlay();
         break;
       }
       case 39: { //>
         pause();
         //shift should jump to next labeled frame
         // if (!e.shiftKey) {
-          showFrame(currentFrame + 1)
+          showFrame(playState.currentFrame + 1)
         // }
         break;
       }
@@ -140,11 +182,12 @@ function VideoFrame(props) {
         pause();
         //shift should jump to previous labeled frame
         // if (!e.shiftKey) {
-          showFrame(currentFrame - 1)
+          showFrame(playState.currentFrame - 1)
         // }
         break;
       }
-      case 35: { //End (will stop playing automatically)
+      case 35: {
+        pause();
         showFrame(frameImages.current.length - 1);
         break;
       }
@@ -153,8 +196,12 @@ function VideoFrame(props) {
         showFrame(firstFrameIndex.current);
         break;
       }
-      case 82: { //R
-        togglePlay(false);
+      case 82: { //r
+        toggleReverse();
+        break;
+      }
+      case 83: { //s
+        toggleSlowMotion();
         break;
       }
       default: {
@@ -164,15 +211,19 @@ function VideoFrame(props) {
   }
 
   const getWidth = () => {
-    let videoWidth = (window.innerHeight * .5) * aspectRatio
+    let videoWidth = (window.innerHeight * .6) * playState.aspectRatio
     if (videoWidth > (0.8 * window.innerWidth)) {
       videoWidth = (0.8 * window.innerWidth)
     }
-    console.log("running getHeight", videoWidth)
     return videoWidth
   }
 
   let width = getWidth();
+
+  if (playTimer.current != null && playState.paused === true) {
+    clearInterval(playTimer.current)
+    playTimer.current = null
+  }
 
   return (
     <React.Fragment>
@@ -182,17 +233,17 @@ function VideoFrame(props) {
           style={{width: width}}
         >
           <VideoHeader
-            currentFrameIndex={currentFrame}
+            currentFrameIndex={playState.currentFrame}
             handleJumpToFrame={(i) => showFrame(Number(i))}
             width={width}
           />
           <VideoCanvas 
             className={styles.videoCanvas}
-            frameToDraw={frameImages.current[currentFrame]}
-            handleClick={() => togglePlay(true)}
+            frameToDraw={frameImages.current[playState.currentFrame]}
+            handleClick={togglePlay}
             handleKeyDown={handleCanvasKeyDown}
             width={width}
-            aspectRatio={aspectRatio}
+            aspectRatio={playState.aspectRatio}
           />
           <div 
             className={styles.controlsBox}
@@ -205,13 +256,13 @@ function VideoFrame(props) {
               <VideoControls 
                 togglePlay={togglePlay}
                 pause={pause}
-                toggleRev={()=>{playState.current.forward = !playState.current.forward}}
-                toggleSlowMotion={()=> {console.log('todo: implement toggle slow-mo')}} 
+                toggleRev={toggleReverse}
+                toggleSlowMotion={toggleSlowMotion} 
                 showFrame={showFrame}
-                currentFrame={currentFrame}
-                isPlaying={playState.current.timer != null}
-                isForward={playState.current.forward === true}
-                isSlowMotion={false}
+                currentFrame={playState.currentFrame}
+                isPlaying={playState.paused === false}
+                isForward={playState.forwardPlay}
+                isSlowMotion={playState.slowMotion}
                 width={width}
               />
             </div>

@@ -30,14 +30,12 @@ function VideoCanvas(props) {
   },[width, aspectRatio])
 
   const paintCanvas = () => {
-    console.log("painting canvas", frameToDraw)
     if (canvasRef.current === undefined) { return }
     const context = canvasRef.current.getContext('2d')
     context.drawImage(frameToDraw, 0, 0, width, width * (1/aspectRatio));
   }
 
   const clearCanvas = () => {
-    console.log("clearing canvas")
     if (canvasRef.current === undefined) { return }
     const context = canvasRef.current.getContext('2d');
     context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
@@ -48,7 +46,6 @@ function VideoCanvas(props) {
     handleKeyDown(e)
   }
 
-  console.log("rendering canvas")
   frameToDraw !== undefined
     ? paintCanvas()
     : clearCanvas();

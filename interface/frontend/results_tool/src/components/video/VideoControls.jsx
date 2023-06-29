@@ -169,7 +169,7 @@ function VideoControls(props) {
       </ButtonGroup>
 
       <ButtonGroup className={styles.buttonGroup} >
-        {/* <Tooltip 
+        <Tooltip 
           title={"Slow motion mode"} 
           placement="top"
           disableInteractive
@@ -177,7 +177,7 @@ function VideoControls(props) {
           <IconButton
               id="slowMotion"
               aria-label="toggle slow motion play"
-              sx={isSlowMotion? styleOverrides.button.toggled : styleOverrides.button.default}
+              sx={isSlowMotion? styleOverrides.button.default : styleOverrides.button.toggled}
               onClick={handleSlowMotionClick}
             >
               <SlowMotionVideoRounded 
@@ -185,7 +185,7 @@ function VideoControls(props) {
               fontSize="large" 
               />
             </IconButton>
-          </Tooltip> */}
+          </Tooltip>
           <Tooltip 
             title={`Reverse ${isForward ? "off": "on"} (r)`} 
             placement="top"
