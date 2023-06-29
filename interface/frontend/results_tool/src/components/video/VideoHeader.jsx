@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoHeader.module.css';
-import { useSnacksDispatch } from '../../state/SnacksProvider';
+import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 
   
@@ -21,20 +21,21 @@ function VideoHeader(props, {children}) {
   useEffect(() => {
     if(Object.keys(videoData.metadata).length !== 0) {
       if (videoData.metadata.fps === undefined) {
-        dispatchSnack({
-          type: 'pushSnack',
-          severity: 'error',
-          message: 'No frames per second rate found, defaulting to 30.\nPlayback and timestamp accuracy will be affected.'
-        });
+        console.log('dispatching snack fps')
+        addSnack(
+          'No frames per second rate found, defaulting to 30.\nPlayback and timestamp accuracy will be affected.',
+          'error',
+          dispatchSnack
+        )
         currFramerate.current = 30;
       } else { currFramerate.current = (videoData.metadata.fps); }
 
       // if (videoData.metadata.smpteOffset === undefined) {
-      //   dispatchSnack({
-      //     type: 'pushSnack',
-      //     severity: 'info',
-      //     message: 'No timestamp offset found, defaulting to 0.\nTimestamps in browser may differ from original video.\nFrame numbers are still accurate.'
-      //   });
+        // addSnack(
+        //   'No timestamp offset found, defaulting to 0.\nTimestamps in browser may differ from original video.\nFrame numbers are still accurate.',
+        //   'info',
+        //   dispatchSnack
+        // )
       //   smpteOffset.current = 0;
       // } else { smpteOffset.current = videoData.metadata.smpteOffset }
     } 

@@ -57,3 +57,16 @@ function snacksReducer(snacks, action) {
 }
 
 const initialSnacks = []
+
+export function addSnack (message, severity, dispatch) {
+  dispatch({
+    type: 'pushSnack',
+    severity: severity,
+    message: message
+  })
+  setTimeout(() => {
+    dispatch({
+      type: 'removeTopSnack'
+    })
+  }, 1000)
+}
