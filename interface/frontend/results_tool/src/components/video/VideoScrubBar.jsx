@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 
-function ProgressBar(props, {children}) {
+function VideoScrubBar(props, {children}) {
 
   const { currentFrame } = props;
   const videoData = useVideoData();
@@ -61,4 +61,4 @@ function ProgressBar(props, {children}) {
   );
 }
 
-export default ProgressBar;
+export default VideoScrubBar;

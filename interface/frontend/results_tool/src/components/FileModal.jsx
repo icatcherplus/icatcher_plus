@@ -170,7 +170,10 @@ function FileModal() {
       if (parsedFile === undefined || parsedFile === '') {
         addSnack(`Annotations file is empty`, "error", dispatchSnack)
       } else {
-        let tempAnnotations = {}
+        let tempAnnotations = {
+          machineLabel: [],
+          confidence: []
+        }
         let lines = parsedFile.split('\n')
         lines.forEach((line, i) => {
           let data = line.split(',');
@@ -184,16 +187,14 @@ function FileModal() {
             }
             return;
           }
-          tempAnnotations[data[0]] = {
-            machineLabel: data[1],
-            confidence: Number(data[2])
-          }
+          let index = Number(data[0]) + 4
+          tempAnnotations.machineLabel[index] = data[1].trim()
+          tempAnnotations.confidence[index] = Number(data[2])
         })
         dispatchVideoData({
           type: "setAnnotations",
           annotations: tempAnnotations
         })
-        console.log("Annotations:", tempAnnotations)
       }
     });
     reader.readAsText(annotationsFile.current);
@@ -210,7 +211,6 @@ function FileModal() {
     // console.time('Sort time')
     tempFrames = tempFrames.sort((a,b) => a.frameNumber - b.frameNumber);
     // console.timeEnd('Sort time')
-    console.log("file", tempFrames[5])
     dispatchVideoData({
       type:"setFrames",
       frames: tempFrames

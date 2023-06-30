@@ -1,0 +1,8 @@
+.annotationsBar {
+  display: inline-block;
+  padding: 1rem;
+}
+
+.visible {
+  background-color: blueviolet;
+}

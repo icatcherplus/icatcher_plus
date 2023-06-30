@@ -3,11 +3,10 @@ import styles from './VideoFrame.module.css';
 
 // import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
-import ProgressBar from './ProgressBar'
+import VideoScrubBar from './VideoScrubBar'
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
-import HeatmapBar from './HeatmapBar';
-import InfoBars from './InfoBars';
+import AnnotationsFrame from '../annotations/AnnotationsFrame';
 import VideoHeader from './VideoHeader';
 
   
@@ -44,6 +43,7 @@ function VideoFrame(props) {
   }, [videoData.frames, videoData.metadata])
 
   const loadFrames = () => {
+    console.log("videoData.frames.length", videoData.frames.length)
     videoData.frames.forEach((f, index) => {
       let img = new Image();
       img.frameNumber = f.frameNumber + videoData.metadata.frameOffset - 1;
@@ -252,7 +252,7 @@ function VideoFrame(props) {
             <div 
               className={styles.controlsBackground}
             >
-              <ProgressBar />
+              <VideoScrubBar currentFrame={playState.currentFrame}/>
               <VideoControls 
                 togglePlay={togglePlay}
                 pause={pause}
@@ -268,11 +268,8 @@ function VideoFrame(props) {
             </div>
           </div>  
         </div>
-        {/* <InfoBars>
-          <HeatmapBar id="editsMap"/>
-          <HeatmapBar id="labelsMap"/>
-          <HeatmapBar id="confidenceMap"/>
-        </InfoBars> */}
+        <AnnotationsFrame width={width} />
+
       </div>
     </React.Fragment>
   );
