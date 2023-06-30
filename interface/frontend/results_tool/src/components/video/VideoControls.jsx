@@ -31,45 +31,51 @@ function VideoControls(props) {
   } = props;
 
 
-  const buttonStyling = {
-    default: {
-      color: 'white',
-      borderRadius: 1,
-      '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+  const styleOverrides = {
+    button: {
+      default: {
+        color: 'white',
         borderRadius: 1,
-        backgroundColor: 'lightgray',
+        '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+          borderRadius: 1,
+          backgroundColor: 'lightgray',
+        }
+      },
+      toggled: {
+        color: 'white',
+        fillOpacity: .66,
+        borderRadius: 1,
+        '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
+          borderRadius: 1,
+        }
       }
     },
-    toggled: {
-      color: 'white',
-      fillOpacity: .66,
-      borderRadius: 1,
-      '.MuiTouchRipple-ripple .MuiTouchRipple-child': {
-        borderRadius: 1,
-      }
-    }
-  }
-
-  const switchStyling = {
-    '.MuiSwitch-switchBase': {
-      margin: '8px',
-      color: 'white',
-      backgroundColor: 'black',
-      width: '20px',
-      height: '20px',
-      '&.Mui-checked': {
-        color: 'black',
-        backgroundColor: 'white',
-        '& + .MuiSwitch-track': {
-          backgroundColor: 'white'
-        },
+    switch: {
+      '.MuiSwitch-switchBase': {
+        margin: '8px',
+        color: 'white',
+        backgroundColor: 'gray',
+        width: '20px',
+        height: '20px',
         '&:hover': {
-          backgroundColor: 'white'
+          backgroundColor: 'gray'
+        },
+        '& + .MuiSwitch-track': {
+          backgroundColor: 'gray'
+        },
+        '&.Mui-checked': {
+          color: 'gray',
+          backgroundColor: 'white',
+          '& + .MuiSwitch-track': {
+            backgroundColor: 'white'
+          },
+          '&:hover': {
+            backgroundColor: 'white'
+          }
         }
       }
     }
   }
-
 
   const handlePlayPauseClick = (e) => {
     console.log("play/pause")
@@ -106,11 +112,12 @@ function VideoControls(props) {
         <Tooltip 
           title={isPlaying? "Pause (space)": "Play (Space)"} 
           placement="top" 
+          disableInteractive
         >
           <IconButton
             id="playPause"
             aria-label="toggle play"
-            sx={buttonStyling.default}
+            sx={styleOverrides.button.default}
             onClick={handlePlayPauseClick}
           >
             { isPlaying
@@ -127,13 +134,14 @@ function VideoControls(props) {
         </Tooltip>
         <Tooltip 
           title={"Step Back (<)"} 
-          placement="top" 
+          placement="top"
+          disableInteractive
         >
           <IconButton
             id="stepReverse"
             aria-label="step back one frame"
-            sx={buttonStyling.default}
-            onClick={handleStepForwardClick}
+            sx={styleOverrides.button.default}
+            onClick={handleStepBackClick}
           >
             <SkipPreviousRounded 
               fontSize={'large'}
@@ -143,13 +151,14 @@ function VideoControls(props) {
         </Tooltip>
         <Tooltip 
           title={"Step Forward (>)"} 
-          placement="top" 
+          placement="top"
+          disableInteractive
         >
           <IconButton
             id="stepForward"
             aria-label="step forward one frame"
-            sx={buttonStyling.default}
-            onClick={handleStepBackClick}
+            sx={styleOverrides.button.default}
+            onClick={handleStepForwardClick}
           >
             <SkipNextRounded 
               fontSize={'large'}
@@ -162,12 +171,13 @@ function VideoControls(props) {
       <ButtonGroup className={styles.buttonGroup} >
         <Tooltip 
           title={"Slow motion mode"} 
-          placement="top" 
+          placement="top"
+          disableInteractive
         >
           <IconButton
               id="slowMotion"
               aria-label="toggle slow motion play"
-              sx={isSlowMotion? buttonStyling.toggled : buttonStyling.default}
+              sx={isSlowMotion? styleOverrides.button.default : styleOverrides.button.toggled}
               onClick={handleSlowMotionClick}
             >
               <SlowMotionVideoRounded 
@@ -178,12 +188,13 @@ function VideoControls(props) {
           </Tooltip>
           <Tooltip 
             title={`Reverse ${isForward ? "off": "on"} (r)`} 
-            placement="top" 
+            placement="top"
+            disableInteractive
           >
             <Switch
               id="reverseSwitch"
               aria-label="toggle reversed playback"
-              sx={switchStyling}
+              sx={styleOverrides.switch}
               icon={
                 <FastForwardRounded fontSize="16px"/>
               }

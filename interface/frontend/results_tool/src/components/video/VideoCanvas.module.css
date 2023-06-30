@@ -1,6 +1,4 @@
 .videoCanvas {
     flex: 2;
-    min-width: 500;
-    min-height: 300;
     background-color:#eee;
 }

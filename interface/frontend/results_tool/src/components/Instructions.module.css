@@ -1,0 +1,31 @@
+.accordion {
+  color: white;
+  background-color: gray;
+  position: sticky;
+}
+
+.headerText {
+  color: white;
+}
+
+.buttonText {
+  color: black;
+}
+
+.instructionContainer {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.instructionsHeader {
+  margin: 0;
+}
+
+.instructions {
+  margin: 0;
+  font-size: 14px;
+}

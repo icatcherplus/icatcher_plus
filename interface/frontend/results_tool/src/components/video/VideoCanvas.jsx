@@ -3,7 +3,7 @@ import {
   DialogTitle,
   DialogContent
 } from '@mui/material';
-import { useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './VideoCanvas.module.css';
 
   
@@ -13,16 +13,26 @@ handleClick: callback to handle click on canvas
 */
 function VideoCanvas(props) {
   
-  const { frameToDraw, handleClick, handleKeyDown } = props;
+  const { frameToDraw, handleClick, handleKeyDown, width, aspectRatio } = props;
 
   const canvasRef = useRef();
+
+
+  useEffect (() => {
+    if (canvasRef.current !== undefined) { 
+      console.log('setting dimensions')
+      canvasRef.current.width = width
+      canvasRef.current.height = width * (1/aspectRatio)  
+      frameToDraw !== undefined
+      ? paintCanvas()
+      : clearCanvas();
+    }
+  },[width, aspectRatio])
+
   const paintCanvas = () => {
     if (canvasRef.current === undefined) { return }
-    // console.log("Showing image", frameToDraw.frameNumber)
-    canvasRef.current.width = frameToDraw.width;
-    canvasRef.current.height = frameToDraw.height;
     const context = canvasRef.current.getContext('2d')
-    context.drawImage(frameToDraw, 0, 0);
+    context.drawImage(frameToDraw, 0, 0, width, width * (1/aspectRatio));
   }
 
   const clearCanvas = () => {
@@ -39,21 +49,16 @@ function VideoCanvas(props) {
   frameToDraw !== undefined
     ? paintCanvas()
     : clearCanvas();
-
   
   return (
-    // <div>
-      <canvas 
-        id="videoCanvas" 
-        width="854" 
-        height="480"
-        ref={canvasRef}
-        className={styles.videoCanvas}
-        onClick={handleClick}
-        onKeyDown = {onKeyDown}
-        tabIndex={0}
-      />
-    // {/* </div> */}
+    <canvas 
+      id="videoCanvas"
+      ref={canvasRef}
+      className={styles.videoCanvas}
+      onClick={handleClick}
+      onKeyDown = {onKeyDown}
+      tabIndex={0}
+    />
   );
 }
   

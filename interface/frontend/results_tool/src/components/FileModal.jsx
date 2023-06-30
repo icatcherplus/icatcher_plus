@@ -4,7 +4,7 @@ import {
   DialogContent
 } from '@mui/material';
 import { useState, useRef, useEffect } from 'react';
-import { useSnacksDispatch } from '../state/SnacksProvider';
+import { useSnacksDispatch, addSnack } from '../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch, METADATA_FIELD_MAPPING } from '../state/VideoDataProvider'
 
 /* Expected props:
@@ -32,11 +32,7 @@ function FileModal() {
   const handleSubmitClick = (e) => {
     // console.time('Submit Timer')
     if (inputDirectory.current === undefined || inputDirectory.current.length === 0) {
-      dispatchSnack({
-        type: 'pushSnack', 
-        severity: 'warning',
-        message: 'You must select an input directory to continue'
-      })
+      addSnack('You must select an input directory to continue', 'warning', dispatchSnack)
       return;
     }
 
@@ -110,21 +106,13 @@ function FileModal() {
     
     let validInput = true;
     if (framesFiles.current.length === 0) {
-      dispatchSnack({
-        type:"pushSnack",
-        severity:"error",
-        message:`Your input directory is missing frames`
-      });
+      addSnack(`Your input directory is missing frames`, "error", dispatchSnack)
       validInput = false
     }
     let INDEX_MAP = ['metadata', 'annotations', 'video'];
     [metadataFile.current, annotationsFile.current, videoFile.current].forEach((a, i) => {
       if(a === undefined){
-        dispatchSnack({
-          type:"pushSnack",
-          severity:"error",
-          message:`Your input directory is missing ${INDEX_MAP[i]}`
-        });
+        addSnack(`Your input directory is missing ${INDEX_MAP[i]}`, "error", dispatchSnack)
         validInput = false
       }
     });
@@ -147,21 +135,17 @@ function FileModal() {
       let validMetadata = true
       let tempMetadata = {}
       if (parsedFile === undefined) {
-        dispatchSnack({
-          type: "pushSnack",
-          severity: "error",
-          message: `Metadata.json file is empty`
-        });
+        addSnack(`Metadata.json file is empty`, "error", dispatchSnack)
         validMetadata = false;
       } else {
         Object.keys(METADATA_FIELD_MAPPING).forEach((key) => {
             if (parsedFile[METADATA_FIELD_MAPPING[key]] === undefined) {
               validMetadata = false;
-              dispatchSnack({
-                type: "pushSnack",
-                severity: "error",
-                message: `Metadata.json missing required key "${METADATA_FIELD_MAPPING[key]}". Please fix to continue.`
-              });
+              addSnack(
+                `Metadata.json missing required key "${METADATA_FIELD_MAPPING[key]}". Please fix to continue.`, 
+                "error", 
+                dispatchSnack
+              )
             } else { tempMetadata[key] = parsedFile[METADATA_FIELD_MAPPING[key]] }
         });
       }
@@ -184,36 +168,33 @@ function FileModal() {
     reader.addEventListener('load', (event) => {
       parsedFile = event.target.result;
       if (parsedFile === undefined || parsedFile === '') {
-        dispatchSnack({
-          type: "pushSnack",
-          severity: "error",
-          message: `Annotations file is empty`
-        });
+        addSnack(`Annotations file is empty`, "error", dispatchSnack)
       } else {
-        let tempAnnotations = {}
+        let tempAnnotations = {
+          machineLabel: [],
+          confidence: []
+        }
         let lines = parsedFile.split('\n')
         lines.forEach((line, i) => {
           let data = line.split(',');
           if (data.length < 3) {
             if(i !== lines.length-1) {
-              dispatchSnack({
-                type: "pushSnack",
-                severity: "error",
-                message: `Annotations file has unexpected format "${line}" at line ${i}.`
-              });
+              addSnack(
+                `Annotations file has unexpected format "${line}" at line ${i}.`, 
+                "error", 
+                dispatchSnack
+              )
             }
             return;
           }
-          tempAnnotations[data[0]] = {
-            machineLabel: data[1],
-            confidence: Number(data[2])
-          }
+          let index = Number(data[0]) + 4
+          tempAnnotations.machineLabel[index] = data[1].trim()
+          tempAnnotations.confidence[index] = Number(data[2])
         })
         dispatchVideoData({
           type: "setAnnotations",
           annotations: tempAnnotations
         })
-        console.log("Annotations:", tempAnnotations)
       }
     });
     reader.readAsText(annotationsFile.current);
@@ -230,7 +211,6 @@ function FileModal() {
     // console.time('Sort time')
     tempFrames = tempFrames.sort((a,b) => a.frameNumber - b.frameNumber);
     // console.timeEnd('Sort time')
-    console.log("file", tempFrames[5])
     dispatchVideoData({
       type:"setFrames",
       frames: tempFrames

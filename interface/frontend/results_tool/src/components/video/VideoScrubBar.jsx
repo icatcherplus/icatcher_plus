@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 
-function ProgressBar(props, {children}) {
+function VideoScrubBar(props, {children}) {
 
   const { currentFrame } = props;
   const videoData = useVideoData();
@@ -17,6 +17,9 @@ function ProgressBar(props, {children}) {
   const sliderStyling = {
     color: 'red',
     height: 4,
+    padding: 0,
+    paddingBottom: 0.5,
+    zIndex: 1,
     '& .MuiSlider-thumb': {
       width: 8,
       height: 8,
@@ -39,12 +42,13 @@ function ProgressBar(props, {children}) {
 
   const handleSliderChange = (e, value, activeThumb) => {
     setFrameRange(value)
-    console.log(`Slider change: ${value}, ${activeThumb}`)
+    // console.log(`Slider change: ${value}, ${activeThumb}`)
   }
 
   return (
     <Slider
-      aria-label="video scrub bar"
+      getAriaLabel={() => 'video scrub bar'}
+      getAriaValueText={(v) => `frame ${v}`}
       size="small"
       value={frameRange}
       min={videoData.metadata.frameOffset}
@@ -52,8 +56,9 @@ function ProgressBar(props, {children}) {
       max={videoData.metadata.numFrames}
       onChange={handleSliderChange}
       sx={sliderStyling}
+      valueLabelDisplay="auto"
     />
   );
 }
 
-export default ProgressBar;
+export default VideoScrubBar;

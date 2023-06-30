@@ -1,6 +1,6 @@
 import { 
   Alert,
-  Grow,
+  Slide,
   Snackbar
 } from '@mui/material';
 import { useState, useEffect } from 'react';
@@ -12,31 +12,15 @@ import { useSnacks, useSnacksDispatch } from '../../state/SnacksProvider';
 function Snacks() {
 
   const snacks = useSnacks();
-  const dispatch = useSnacksDispatch();
-  const [ open, setOpen ] = useState()
-
-  useEffect (() => {
-    setOpen(snacks.length !== 0)
-  }, [ snacks ])
-
-  const handleClose = (e, reason) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-    dispatch({
-      type: "removeTopSnack"    
-    });
-  };
 
   return (
     <Snackbar
       anchorOrigin={{ vertical:'top', horizontal:'center' }}
-      open={open}
-      autoHideDuration={3000}
-      onClose={handleClose}
-      TransitionComponent={Grow}
+      open={snacks.length !== 0}
+      TransitionComponent={Slide}
+      // message={snacks[0]?.message}
     >
-      <Alert severity={snacks[0]?.severity}>
+      <Alert variant="filled" severity={snacks[0]?.severity}>
         {snacks[0]?.message}
       </Alert>
     </Snackbar>
