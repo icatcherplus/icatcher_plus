@@ -31,7 +31,32 @@ function playbackStateReducer(playbackState, action) {
   switch (action.type) {
     case 'setCurrentFrame': {
       return { ...playbackState,
-          metadata: { ...action.metadata}
+        currentFrame: { ...action.currentFrame}
+        };
+    }
+    case 'setAspectRatio': {
+      return { ...playbackState,
+        aspectRatio: { ...action.aspectRatio}
+        };
+    }
+    case 'setWidth': {
+      return { ...playbackState,
+        width: { ...action.width}
+        };
+    }
+    case 'setForwardPlay': {
+      return { ...playbackState,
+        forwardPlay: { ...action.forwardPlay}
+        };
+    }
+    case 'setSlowMotion': {
+      return { ...playbackState,
+        slowMotion: { ...action.slowMotion}
+        };
+    }
+    case 'setPaused': {
+      return { ...playbackState,
+        paused: { ...action.paused}
         };
     }
     default: {
@@ -41,7 +66,10 @@ function playbackStateReducer(playbackState, action) {
 }
 const initialPlaybackState = {
   currentFrame: undefined,
+  aspectRatio: 16/9,
+  width: undefined,
   forwardPlay: true,
   slowMotion: false,
+  paused: true
   // playTimer: undefined
 }
