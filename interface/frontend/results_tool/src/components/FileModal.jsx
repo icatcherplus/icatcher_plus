@@ -3,7 +3,7 @@ import {
   DialogTitle,
   DialogContent
 } from '@mui/material';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useSnacksDispatch, addSnack } from '../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch, METADATA_FIELD_MAPPING } from '../state/VideoDataProvider'
 
@@ -26,13 +26,12 @@ function FileModal() {
 
   const handleDirSelect = (e) => {
     inputDirectory.current = [...e.target.files]
-    console.log(inputDirectory.current)
   }
 
   const handleSubmitClick = (e) => {
     // console.time('Submit Timer')
     if (inputDirectory.current === undefined || inputDirectory.current.length === 0) {
-      addSnack('You must select an input directory to continue', 'warning', dispatchSnack)
+      dispatchSnack(addSnack('You must select an input directory to continue', 'warning'))
       return;
     }
 
@@ -106,13 +105,13 @@ function FileModal() {
     
     let validInput = true;
     if (framesFiles.current.length === 0) {
-      addSnack(`Your input directory is missing frames`, "error", dispatchSnack)
+      dispatchSnack(addSnack(`Your input directory is missing frames`, "error"))
       validInput = false
     }
     let INDEX_MAP = ['metadata', 'annotations', 'video'];
     [metadataFile.current, annotationsFile.current, videoFile.current].forEach((a, i) => {
       if(a === undefined){
-        addSnack(`Your input directory is missing ${INDEX_MAP[i]}`, "error", dispatchSnack)
+        dispatchSnack(addSnack(`Your input directory is missing ${INDEX_MAP[i]}`, "error"))
         validInput = false
       }
     });
@@ -135,17 +134,16 @@ function FileModal() {
       let validMetadata = true
       let tempMetadata = {}
       if (parsedFile === undefined) {
-        addSnack(`Metadata.json file is empty`, "error", dispatchSnack)
+        dispatchSnack(addSnack(`Metadata.json file is empty`, "error"))
         validMetadata = false;
       } else {
         Object.keys(METADATA_FIELD_MAPPING).forEach((key) => {
             if (parsedFile[METADATA_FIELD_MAPPING[key]] === undefined) {
               validMetadata = false;
-              addSnack(
+              dispatchSnack(addSnack(
                 `Metadata.json missing required key "${METADATA_FIELD_MAPPING[key]}". Please fix to continue.`, 
-                "error", 
-                dispatchSnack
-              )
+                "error"
+              ))
             } else { tempMetadata[key] = parsedFile[METADATA_FIELD_MAPPING[key]] }
         });
       }
@@ -168,7 +166,7 @@ function FileModal() {
     reader.addEventListener('load', (event) => {
       parsedFile = event.target.result;
       if (parsedFile === undefined || parsedFile === '') {
-        addSnack(`Annotations file is empty`, "error", dispatchSnack)
+        dispatchSnack(addSnack(`Annotations file is empty`, "error"))
       } else {
         let tempAnnotations = {
           machineLabel: [],
@@ -179,11 +177,10 @@ function FileModal() {
           let data = line.split(',');
           if (data.length < 3) {
             if(i !== lines.length-1) {
-              addSnack(
+              dispatchSnack(addSnack(
                 `Annotations file has unexpected format "${line}" at line ${i}.`, 
-                "error", 
-                dispatchSnack
-              )
+                "error"
+              ))
             }
             return;
           }

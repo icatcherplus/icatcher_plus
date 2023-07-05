@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './VideoHeader.module.css';
 import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
+import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
+
 
   
 /* Expected props:
@@ -9,43 +11,41 @@ currentFrameIndex: int
 handleJumpToFrame: callback
 */
 function VideoHeader(props, {children}) {
-  
-  const { currentFrameIndex, handleJumpToFrame, width } = props;
+  const { handleJumpToFrame } = props;
   const videoData = useVideoData();
+  const playbackState = usePlaybackState();
   const dispatchSnack = useSnacksDispatch();
+
   const smpteOffset = useRef(0);
-  const currFramerate = useRef(0);
-  const currInput = useRef();
+  const currentFramerate = useRef(0);
+  const currentInput = useRef();
   const [ visible, setVisible ] = useState(false)
 
   useEffect(() => {
     if(Object.keys(videoData.metadata).length !== 0) {
       if (videoData.metadata.fps === undefined) {
-        console.log('dispatching snack fps')
-        addSnack(
-          'No frames per second rate found, defaulting to 30.\nPlayback and timestamp accuracy will be affected.',
-          'error',
-          dispatchSnack
-        )
-        currFramerate.current = 30;
-      } else { currFramerate.current = (videoData.metadata.fps); }
+        dispatchSnack(addSnack(
+          'No frames per second rate found, defaulting to 30.\nPlayback accuracy will be affected.',
+          'error'
+        ))
+        currentFramerate.current = 30;
+      } else { currentFramerate.current = (videoData.metadata.fps); }
 
       // if (videoData.metadata.smpteOffset === undefined) {
-        // addSnack(
+        // dispatchSnack(addSnack(
         //   'No timestamp offset found, defaulting to 0.\nTimestamps in browser may differ from original video.\nFrame numbers are still accurate.',
-        //   'info',
-        //   dispatchSnack
-        // )
+        //   'info'
+        // ))
       //   smpteOffset.current = 0;
       // } else { smpteOffset.current = videoData.metadata.smpteOffset }
     } 
   },[videoData.metadata.fps])
 
   useEffect(() => {
-    if (!visible && currentFrameIndex !== undefined) {
+    if (!visible && playbackState.currentFrame !== undefined) {
       setVisible(true)
     }
-  }, [currentFrameIndex])
+  }, [playbackState.currentFrame])
 
   const getSMPTETime = (index, fps) => {
 
@@ -72,16 +72,13 @@ function VideoHeader(props, {children}) {
   }
 
   const handleInputChange = (e) => {
-    console.log('input', e.target.value)
-    currInput.current = Number(e.target.value);
+    currentInput.current = Number(e.target.value);
   } 
 
-  const smpteTime = smpteOffset.current + currentFrameIndex;
-  const smpteString = getSMPTETime(currentFrameIndex, currFramerate)
-  // const utcTime = utcOffset + ((1000/currFramerate.current)*currentFrameIndex);
+  const smpteTime = smpteOffset.current + playbackState.currentFrame;
+  const smpteString = getSMPTETime(playbackState.currentFrame, currentFramerate)
+  // const utcTime = utcOffset + ((1000/currentFramerate.current)*currentFrameIndex);
   // const utcString = new Date(utcTime).toISOString()
-  const label = 'tbd'
-  const confidence = 'tbd'
 
   return (
     <React.Fragment>
@@ -90,22 +87,22 @@ function VideoHeader(props, {children}) {
         { visible ?
           <div
             className={styles.videoHeader}
-            style={{width: width}}
+            style={{width: playbackState.videoWidth}}
           >
             {/* <div> UTC Time: {utcTime} </div> */}
             {/* <div> SMPTE Time {smpteString}</div> */}
-            <div> Frame Number: {currentFrameIndex} </div>
-            <div> Label: {videoData.annotations[currentFrameIndex - 4]?.machineLabel}</div>
-            <div> Confidence: {videoData.annotations[currentFrameIndex - 4]?.confidence}</div>
+            <div> Frame Number: {playbackState.currentFrame} </div>
+            <div> Label: {videoData.annotations.machineLabel[playbackState.currentFrame]}</div>
+            <div> Confidence: {videoData.annotations.confidence[playbackState.currentFrame]}</div>
             <div>
               <input type='text' onChange={handleInputChange}></input>
-              <button onClick={()=> {handleJumpToFrame(currInput.current)}}> Jump to Frame</button>
+              <button onClick={()=> {handleJumpToFrame(currentInput.current)}}> Jump to Frame</button>
             </div>
           </div>
         :
           <div 
             className={styles.videoHeader} 
-            style={{width: width}}
+            style={{width: playbackState.videoWidth}}
           />
         }
         <div />

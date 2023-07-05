@@ -1,10 +1,7 @@
-import { 
-  Dialog,
-  DialogTitle,
-  DialogContent
-} from '@mui/material';
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
+import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
 import styles from './VideoCanvas.module.css';
+
 
   
 /* Expected props:
@@ -13,42 +10,19 @@ handleClick: callback to handle click on canvas
 */
 function VideoCanvas(props) {
   
-  const { frameToDraw, handleClick, handleKeyDown, width, aspectRatio } = props;
-
+  const { frameToDraw, handleClick, handleKeyDown } = props;
+  const playbackState = usePlaybackState();
   const canvasRef = useRef();
-
 
   useEffect (() => {
     if (canvasRef.current !== undefined) { 
-      console.log('setting dimensions')
-      canvasRef.current.width = width
-      canvasRef.current.height = width * (1/aspectRatio)  
+      canvasRef.current.width = playbackState.videoWidth
+      canvasRef.current.height = playbackState.videoWidth * (1/playbackState.aspectRatio)  
       frameToDraw !== undefined
-      ? paintCanvas()
-      : clearCanvas();
+        ? paintCanvas(canvasRef, playbackState.videoWidth, playbackState.aspectRatio, frameToDraw)
+        : clearCanvas(canvasRef);
     }
-  },[width, aspectRatio])
-
-  const paintCanvas = () => {
-    if (canvasRef.current === undefined) { return }
-    const context = canvasRef.current.getContext('2d')
-    context.drawImage(frameToDraw, 0, 0, width, width * (1/aspectRatio));
-  }
-
-  const clearCanvas = () => {
-    if (canvasRef.current === undefined) { return }
-    const context = canvasRef.current.getContext('2d');
-    context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-  }
-
-  const onKeyDown = (e) => {
-    if (canvasRef.current === undefined) { return }
-    handleKeyDown(e)
-  }
-
-  frameToDraw !== undefined
-    ? paintCanvas()
-    : clearCanvas();
+  },[playbackState.videoWidth, playbackState.aspectRatio, frameToDraw])
   
   return (
     <canvas 
@@ -56,10 +30,27 @@ function VideoCanvas(props) {
       ref={canvasRef}
       className={styles.videoCanvas}
       onClick={handleClick}
-      onKeyDown = {onKeyDown}
+      onKeyDown = {(e) => onKeyDown(e, canvasRef, handleKeyDown)}
       tabIndex={0}
     />
   );
 }
   
 export default VideoCanvas;
+
+const paintCanvas = (canvasRef, width, aspectRatio, frameToDraw) => {
+  // if (canvasRef.current === undefined) { return }
+  const context = canvasRef.current.getContext('2d')
+  context.drawImage(frameToDraw, 0, 0, width, width*(1/aspectRatio));
+}
+
+const clearCanvas = (canvasRef) => {
+  // if (canvasRef.current === undefined) { return }
+  const context = canvasRef.current.getContext('2d');
+  context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+}
+
+const onKeyDown = (event, canvasRef, handleKeyDown) => {
+  if (canvasRef.current === undefined) { return }
+  handleKeyDown(event)
+}

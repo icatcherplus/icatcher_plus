@@ -1,48 +1,62 @@
 import { 
   Slider
 } from '@mui/material';
-import { useState } from 'react';
-import { useSnacksDispatch } from '../../state/SnacksProvider';
-import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
+import { useEffect, useRef } from 'react';
+import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
+import { useVideoData } from '../../state/VideoDataProvider';
+import { usePlaybackState, usePlaybackStateDispatch, updateFrameRange } from '../../state/PlaybackStateProvider';
 
-function VideoScrubBar(props, {children}) {
 
-  const { currentFrame } = props;
-  const videoData = useVideoData();
-  const dispatchVideoData = useVideoDataDispatch();
-  const dispatchSnack = useSnacksDispatch();
-
-  const [ frameRange, setFrameRange ] = useState([0, 100]);
-
-  const sliderStyling = {
-    color: 'red',
-    height: 4,
-    padding: 0,
-    paddingBottom: 0.5,
-    zIndex: 1,
-    '& .MuiSlider-thumb': {
-      width: 8,
-      height: 8,
-      transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
-      '&:before': {
-        boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
-      },
-      '&:hover, &.Mui-focusVisible': {
-        boxShadow: `0px 0px 0px 8px rgb(0 0 0 / 16%)`,
-      },
-      '&.Mui-active': {
-        width: 20,
-        height: 20,
-      },
+const sliderStyling = {
+  color: 'red',
+  height: 4,
+  padding: 0,
+  paddingBottom: 0.5,
+  zIndex: 1,
+  '& .MuiSlider-thumb': {
+    width: 8,
+    height: 8,
+    transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
+    '&:before': {
+      boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
     },
-    '& .MuiSlider-rail': {
-      opacity: 0.28,
-    }
+    '&:hover, &.Mui-focusVisible': {
+      boxShadow: `0px 0px 0px 8px rgb(0 0 0 / 16%)`,
+    },
+    '&.Mui-active': {
+      width: 20,
+      height: 20,
+    },
+  },
+  '& .MuiSlider-rail': {
+    opacity: 0.28,
   }
+}
 
-  const handleSliderChange = (e, value, activeThumb) => {
-    setFrameRange(value)
-    // console.log(`Slider change: ${value}, ${activeThumb}`)
+function VideoScrubBar() {
+
+  const videoData = useVideoData();
+  const dispatchSnack = useSnacksDispatch();
+  const playbackState = usePlaybackState();
+  const dispatchPlaybackState = usePlaybackStateDispatch();
+
+  const sliderValue = useRef(0);
+
+  useEffect(() => { // move to app level ?
+    dispatchPlaybackState(updateFrameRange(playbackState.frameRange, videoData, (m,s) => dispatchSnack(addSnack(m,s))))
+  }, [videoData.metadata])
+
+  useEffect(() => {
+    sliderValue.current = playbackState.currentFrame === undefined ? 0 : playbackState.currentFrame
+  }, [playbackState.currentFrame])
+
+  const handleSliderChange = (event, value, activeThumb) => {
+    // dispatchPlaybackState(updateFrameRange(value, videoData, (m,s) => dispatchSnack(addSnack(m,s))))
+    sliderValue.current = value
+    dispatchPlaybackState({
+      type: 'setCurrentFrame',
+      currentFrame: value
+    })
   }
 
   return (
@@ -50,11 +64,11 @@ function VideoScrubBar(props, {children}) {
       getAriaLabel={() => 'video scrub bar'}
       getAriaValueText={(v) => `frame ${v}`}
       size="small"
-      value={frameRange}
-      min={videoData.metadata.frameOffset}
+      value={sliderValue.current}
+      min={videoData.metadata.frameOffset || 0}
       step={1}
-      max={videoData.metadata.numFrames}
-      onChange={handleSliderChange}
+      max={videoData.metadata.numFrames - 1 || 0}
+      onChange={(e,v,a) => handleSliderChange(e,v,a,videoData,dispatchSnack,dispatchPlaybackState)}
       sx={sliderStyling}
       valueLabelDisplay="auto"
     />
@@ -62,3 +76,4 @@ function VideoScrubBar(props, {children}) {
 }
 
 export default VideoScrubBar;
+

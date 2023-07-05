@@ -5,13 +5,16 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { SnacksProvider } from './state/SnacksProvider';
 import { VideoDataProvider } from './state/VideoDataProvider';
+import { PlaybackStateProvider } from './state/PlaybackStateProvider';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <SnacksProvider>
       <VideoDataProvider>
-        <App />
+        <PlaybackStateProvider>
+          <App />
+        </PlaybackStateProvider>
       </VideoDataProvider>
     </SnacksProvider>
   </React.StrictMode>

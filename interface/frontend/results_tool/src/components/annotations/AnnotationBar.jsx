@@ -19,7 +19,11 @@ const colorPalettes = {
     ],
     edited: [],
     default: [
-
+      '#C5C5C5',
+      '#F05039',
+      '#1F449C',
+      '#EEBAB4',
+      '#7CA1CC'
     ],
   },
   continuous: {
@@ -34,25 +38,9 @@ const colorPalettes = {
   },
 }
 
-const hexToRgb = (hex) => {
-  return {
-      r: parseInt(hex.substring(1, 3), 16),
-      g: parseInt(hex.substring(3, 5), 16),
-      b: parseInt(hex.substring(5, 7), 16)
-  };
-}
-
-const blendColors = (colorA, colorB, weight) => {
-  return {
-      r: Math.floor(colorA.r * (1 - weight) + colorB.r * weight),
-      g: Math.floor(colorA.g * (1 - weight) + colorB.g * weight),
-      b: Math.floor(colorA.b * (1 - weight) + colorB.b * weight)
-  };
-}
-
 function AnnotationBar(props) {
   
-  const { id, type, totalWidth } = props;
+  const { id, type } = props;
   const videoData = useVideoData();
 
   const [ colorArray, setColorArray ] = useState([]);
@@ -69,7 +57,6 @@ function AnnotationBar(props) {
   const computeColorArray = () => {
     let tempColorArray = []
     const palette = colorPalettes[type][colorPalette || 'default']
-    console.log("palette", palette)
     if (type === 'categorical') {
       let categories = [ ...new Set(videoData.annotations[id])]
       let colorMap = {}
@@ -88,13 +75,28 @@ function AnnotationBar(props) {
     }
     setColorArray([...tempColorArray])
   }
-
-
+  
   return (
-    <div width={totalWidth} >
-      <HeatmapCanvas colorArray={colorArray} width={totalWidth}/>
+    <div>
+      <HeatmapCanvas colorArray={colorArray}/>
     </div>
   );
 }
   
 export default AnnotationBar;
+
+const hexToRgb = (hex) => {
+  return {
+      r: parseInt(hex.substring(1, 3), 16),
+      g: parseInt(hex.substring(3, 5), 16),
+      b: parseInt(hex.substring(5, 7), 16)
+  };
+}
+
+const blendColors = (colorA, colorB, weight) => {
+  return {
+      r: Math.floor(colorA.r * (1 - weight) + colorB.r * weight),
+      g: Math.floor(colorA.g * (1 - weight) + colorB.g * weight),
+      b: Math.floor(colorA.b * (1 - weight) + colorB.b * weight)
+  };
+}

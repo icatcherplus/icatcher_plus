@@ -3,7 +3,9 @@ import {
 } from '@mui/material';
 import { useEffect, useState, useRef } from 'react';
 import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
-import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
+import { useVideoData } from '../../state/VideoDataProvider';
+import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
+
 import AnnotationBar from './AnnotationBar';
 import styles from './AnnotationsFrame.module.css';
   
@@ -12,9 +14,11 @@ import styles from './AnnotationsFrame.module.css';
 */
 function AnnotationsFrame(props) {
 
-  const { width } = props;
   const videoData = useVideoData();
   const dispatchSnack = useSnacksDispatch();
+  const playbackState = usePlaybackState();
+  // const dispatchPlaybackState = usePlaybackStateDispatch();
+  
   
   const [ percentLoaded, setPercentLoaded ] = useState(0);
 
@@ -32,17 +36,16 @@ function AnnotationsFrame(props) {
     let loadedFrames = videoData.frames.length;
     if (loadedFrames > 0) {
       if (videoData.metadata.numFrames <= 0) {
-        addSnack(
-          'Video metadata incorrectly lists video as 0 frames long',
-          "error",
-          dispatchSnack
-        )
+        dispatchSnack(addSnack('Video metadata incorrectly lists video as 0 frames long', "error"))
       }
       else {
-        let l = (loadedFrames - videoData.frameOffset - 1)/videoData.metadata.numFrames * 100.0
-        // if (l > percentLoaded) {
-          setPercentLoaded(l)
-        // }
+        let tempPercent = (loadedFrames - videoData.frameOffset - 1)/videoData.metadata.numFrames * 100.0
+        setPercentLoaded((p) => {
+          if (tempPercent > p) {
+            return tempPercent
+          }
+          return p
+        })
       }
     }
   }, [
@@ -58,25 +61,21 @@ function AnnotationsFrame(props) {
   //   return <AnnotationBar width={width} id={key} />
   // }
   
-  console.log("Showing heatmap bar")
-
   return (
     <div className={styles.annotationsBar}>
       {
         Object.keys(videoData.annotations).length !== 0 ? 
           Object.keys(videoData.annotations).map((key) => {
             return <AnnotationBar 
-              totalWidth={width} 
-              // currentFrame={currentFrame} 
-              id={key} 
+              key={key} 
+              id={key}
               type={ key==='confidence' ? 'continuous':'categorical' } 
             />
-            // return <div id={key} className={styles.visible}/>
           })
           : 
           <Skeleton 
             variant="text" 
-            width={width} 
+            width={playbackState.videoWidth} 
             height={100} 
           />
       }

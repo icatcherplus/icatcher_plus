@@ -1,11 +1,12 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext } from 'react';
+import { useReducerWithThunk } from './utils/useReducerWithThunk'
 
 const VideoDataContext = createContext(null);
 
 const VideoDataDispatchContext = createContext(null);
 
 export function VideoDataProvider({ children }) {
-  const [videoData, dispatch] = useReducer(
+  const [videoData, dispatch] = useReducerWithThunk(
     videoDataReducer,
     initialVideoData
   );
@@ -35,7 +36,6 @@ function videoDataReducer(videoData, action) {
         };
     }
     case 'setFrames': {
-      console.log("State update for frames", [...action.frames])
       return { ...videoData,
         frames: [...action.frames]
       }
@@ -46,11 +46,7 @@ function videoDataReducer(videoData, action) {
       }
     }
     case 'resetVideo': {
-      return { 
-        metadata: {},
-        frames: [],
-        annotations: []
-      };
+      return initialVideoData;
     }
     default: {
       throw Error('Unknown action: ' + action.type);

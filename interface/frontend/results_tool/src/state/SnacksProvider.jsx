@@ -1,11 +1,13 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext } from 'react';
+import { useReducerWithThunk } from './utils/useReducerWithThunk'
+
 
 const SnacksContext = createContext(null);
 
 const SnacksDispatchContext = createContext(null);
 
 export function SnacksProvider({ children }) {
-  const [snacks, dispatch] = useReducer(
+  const [snacks, dispatch] = useReducerWithThunk(
     snacksReducer,
     initialSnacks
   );
@@ -58,7 +60,7 @@ function snacksReducer(snacks, action) {
 
 const initialSnacks = []
 
-export function addSnack (message, severity, dispatch) {
+export const addSnack = (message, severity) => dispatch => {
   dispatch({
     type: 'pushSnack',
     severity: severity,

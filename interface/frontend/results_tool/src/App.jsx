@@ -1,11 +1,9 @@
-import { 
-  Drawer
-} from '@mui/material';
 import styles from './App.module.css';
 import Instructions from './components/Instructions';
 import FileModal from './components/FileModal';
 import Snacks from './components/common/Snacks';
 import VideoFrame from './components/video/VideoFrame';
+import AnnotationsFrame from './components/annotations/AnnotationsFrame';
 
 function App() {
 
@@ -14,6 +12,7 @@ function App() {
       <div className={styles.mainpage}>
         <Instructions />
         <VideoFrame />
+        <AnnotationsFrame />
       </div>
       <FileModal />
       <Snacks />
