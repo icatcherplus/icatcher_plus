@@ -1,0 +1,8 @@
+
+.icon {
+  filter: drop-shadow(0 0 0.02em black);
+}
+
+.buttonGroup {
+  align-items: center;
+}

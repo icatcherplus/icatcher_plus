@@ -61,11 +61,12 @@ const paintCanvas = (canvasRef, colorArray, videoData) => {
   if (canvasRef.current === undefined) { return }
   const context = canvasRef.current.getContext('2d')
   let totalWidth = canvasRef.current.offsetWidth;
-  let sliceWidth = totalWidth / videoData.metadata.numFrames;
+  let sliceWidth = totalWidth / (videoData.metadata.numFrames - 8);
   let sliceHeight = canvasRef.current.height;
+  console.log( "drawing func", colorArray)
 
   colorArray.forEach((color, frameNumber) => {
-    let x = sliceWidth * (frameNumber - videoData.metadata.frameOffset - 1)
+    let x = sliceWidth * frameNumber
     context.fillStyle = color;
     context.fillRect(x , 0 , sliceWidth, sliceHeight);
   })

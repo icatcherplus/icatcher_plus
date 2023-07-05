@@ -4,14 +4,3 @@
   min-height: 100vh;
   display: flex;
 }
-
-.mainpage {
-  display: flex;
-  flex-flow: column nowrap;
-  justify-content: flex-start;
-  align-items: stretch;
-  min-width: 100%;
-  min-height: 100%;
-  gap: 10px;
-}
-

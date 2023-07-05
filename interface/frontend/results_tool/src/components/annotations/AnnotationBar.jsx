@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { addSnack, useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
+import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
 import HeatmapCanvas from './HeatmapCanvas';
+import JumpButton from '../common/JumpButton';
+
+import styles from './AnnotationsBar.module.css'
 
 
 /* Expected props:
@@ -10,21 +14,14 @@ tbd
 
 const colorPalettes = {
   categorical: {
-    machineLabel: [
-      '#C5C5C5',
-      '#F05039',
-      '#1F449C',
-      '#EEBAB4',
-      '#7CA1CC'
-    ],
-    edited: [],
-    default: [
-      '#C5C5C5',
-      '#F05039',
-      '#1F449C',
-      '#EEBAB4',
-      '#7CA1CC'
-    ],
+    machineLabel: {
+      'undefined': '#C5C5C5',
+      'left': '#F05039',
+      'right': '#1F449C',
+      'away': '#EEBAB4',
+      'noface': '#7CA1CC'
+    },
+    edited: []
   },
   continuous: {
     confidence: {
@@ -42,6 +39,8 @@ function AnnotationBar(props) {
   
   const { id, type } = props;
   const videoData = useVideoData();
+  const playbackState = usePlaybackState();
+  const dispatchPlaybackState = usePlaybackStateDispatch();
 
   const [ colorArray, setColorArray ] = useState([]);
   const [ colorPalette, setColorPalette ] = useState(id);
@@ -57,28 +56,64 @@ function AnnotationBar(props) {
   const computeColorArray = () => {
     let tempColorArray = []
     const palette = colorPalettes[type][colorPalette || 'default']
+    const startArray = videoData.annotations[id].slice(videoData.metadata.frameOffset-1)
     if (type === 'categorical') {
-      let categories = [ ...new Set(videoData.annotations[id])]
-      let colorMap = {}
-      categories.forEach((l, i) => colorMap[l] = palette[i])
-      console.log(id, categories)
-      videoData.annotations[id].forEach((a, i) => {
-        tempColorArray[i] = colorMap[a]
+      // let categories = [ ...new Set(startArray)]
+      // let colorMap = {}
+      // categories.forEach((l, i) => {
+      //   colorMap[l] = palette[i]
+      // })
+      // console.log(id, categories, colorMap)
+      startArray.forEach((a, i) => {
+      // videoData.annotations[id].forEach((a, i) => {
+        console.log("key", `${a}`)
+        tempColorArray[i] = palette[`${a}`]
       })
     }
     if (type === 'continuous') {
       //TODO: get min/max, convert to percentages
-      videoData.annotations[id].forEach((a, i) => {
+      startArray.forEach((a, i) => {
         let rgb = blendColors(hexToRgb(palette['0%']), hexToRgb(palette['100%']), a)
         tempColorArray[i] = 'rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')';
       })
     }
+    console.log("color array", tempColorArray)
     setColorArray([...tempColorArray])
+  }
+
+  const jumpToNextInstance = (forward) => {
+    console.log("jump func", forward)
+    const condition = (e) => {
+      console.log("result", e, type === 'continuous'
+      ? e < 0.8
+      : e === 'away')
+      return type === 'continuous' 
+        ? e < 0.8
+        : e === 'away'
+    } 
+    let next = -1
+     if(forward === true) {
+      let arraySlice = videoData.annotations[id].slice(playbackState.currentFrame + 1)
+      next = arraySlice.findIndex((e) => condition(e))
+      if (next !== -1) { next = next + playbackState.currentFrame + 1}
+      
+    } else {
+      let arraySlice = videoData.annotations[id].slice(0, playbackState.currentFrame)
+      next = arraySlice.findLastIndex((e) => condition(e))
+     }
+     if (next !== -1) {
+      dispatchPlaybackState({
+        type: 'setCurrentFrame',
+        currentFrame: next
+       })
+       console.log("jumping to ", next)
+     } 
   }
   
   return (
     <div>
       <HeatmapCanvas colorArray={colorArray}/>
+      <JumpButton handleJump={jumpToNextInstance} />
     </div>
   );
 }

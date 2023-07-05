@@ -199,40 +199,37 @@ function VideoFrame() {
 
   return (
     <React.Fragment>
-      <div className={styles.mainpage}>
-        <div
-          className={styles.videoFrame}
+      <div
+        className={styles.videoFrame}
+        style={{width: playbackState.videoWidth}}
+      >
+        <VideoHeader
+          handleJumpToFrame={(i) => showFrame(Number(i))}
+        />
+        <VideoCanvas 
+          className={styles.videoCanvas}
+          frameToDraw={frameImages.current[playbackState.currentFrame]}
+          handleClick={togglePlay}
+          handleKeyDown={handleCanvasKeyDown}
+        />
+        <div 
+          className={styles.controlsBox}
           style={{width: playbackState.videoWidth}}
         >
-          <VideoHeader
-            handleJumpToFrame={(i) => showFrame(Number(i))}
-          />
-          <VideoCanvas 
-            className={styles.videoCanvas}
-            frameToDraw={frameImages.current[playbackState.currentFrame]}
-            handleClick={togglePlay}
-            handleKeyDown={handleCanvasKeyDown}
-          />
           <div 
-            className={styles.controlsBox}
-            style={{width: playbackState.videoWidth}}
+            className={styles.controlsBackground}
           >
-            <div 
-              className={styles.controlsBackground}
-            >
-              <VideoScrubBar 
-              />
-              <VideoControls 
-                togglePlay={togglePlay}
-                toggleRev={toggleReverse}
-                toggleSlowMotion={toggleSlowMotion} 
-                stepBack={() => stepFrame(false)}
-                stepForward={() => stepFrame(true)}
-              />
-            </div>
-          </div>  
-        </div>
-        {/* <AnnotationsFrame /> */}
+            <VideoScrubBar 
+            />
+            <VideoControls 
+              togglePlay={togglePlay}
+              toggleRev={toggleReverse}
+              toggleSlowMotion={toggleSlowMotion} 
+              stepBack={() => stepFrame(false)}
+              stepForward={() => stepFrame(true)}
+            />
+          </div>
+        </div>  
       </div>
     </React.Fragment>
   );

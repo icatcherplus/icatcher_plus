@@ -1,20 +1,25 @@
-import styles from './App.module.css';
-import Instructions from './components/Instructions';
-import FileModal from './components/FileModal';
+import { useView } from './state/ViewProvider'
+import UploadView from './views/UploadView';
+import ProgressView from './views/ProgressView';
+import ResultsView from './views/ResultsView';
 import Snacks from './components/common/Snacks';
-import VideoFrame from './components/video/VideoFrame';
-import AnnotationsFrame from './components/annotations/AnnotationsFrame';
+
+import styles from './App.module.css';
+
+
+const VIEWS_MAP = {
+  UPLOAD: <UploadView />,
+  PROGRESS: <ProgressView />,
+  RESULTS: <ResultsView />
+}
 
 function App() {
 
+  const viewState = useView();
+
   return (
     <div className={styles.app}>
-      <div className={styles.mainpage}>
-        <Instructions />
-        <VideoFrame />
-        <AnnotationsFrame />
-      </div>
-      <FileModal />
+      { VIEWS_MAP[viewState?.currentView] }
       <Snacks />
     </div>
   );

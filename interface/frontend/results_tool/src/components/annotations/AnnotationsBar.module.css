@@ -1,0 +1,6 @@
+.invisible {
+  /* visibility: hidden !important; */
+  width: 80px;
+  color: white;
+  background-color: white;
+}

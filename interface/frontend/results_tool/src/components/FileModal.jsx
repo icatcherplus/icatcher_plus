@@ -188,6 +188,7 @@ function FileModal() {
           tempAnnotations.machineLabel[index] = data[1].trim()
           tempAnnotations.confidence[index] = Number(data[2])
         })
+        console.log("Annotations", tempAnnotations)
         dispatchVideoData({
           type: "setAnnotations",
           annotations: tempAnnotations

@@ -4,18 +4,15 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { SnacksProvider } from './state/SnacksProvider';
-import { VideoDataProvider } from './state/VideoDataProvider';
-import { PlaybackStateProvider } from './state/PlaybackStateProvider';
+import { ViewProvider } from './state/ViewProvider'
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <SnacksProvider>
-      <VideoDataProvider>
-        <PlaybackStateProvider>
-          <App />
-        </PlaybackStateProvider>
-      </VideoDataProvider>
+      <ViewProvider>
+        <App />
+      </ViewProvider>
     </SnacksProvider>
   </React.StrictMode>
 );
