@@ -11,13 +11,20 @@ def parse_arguments(my_string=None):
     """
     parser = argparse.ArgumentParser(prog='icatcher')
     parser.add_argument("source", type=str, help="the source to use (path to video file, folder or webcam id)")
-    parser.add_argument("--model", type=str, help="path to model that will be used for predictions "
-                                                  "if not supplied will use model trained on the lookit dataset")
+    parser.add_argument("--model", type=str, default="icatcher+_lookit_regnet.pth", 
+                        choices=["icatcher+_lookit.pth",
+                                 "icatcher+_lookit_regnet.pth",
+                                 "icatcher+_bw-cali.pth",
+                                 "icatcher+_senegal.pth"],
+                        help="model file that will be used for gaze detection")
     parser.add_argument("--use_fc_model", action="store_true", help="if supplied, will use face classifier "
-                                                                              "to decide which crop to use from every frame.")
-    parser.add_argument("--fc_model", type=str, help="path to face classifier model that will be used for deciding "
-                                                     "which crop should we select from every frame. "
-                                                     "if not supplied but use_fc_model is true, will use the model trained on the lookit dataset.")
+                                                                    "to decide which crop to use from every frame.")
+    parser.add_argument("--fc_model", type=str, default="face_classifier_lookit.pth",
+                        choices=["face_classifier_lookit.pth",
+                                 "face_classifier_cali-bw.pth",
+                                  "face_classifier_senegal.pth"],
+                        help="face classifier model file that will be used for deciding "
+                                                     "which crop should we select from every frame. ")
     parser.add_argument("--source_type", type=str, default="file", choices=["file", "webcam"],
                         help="selects source of stream to use.")
     parser.add_argument("--crop_percent", type=int, default=0, help="A percent to crop video frames to prevent other people from appearing")
@@ -71,15 +78,11 @@ def parse_arguments(my_string=None):
         args = parser.parse_args(my_string.split())
     else:
         args = parser.parse_args()
-    if args.model:
-        args.model = Path(args.model)
     if args.fd_confidence_threshold is None:  # set defaults outside argparse to avoid complication
         if args.fd_model == "retinaface":
             args.fd_confidence_threshold = 0.9
         elif args.fd_model == "opencv_dnn":
             args.fd_confidence_threshold = 0.7
-    # if not args.model.is_file():
-    #     raise FileNotFoundError("Model file not found")
     if args.crop_percent not in [x for x in range(100)]:
         raise ValueError("crop_video must be a percent between 0 - 99")
     if "left" in args.crop_mode and "right" in args.crop_mode:

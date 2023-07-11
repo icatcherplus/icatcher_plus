@@ -103,12 +103,12 @@ class Encoder_box(torch.nn.Module):
         return x
 
 class GazeCodingModel(torch.nn.Module):
-    def __init__(self, args, add_box=True):
+    def __init__(self, args, is_regnet=True, add_box=True):
         super().__init__()
         self.args = args
         self.n = (args.sliding_window_size + 1) // args.window_stride
         self.add_box = add_box
-        if "regnet" in str(args.path_to_gaze_model.stem):
+        if is_regnet:
             # Use the RegNet network architecture
             self.encoder_img = regnet_y_16gf(num_classes=256).to(self.args.device)
         else:
