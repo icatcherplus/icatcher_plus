@@ -1,5 +1,5 @@
 ### define version
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 version = __version__
 ### define classes
 classes = {'noface': -2, 'nobabyface': -1, 'away': 0, 'left': 1, 'right': 2}
