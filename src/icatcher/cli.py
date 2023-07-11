@@ -161,9 +161,14 @@ def load_models(opt):
         face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))
     else:
         raise NotImplementedError
-    path_to_gaze_model = file_paths[file_names.index("icatcher+_lookit.pth")]
+    path_to_gaze_model = Path(file_paths[file_names.index("icatcher+_lookit_regnet.pth")])
     if opt.model:
-        path_to_gaze_model = opt.model
+        if Path(opt.model).is_file():
+            path_to_gaze_model = opt.model
+        elif str(opt.model) in file_names:
+            path_to_gaze_model = Path(file_paths[file_names.index(str(opt.model))])
+    opt.path_to_gaze_model = path_to_gaze_model
+
     path_to_fc_model = file_paths[file_names.index("face_classifier_lookit.pth")]
     if opt.fc_model:
         path_to_fc_model = opt.fc_model
@@ -357,7 +362,7 @@ def predict_from_video(opt):
                                     "boxs": torch.tensor(np.array(box_sequence[::2]), dtype=torch.float).to(opt.device)
                                     }
                     with torch.set_grad_enabled(False):
-                        outputs = gaze_model(to_predict)  # actual gaze prediction
+                        outputs = gaze_model(to_predict).detach()  # actual gaze prediction
                         probs = torch.nn.functional.softmax(outputs, dim=1)
                         _, prediction = torch.max(outputs, 1)
                         confidence, _ = torch.max(probs, 1)
