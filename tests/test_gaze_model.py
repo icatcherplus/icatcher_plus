@@ -7,9 +7,7 @@ from icatcher.options import parse_arguments
 @pytest.mark.parametrize(
     "args_string, model_class_name",
     [
-        ("tests/test_data/test.mp4",
-        "RegNet"
-        ),
+        ("tests/test_data/test.mp4", "RegNet"),
         (
             "tests/test_data/test.mp4 --model icatcher+_lookit_regnet.pth",
             "RegNet",
