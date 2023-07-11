@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision.models.resnet import resnet18
-from torchvision.models import vgg16
+from torchvision.models import vgg16, regnet_y_16gf
 from torchvision import transforms
 
 
@@ -103,12 +103,16 @@ class Encoder_box(torch.nn.Module):
         return x
 
 class GazeCodingModel(torch.nn.Module):
-    def __init__(self, args, add_box=True):
+    def __init__(self, args, is_regnet=True, add_box=True):
         super().__init__()
         self.args = args
         self.n = (args.sliding_window_size + 1) // args.window_stride
         self.add_box = add_box
-        self.encoder_img = resnet18(num_classes=256).to(self.args.device)
+        if is_regnet:
+            # Use the RegNet network architecture
+            self.encoder_img = regnet_y_16gf(num_classes=256).to(self.args.device)
+        else:
+            self.encoder_img = resnet18(num_classes=256).to(self.args.device)
         self.encoder_box = Encoder_box().to(self.args.device)
         self.predictor = Predictor_fc(self.n, add_box).to(self.args.device)
 
