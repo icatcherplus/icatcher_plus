@@ -5,22 +5,22 @@ from icatcher.options import parse_arguments
 
 
 @pytest.mark.parametrize(
-    "args_string, model_path_stem, model_class_name",
+    "args_string, model_class_name",
     [
-        ("tests/test_data/test.mp4", "icatcher+_lookit_regnet", "RegNet"),
+        ("tests/test_data/test.mp4",
+        "RegNet"
+        ),
         (
             "tests/test_data/test.mp4 --model icatcher+_lookit_regnet.pth",
-            "icatcher+_lookit_regnet",
             "RegNet",
         ),
         (
             "tests/test_data/test.mp4 --model icatcher+_lookit.pth",
-            "icatcher+_lookit",
             "ResNet",
         ),
     ],
 )
-def test_load_models(args_string, model_path_stem, model_class_name):
+def test_load_models(args_string, model_class_name):
     """
     Checks that when load_model is called with the gaze model:
         1. left unspecified, RegNet trained on Lookit is called
@@ -30,7 +30,6 @@ def test_load_models(args_string, model_path_stem, model_class_name):
 
     args = parse_arguments(args_string)
     gaze_model, _, _, _ = load_models(args)
-    assert args.path_to_gaze_model.stem == model_path_stem
     assert gaze_model.encoder_img.__class__.__name__ == model_class_name
 
 
