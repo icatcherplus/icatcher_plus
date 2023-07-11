@@ -17,28 +17,29 @@ from batch_face import RetinaFace
 
 @pytest.fixture
 def retina_model():
-    #download models that will be tested. these will be cached
-    GOODBOY = pooch.create(path=pooch.os_cache("icatcher_plus"),
-                               base_url="https://osf.io/h7svp/download",
-                               version=version,
-                               version_dev="main",
-                               env="ICATCHER_DATA_DIR",
-                               registry={"zip_content.txt": None,
-                                         "icatcher+_models.zip": None},
-                               urls={"zip_content.txt":"https://osf.io/v4w53/download",
-                                     "icatcher+_models.zip":"https://osf.io/h7svp/download"})
+    # download models that will be tested. these will be cached
+    GOODBOY = pooch.create(
+        path=pooch.os_cache("icatcher_plus"),
+        base_url="https://osf.io/h7svp/download",
+        version=version,
+        version_dev="main",
+        env="ICATCHER_DATA_DIR",
+        registry={"zip_content.txt": None, "icatcher+_models.zip": None},
+        urls={
+            "zip_content.txt": "https://osf.io/v4w53/download",
+            "icatcher+_models.zip": "https://osf.io/h7svp/download",
+        },
+    )
 
-    file_paths = GOODBOY.fetch("icatcher+_models.zip",
-                               processor=pooch.Unzip(),
-                               progressbar=True)
+    file_paths = GOODBOY.fetch(
+        "icatcher+_models.zip", processor=pooch.Unzip(), progressbar=True
+    )
 
     file_names = [Path(x).name for x in file_paths]
 
     # load whatever models that need to be tested here
     retina_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
-    model = RetinaFace(
-        gpu_id=-1, model_path=retina_model_file, network="resnet50"
-    )
+    model = RetinaFace(gpu_id=-1, model_path=retina_model_file, network="resnet50")
     return model
 
 
@@ -92,9 +93,13 @@ def test_retina_face(filename, num_bounding_boxes, retina_model):
 @pytest.fixture
 def faces1():
     return [[(0, 0, 10, 10, 0.9), (10, 10, 20, 20, 0.8)], []]
+
+
 @pytest.fixture
 def faces2():
     return [[(0, 0, 10, 10, 0.9)], []]
+
+
 @pytest.fixture
 def all_faces():
     return [
@@ -102,16 +107,19 @@ def all_faces():
         [(30, 30, 40, 40, 0.7), (40, 40, 50, 50, 0.6)],
     ]
 
+
 @pytest.mark.parametrize(
     "confidence_threshold,output",
     [
-        (0.75, 'faces1'),
-        (0.9, 'faces2'),
-        (0.5, 'all_faces'),
+        (0.75, "faces1"),
+        (0.9, "faces2"),
+        (0.5, "all_faces"),
     ],
 )
 def test_threshold_faces(confidence_threshold, output, all_faces, request):
-    assert threshold_faces(all_faces, confidence_threshold) == request.getfixturevalue(output)
+    assert threshold_faces(all_faces, confidence_threshold) == request.getfixturevalue(
+        output
+    )
 
 
 def test_find_bboxes(retina_model):
@@ -151,7 +159,9 @@ def test_find_bboxes(retina_model):
     ]
 
     # read in manual annotation
-    with open(Path("tests", "test_data", "test_video_manual_annotation.csv"), 'r') as file:
+    with open(
+        Path("tests", "test_data", "test_video_manual_annotation.csv"), "r"
+    ) as file:
         reader = csv.reader(file)
         next(reader)  # skip the first line
         second_line = next(reader)  # get the second line
