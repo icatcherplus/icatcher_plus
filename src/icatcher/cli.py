@@ -150,7 +150,7 @@ def load_models(opt):
                                processor=pooch.Unzip(),
                                progressbar=True)
     file_names = [Path(x).name for x in file_paths]
-    if opt.fd_model == "retinaface":  # option for retina face vs. previous opencv dnn model
+    if opt.fd_model == "retinaface":
         face_detector_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
         face_detector_model = RetinaFace(
             gpu_id=opt.gpu_id, model_path=face_detector_model_file, network="resnet50"
@@ -161,21 +161,10 @@ def load_models(opt):
         face_detector_model = cv2.dnn.readNetFromCaffe(str(config_file), str(face_detector_model_file))
     else:
         raise NotImplementedError
-    path_to_gaze_model = Path(file_paths[file_names.index("icatcher+_lookit_regnet.pth")])
-    if opt.model:
-        if Path(opt.model).is_file():
-            path_to_gaze_model = opt.model
-        elif str(opt.model) in file_names:
-            path_to_gaze_model = Path(file_paths[file_names.index(str(opt.model))])
-    opt.path_to_gaze_model = path_to_gaze_model
-
-    path_to_fc_model = file_paths[file_names.index("face_classifier_lookit.pth")]
-    if opt.fc_model:
-        path_to_fc_model = opt.fc_model
-    # face_detector_model_file = Path("models", "face_model.caffemodel")
-    # config_file = Path("models", "config.prototxt")
-    # path_to_gaze_model = opt.model
-    gaze_model = models.GazeCodingModel(opt).to(opt.device)
+    path_to_gaze_model = Path(file_paths[file_names.index(opt.model)])
+    is_regnet = "regnet" in str(path_to_gaze_model.stem)
+    path_to_fc_model = file_paths[file_names.index(opt.fc_model)]
+    gaze_model = models.GazeCodingModel(opt, is_regnet=is_regnet).to(opt.device)
     if opt.device == 'cpu':
         state_dict = torch.load(str(path_to_gaze_model), map_location=torch.device(opt.device))
     else:
@@ -192,7 +181,7 @@ def load_models(opt):
         gaze_model.load_state_dict(new_state_dict)
     gaze_model.eval()
 
-    if opt.fc_model or opt.use_fc_model:
+    if opt.use_fc_model:
         face_classifier_model, fc_input_size = models.init_face_classifier(opt.device,
                                                                            num_classes=2,
                                                                            resume_from=path_to_fc_model)
