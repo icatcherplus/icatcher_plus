@@ -1,5 +1,7 @@
 .annotationsBar {
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 1rem;
   margin: 0 auto
 }

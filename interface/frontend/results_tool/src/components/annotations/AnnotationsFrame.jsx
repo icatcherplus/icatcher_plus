@@ -6,7 +6,9 @@ import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
 
-import AnnotationBar from './AnnotationBar';
+import ContinuousAnnotationBar from './ContinuousAnnotationBar';
+import CategoricalAnnotationBar from './CategoricalAnnotationBar';
+
 import styles from './AnnotationsFrame.module.css';
   
 /* Expected props:
@@ -54,28 +56,28 @@ function AnnotationsFrame(props) {
     videoData.metadata.numFrames,
     dispatchSnack
   ])
-
-  // const getAnnotationBar = (key) => {
-  // //   let dataArray = videoData.annotations[key]
-  // //   console.log('getting data', dataArray, key)
-  //   return <AnnotationBar width={width} id={key} />
-  // }
   
   return (
     <div className={styles.annotationsBar}>
       {
         Object.keys(videoData.annotations).length !== 0 ? 
           Object.keys(videoData.annotations).map((key) => {
-            return <AnnotationBar 
-              key={key} 
-              id={key}
-              type={ key==='confidence' ? 'continuous':'categorical' } 
-            />
+            console.log("running", key)
+            return key==='confidence'
+              ? <ContinuousAnnotationBar 
+                  key={key} 
+                  id={key}
+                  palette={'confidence'}
+                />
+              : <CategoricalAnnotationBar 
+                  key={key} 
+                  id={key}
+                />
           })
           : 
           <Skeleton 
             variant="text" 
-            width={playbackState.videoWidth} 
+            width={playbackState.videoWidth}
             height={100} 
           />
       }

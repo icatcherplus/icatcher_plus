@@ -63,7 +63,7 @@ const paintCanvas = (canvasRef, colorArray, videoData) => {
   let totalWidth = canvasRef.current.offsetWidth;
   let sliceWidth = totalWidth / (videoData.metadata.numFrames - 8);
   let sliceHeight = canvasRef.current.height;
-  console.log( "drawing func", colorArray)
+  // console.log( "drawing func", colorArray)
 
   colorArray.forEach((color, frameNumber) => {
     let x = sliceWidth * frameNumber

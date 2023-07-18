@@ -4,3 +4,19 @@
   color: white;
   background-color: white;
 }
+
+.temp {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+}
+
+.text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  width: 200px;
+  padding: 8px;
+
+}

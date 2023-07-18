@@ -16,7 +16,7 @@ import styles from './JumpButton.module.css';
 const styleOverrides = {
   buttonGroup: {
     backgroundColor: '#eeeeee',
-    margin: "0 1em auto"
+    margin: "0 1em"
   },
   button: {
     default: {
