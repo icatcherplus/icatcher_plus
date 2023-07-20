@@ -108,7 +108,9 @@ function CategoricalAnnotationBar(props) {
       addSnack(`Value is not a valid ${id} option`, 'warning')
       return
     }
+    console.log("changing label", targetValue)
     setSelectedLabel(targetValue)
+    
   }
   
   const getThresholdInput = () => {
@@ -137,7 +139,24 @@ function CategoricalAnnotationBar(props) {
         getColorArray={computeColorArray}
         handleJump={jumpToNextInstance}
         getThresholdInput={getThresholdInput}
-      />
+      >
+        {/* <TextField
+            className={styles.threshold}
+            id={`${id}-threshold-jumper`}
+            label={"Label"}
+            select
+            margin="dense"
+            multiline={false}
+            defaultValue={selectedLabel}
+            onChange={handleLabelChange}
+          >
+            {labelOptions.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {option}
+                </MenuItem>
+              ))}
+          </TextField> */}
+      </AnnotationBar>
     </div>
   );
 }

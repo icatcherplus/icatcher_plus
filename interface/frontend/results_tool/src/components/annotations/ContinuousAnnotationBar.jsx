@@ -141,7 +141,24 @@ function ContinuousAnnotationBar(props) {
         getColorArray={computeColorArray}
         handleJump={jumpToNextInstance}
         getThresholdInput={getThresholdInput}
-      />
+      >
+        {/* <TextField
+            className={styles.threshold}
+            id={`${id}-threshold-jumper`}
+            label={"Threshold"}
+            name="Name"
+            type="number"
+            inputProps={{
+              min: range[0],
+              max: range[1],
+              step: 0.01
+            }}
+            margin="dense"
+            multiline={false}
+            value={threshold}
+            onChange={handleThresholdChange}
+          /> */}
+      </AnnotationBar>
     </div>
   );
 }

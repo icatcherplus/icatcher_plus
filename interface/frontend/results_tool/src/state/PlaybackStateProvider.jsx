@@ -41,6 +41,7 @@ function playbackStateReducer(playbackState, action) {
       };
     }
     case 'setVideoWidth': {
+      console.log('videoWidth', action.videoWidth)
       return { ...playbackState,
         width: action.videoWidth
       };
@@ -73,7 +74,7 @@ function playbackStateReducer(playbackState, action) {
 const initialPlaybackState = {
   currentFrame: undefined,
   aspectRatio: 16/9,
-  videoWidth: window.innerHeight * .6,
+  videoWidth: window.innerHeight * .8,
   forwardPlay: true,
   slowMotion: false,
   paused: true,
@@ -83,17 +84,18 @@ const initialPlaybackState = {
 
 export const updateVideoWidth = () => (dispatch, getState) => {
   let state = getState()
-  let videoWidth = (window.innerHeight * .6) * state.aspectRatio
+  let videoWidth = (window.innerHeight * 0.8) * state.aspectRatio
   if (videoWidth > (0.8 * window.innerWidth)) {
     videoWidth = (0.8 * window.innerWidth)
   }
   dispatch({
-    type: 'setWidth',
+    type: 'setVideoWidth',
     videoWidth: videoWidth
   })
 }
 
 export const updateDimensions = (aspectRatio) => (dispatch, getState) => {
+  console.log("updating dimensions")
   dispatch({
     type: 'setAspectRatio',
     aspectRatio: aspectRatio

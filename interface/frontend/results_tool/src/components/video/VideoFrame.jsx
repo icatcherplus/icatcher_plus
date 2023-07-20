@@ -3,7 +3,7 @@ import styles from './VideoFrame.module.css';
 
 // import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
-import { usePlaybackState, usePlaybackStateDispatch, getNextFrame } from '../../state/PlaybackStateProvider';
+import { usePlaybackState, usePlaybackStateDispatch, getNextFrame, updateDimensions } from '../../state/PlaybackStateProvider';
 
 import VideoScrubBar from './VideoScrubBar'
 import VideoCanvas from './VideoCanvas';
@@ -52,10 +52,11 @@ function VideoFrame() {
         if(thisImg.frameNumber === firstFrameIndex.current) {
           showFrame(thisImg.frameNumber);
           let firstImg = frameImages.current[thisImg.frameNumber]
-          dispatchPlaybackState({
-            type: 'setAspectRatio',
-            aspectRatio: firstImg.width/firstImg.height
-          })
+          // dispatchPlaybackState({
+          //   type: 'setAspectRatio',
+          //   aspectRatio: firstImg.width/firstImg.height
+          // })
+          dispatchPlaybackState(updateDimensions(firstImg.width/firstImg.height))
         }
       }
       img.src = f.src;

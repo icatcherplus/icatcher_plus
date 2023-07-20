@@ -82,7 +82,7 @@ function AnnotationsFrame(props) {
             height={100} 
           />
       }
-      <AnnotationsScrubber />
+      {/* <AnnotationsScrubber /> */}
     </div>
   );
 }

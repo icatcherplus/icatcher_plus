@@ -14,7 +14,7 @@ function Instructions() {
 
   const styleOverrides = {
     accordion: {
-      backgroundColor: 'lightgray'
+      backgroundColor: 'lightblue'
     },
     accordionSummary : {
       alignItems: 'center',

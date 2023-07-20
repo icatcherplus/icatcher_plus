@@ -97,7 +97,7 @@ function FileModal() {
   const findFiles = () => {
     let files = [...inputDirectory.current]
     framesFiles.current = files.filter(f =>
-      f.webkitRelativePath.toLowerCase().includes('decorated_frms') &&
+      f.webkitRelativePath.toLowerCase().includes('decorated_frames') &&
       f.name.toLowerCase().match(/frame_\d+\./) !== null
     );
     metadataFile.current = files.find(f =>  f.name.toLowerCase().includes('metadata.json'));
