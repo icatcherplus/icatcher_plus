@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { addSnack, useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvider';
 import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
-import AnnotationBar from './AnnotationBar';
+import AnnotationBar from './AnnotationsBar';
 
 import styles from './ContinuousAnnotationBar.module.css'
 

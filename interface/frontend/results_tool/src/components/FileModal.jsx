@@ -1,7 +1,8 @@
 import { 
   Dialog,
   DialogTitle,
-  DialogContent
+  DialogContent,
+  DialogContentText
 } from '@mui/material';
 import { useState, useRef } from 'react';
 import { useSnacksDispatch, addSnack } from '../state/SnacksProvider';
@@ -96,20 +97,20 @@ function FileModal() {
   const findFiles = () => {
     let files = [...inputDirectory.current]
     framesFiles.current = files.filter(f =>
-      f.webkitRelativePath.toLowerCase().includes('decorated_frames') &&
+      f.webkitRelativePath.toLowerCase().includes('decorated_frms') &&
       f.name.toLowerCase().match(/frame_\d+\./) !== null
     );
     metadataFile.current = files.find(f =>  f.name.toLowerCase().includes('metadata.json'));
     annotationsFile.current = files.find(f =>  f.name.toLowerCase().includes('labels.txt'));
-    videoFile.current = files.find(f =>  f.name.toLowerCase().includes('decorated_video_bbox_only.mp4'));
+    // videoFile.current = files.find(f =>  f.name.toLowerCase().includes('decorated_video_bbox_only.mp4'));
     
     let validInput = true;
     if (framesFiles.current.length === 0) {
       dispatchSnack(addSnack(`Your input directory is missing frames`, "error"))
       validInput = false
     }
-    let INDEX_MAP = ['metadata', 'annotations', 'video'];
-    [metadataFile.current, annotationsFile.current, videoFile.current].forEach((a, i) => {
+    let INDEX_MAP = ['metadata', 'annotations'];
+    [metadataFile.current, annotationsFile.current].forEach((a, i) => {
       if(a === undefined){
         dispatchSnack(addSnack(`Your input directory is missing ${INDEX_MAP[i]}`, "error"))
         validInput = false
@@ -219,18 +220,24 @@ function FileModal() {
 
   return (
     <Dialog className="FileModal" open={modalOpen}>
-      <DialogTitle>Choose Video Directory</DialogTitle>
-        <DialogContent>
-          {/* <label for="fileInput">Choose project directory</label> */}
-          <input 
-            type="file" 
-            id="fileInput" 
-            onChange={handleDirSelect}
-            webkitdirectory=""
-          />
-          {/* <p>No directory selected</p> */}
-          <button onClick={handleSubmitClick}>Submit</button>
-        </DialogContent>
+      <DialogTitle>
+        Choose Video Directory
+        <DialogContentText>
+          Directory should include video frames, metadata, and annotations
+        </DialogContentText>
+      </DialogTitle>
+      
+      <DialogContent>
+        {/* <label for="fileInput">Choose project directory</label> */}
+        <input 
+          type="file" 
+          id="fileInput" 
+          onChange={handleDirSelect}
+          webkitdirectory=""
+        />
+        {/* <p>No directory selected</p> */}
+        <button onClick={handleSubmitClick}>Submit</button>
+      </DialogContent>
     </Dialog>
   );
 }

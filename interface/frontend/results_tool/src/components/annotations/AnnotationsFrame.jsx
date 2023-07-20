@@ -8,6 +8,7 @@ import { usePlaybackState, usePlaybackStateDispatch } from '../../state/Playback
 
 import ContinuousAnnotationBar from './ContinuousAnnotationBar';
 import CategoricalAnnotationBar from './CategoricalAnnotationBar';
+import AnnotationsScrubber from './AnnotationsScrubber';
 
 import styles from './AnnotationsFrame.module.css';
   
@@ -81,6 +82,7 @@ function AnnotationsFrame(props) {
             height={100} 
           />
       }
+      <AnnotationsScrubber />
     </div>
   );
 }

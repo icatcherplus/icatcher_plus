@@ -67,7 +67,8 @@ const paintCanvas = (canvasRef, colorArray, videoData) => {
 
   colorArray.forEach((color, frameNumber) => {
     let x = sliceWidth * frameNumber
+    context.fillStyle = "black";
     context.fillStyle = color;
-    context.fillRect(x , 0 , sliceWidth, sliceHeight);
+    context.fillRect(Math.ceil(x) , 0 , Math.ceil(sliceWidth), sliceHeight);
   })
 }

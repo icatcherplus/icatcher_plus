@@ -8,7 +8,7 @@ import JumpButton from '../common/JumpButton';
 
 import styles from './AnnotationsBar.module.css'
 
-function AnnotationBar(props) {
+function AnnotationsBar(props) {
   
   const { id, getColorArray, handleJump, getThresholdInput } = props;
   const videoData = useVideoData();
@@ -41,7 +41,7 @@ function AnnotationBar(props) {
   );
 }
   
-export default AnnotationBar;
+export default AnnotationsBar;
 
 const idToName = (id) => {
   return id.split(/(?=[A-Z])/).join(" ")

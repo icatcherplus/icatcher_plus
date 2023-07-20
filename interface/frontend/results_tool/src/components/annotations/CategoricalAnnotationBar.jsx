@@ -8,7 +8,7 @@ import { useVideoData, useVideoDataDispatch } from '../../state/VideoDataProvide
 import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
 import HeatmapCanvas from './HeatmapCanvas';
 import JumpButton from '../common/JumpButton';
-import AnnotationBar from './AnnotationBar';
+import AnnotationBar from './AnnotationsBar';
 
 
 import styles from './ContinuousAnnotationBar.module.css'
@@ -115,12 +115,11 @@ function CategoricalAnnotationBar(props) {
     return <TextField
             className={styles.threshold}
             id={`${id}-threshold-jumper`}
-            label={"Threshold"}
-            name="Name"
+            label={"Label"}
             select
             margin="dense"
             multiline={false}
-            value={selectedLabel}
+            defaultValue={selectedLabel}
             onChange={handleLabelChange}
           >
             {labelOptions.map((option) => (
