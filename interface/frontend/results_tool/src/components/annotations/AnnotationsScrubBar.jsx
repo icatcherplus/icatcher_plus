@@ -10,16 +10,19 @@ import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState, usePlaybackStateDispatch, updateFrameRange } from '../../state/PlaybackStateProvider';
 
+import styles from './AnnotationsScrubBar.module.css'
 
 const sliderStyling = {
-  color: 'red',
+  color: 'green',
   height: 4,
   padding: 0,
   paddingBottom: 0.5,
   zIndex: 1,
   '& .MuiSlider-thumb': {
-    width: 8,
-    height: 8,
+    width: 10,
+    height: 10, 
+    alignItems: 'flex-start',
+    zIndex: 1,
     transition: '0.3s cubic-bezier(.47,1.64,.41,.8)',
     '&:before': {
       boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
@@ -27,54 +30,40 @@ const sliderStyling = {
     '&:hover, &.Mui-focusVisible': {
       boxShadow: `0px 0px 0px 8px rgb(0 0 0 / 16%)`,
     },
-    '&.Mui-active': {
-      width: 20,
-      height: 20,
-    },
   },
-  '& .MuiSlider-rail': {
-    opacity: 0.28,
-  }
 }
 
 function AnnotationScrubTrackComponent(props) {
   const { children, ...other } = props;
   return (
-    
-      <SliderThumb {...other}>
-        {children}
-        <Box
+    <SliderThumb {...other}>
+      {children}
+      <Box
         sx={{
-          // width: 300,
-          height: 300,
-          backgroundColor: 'red',
-          '&:hover': {
-            backgroundColor: 'black',
-            opacity: [0.9, 0.8, 0.7],
-          },
+          width: 3,
+          height: 175,
+          backgroundColor: 'green',
+          borderRight: '1px solid gray',
           '&:before': {
             boxShadow: '0 2px 12px 0 rgba(0,0,0,0.4)',
           },
           '&:hover, &.Mui-focusVisible': {
-            boxShadow: `0px 0px 0px 8px rgb(0 0 0 / 16%)`,
+            boxShadow: `0px 0px 0px 2px rgb(0 0 0 / 16%)`,
           },
           '&.Mui-active': {
             width: 20,
             height: 20,
           },
-        }
-      }></Box>
-        {/* <span className="airbnb-bar" />
-        <span className="airbnb-bar" />
-        <span className="airbnb-bar" /> */}
-      </SliderThumb>
-    // </Box>
+        }}
+      >
+      </Box>
+    </SliderThumb>
     
   );
 }
 
 
-function AnnotationsScrubber() {
+function AnnotationsScrubBar() {
 
   const videoData = useVideoData();
   const dispatchSnack = useSnacksDispatch();
@@ -96,22 +85,27 @@ function AnnotationsScrubber() {
   }
 
   sliderValue.current = playbackState.currentFrame === undefined ? 0 : playbackState.currentFrame
+  console.log('playbackState', playbackState)
 
   return (
-    <Slider
-      slots={{thumb: AnnotationScrubTrackComponent}}
-      getAriaLabel={() => 'annotation scrub bar'}
-      getAriaValueText={(v) => `frame ${v}`}
-      size="small"
-      value={sliderValue.current}
-      min={videoData.metadata.frameOffset || 0}
-      step={1}
-      max={videoData.metadata.numFrames - 1 || 0}
-      onChange={(e,v,a) => handleSliderChange(e,v,a,videoData,dispatchSnack,dispatchPlaybackState)}
-      sx={sliderStyling}
-      valueLabelDisplay="auto"
-    />
+    <div className={styles.spacer}>
+      <Slider
+        step={1}
+        slots={{thumb: AnnotationScrubTrackComponent}}
+        getAriaLabel={() => 'annotation scrub bar'}
+        getAriaValueText={(v) => `frame ${v}`}
+        size="small"
+        value={sliderValue.current}
+        min={videoData.metadata.frameOffset || 0}
+        max={videoData.metadata.numFrames - 1 || 0}
+        onChange={(e,v,a) => handleSliderChange(e,v,a,videoData,dispatchSnack,dispatchPlaybackState)}
+        sx={{...sliderStyling, 
+          width: playbackState.videoWidth-20
+        }}
+        valueLabelDisplay="auto"
+      />
+    </div>
   );
 }
 
-export default AnnotationsScrubber;
+export default AnnotationsScrubBar;

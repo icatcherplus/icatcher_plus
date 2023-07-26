@@ -43,7 +43,7 @@ function playbackStateReducer(playbackState, action) {
     case 'setVideoWidth': {
       console.log('videoWidth', action.videoWidth)
       return { ...playbackState,
-        width: action.videoWidth
+        videoWidth: action.videoWidth
       };
     }
     case 'setForwardPlay': {
@@ -74,7 +74,7 @@ function playbackStateReducer(playbackState, action) {
 const initialPlaybackState = {
   currentFrame: undefined,
   aspectRatio: 16/9,
-  videoWidth: window.innerHeight * .8,
+  videoWidth: (window.innerHeight * .6)*16/9,
   forwardPlay: true,
   slowMotion: false,
   paused: true,
@@ -82,9 +82,9 @@ const initialPlaybackState = {
 }
 
 
-export const updateVideoWidth = () => (dispatch, getState) => {
-  let state = getState()
-  let videoWidth = (window.innerHeight * 0.8) * state.aspectRatio
+export const updateVideoWidth = (aspectRatio) => (dispatch) => {
+  console.log("test", window.innerHeight, window.innerHeight*.6, aspectRatio)
+  let videoWidth = (window.innerHeight * 0.6) * aspectRatio
   if (videoWidth > (0.8 * window.innerWidth)) {
     videoWidth = (0.8 * window.innerWidth)
   }
@@ -100,7 +100,7 @@ export const updateDimensions = (aspectRatio) => (dispatch, getState) => {
     type: 'setAspectRatio',
     aspectRatio: aspectRatio
   })
-  dispatch(updateVideoWidth());
+  dispatch(updateVideoWidth(aspectRatio));
 }
 
 export const getNextFrame = (frameDeck) => (dispatch, getState) => {

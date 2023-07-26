@@ -1,6 +1,6 @@
 import {
   MenuItem,
-  TextField
+  Select
 } from '@mui/material'
 import { useEffect, useState } from 'react';
 import { addSnack, useSnacksDispatch } from '../../state/SnacksProvider';
@@ -104,32 +104,13 @@ function CategoricalAnnotationBar(props) {
   
   const handleLabelChange = (e) => {
     let targetValue = e.target.value
-    if(!(targetValue in labelOptions)) {
+    if(!(labelOptions.includes(targetValue))) {
       addSnack(`Value is not a valid ${id} option`, 'warning')
       return
     }
     console.log("changing label", targetValue)
     setSelectedLabel(targetValue)
     
-  }
-  
-  const getThresholdInput = () => {
-    return <TextField
-            className={styles.threshold}
-            id={`${id}-threshold-jumper`}
-            label={"Label"}
-            select
-            margin="dense"
-            multiline={false}
-            defaultValue={selectedLabel}
-            onChange={handleLabelChange}
-          >
-            {labelOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-          </TextField>
   }
 
   return (
@@ -138,24 +119,22 @@ function CategoricalAnnotationBar(props) {
         id={id}
         getColorArray={computeColorArray}
         handleJump={jumpToNextInstance}
-        getThresholdInput={getThresholdInput}
       >
-        {/* <TextField
+        <Select
             className={styles.threshold}
             id={`${id}-threshold-jumper`}
             label={"Label"}
-            select
             margin="dense"
-            multiline={false}
             defaultValue={selectedLabel}
-            onChange={handleLabelChange}
+            value={selectedLabel}
+            onChange={(e) =>handleLabelChange(e)}
           >
             {labelOptions.map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
                 </MenuItem>
               ))}
-          </TextField> */}
+          </Select>
       </AnnotationBar>
     </div>
   );

@@ -10,7 +10,8 @@ import styles from './AnnotationsBar.module.css'
 
 function AnnotationsBar(props) {
   
-  const { id, getColorArray, handleJump, getThresholdInput } = props;
+  const { id, getColorArray, handleJump, children } = props;
+  console.log("children", children)
   const videoData = useVideoData();
   const [ colorArray, setColorArray ] = useState([]);
 
@@ -34,7 +35,7 @@ function AnnotationsBar(props) {
       <HeatmapCanvas colorArray={colorArray}/>
       <div className={styles.text}>
         <JumpButton handleJump={handleJump} />
-        {getThresholdInput()}
+        {children}
       </div>
       
     </div>

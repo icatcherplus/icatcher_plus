@@ -91,10 +91,19 @@ function VideoHeader(props, {children}) {
           >
             {/* <div> UTC Time: {utcTime} </div> */}
             {/* <div> SMPTE Time {smpteString}</div> */}
-            <div> Frame Number: {playbackState.currentFrame} </div>
-            <div> Label: {videoData.annotations.machineLabel[playbackState.currentFrame]}</div>
-            <div> Confidence: {videoData.annotations.confidence[playbackState.currentFrame]}</div>
-            <div>
+            <div className={styles.vertical} > 
+              <div>Frame Number:</div> 
+              <div>{playbackState.currentFrame} </div>
+            </div>
+            <div className={styles.vertical} > 
+              <div>Label:</div> 
+              <div>{videoData.annotations.machineLabel[playbackState.currentFrame]} </div>
+            </div>
+            <div className={styles.vertical} > 
+              <div>Confidence:</div> 
+              <div>{videoData.annotations.confidence[playbackState.currentFrame]} </div>
+            </div>
+            <div className={styles.vertical} >
               <input type='text' onChange={handleInputChange}></input>
               <button onClick={()=> {handleJumpToFrame(currentInput.current)}}> Jump to Frame</button>
             </div>

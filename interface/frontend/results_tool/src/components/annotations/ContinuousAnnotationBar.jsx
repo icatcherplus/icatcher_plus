@@ -140,9 +140,10 @@ function ContinuousAnnotationBar(props) {
         id={id}
         getColorArray={computeColorArray}
         handleJump={jumpToNextInstance}
-        getThresholdInput={getThresholdInput}
+        // getThresholdInput={getThresholdInput}
       >
-        {/* <TextField
+        {/* <div> */}
+        <TextField
             className={styles.threshold}
             id={`${id}-threshold-jumper`}
             label={"Threshold"}
@@ -157,7 +158,8 @@ function ContinuousAnnotationBar(props) {
             multiline={false}
             value={threshold}
             onChange={handleThresholdChange}
-          /> */}
+          />
+          {/* </div> */}
       </AnnotationBar>
     </div>
   );

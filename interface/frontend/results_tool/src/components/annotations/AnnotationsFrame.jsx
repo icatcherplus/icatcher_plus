@@ -8,7 +8,7 @@ import { usePlaybackState, usePlaybackStateDispatch } from '../../state/Playback
 
 import ContinuousAnnotationBar from './ContinuousAnnotationBar';
 import CategoricalAnnotationBar from './CategoricalAnnotationBar';
-import AnnotationsScrubber from './AnnotationsScrubber';
+import AnnotationsScrubBar from './AnnotationsScrubBar';
 
 import styles from './AnnotationsFrame.module.css';
   
@@ -62,19 +62,24 @@ function AnnotationsFrame(props) {
     <div className={styles.annotationsBar}>
       {
         Object.keys(videoData.annotations).length !== 0 ? 
-          Object.keys(videoData.annotations).map((key) => {
-            console.log("running", key)
-            return key==='confidence'
-              ? <ContinuousAnnotationBar 
-                  key={key} 
-                  id={key}
-                  palette={'confidence'}
-                />
-              : <CategoricalAnnotationBar 
-                  key={key} 
-                  id={key}
-                />
-          })
+          <div>
+            <AnnotationsScrubBar />
+            { 
+              Object.keys(videoData.annotations).map((key) => {
+                console.log("running", key)
+                return key==='confidence'
+                  ? <ContinuousAnnotationBar 
+                      key={key} 
+                      id={key}
+                      palette={'confidence'}
+                    />
+                  : <CategoricalAnnotationBar 
+                      key={key} 
+                      id={key}
+                    />
+              })
+            }
+          </div>
           : 
           <Skeleton 
             variant="text" 
@@ -82,7 +87,6 @@ function AnnotationsFrame(props) {
             height={100} 
           />
       }
-      {/* <AnnotationsScrubber /> */}
     </div>
   );
 }
