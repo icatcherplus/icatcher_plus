@@ -20,5 +20,5 @@ RUN mkdir /models
 ENV ICATCHER_DATA_DIR=/models
 
 # download models so user doesn't have to
-ADD preload_models.py preload_models.py
+ADD docker/preload_models.py preload_models.py
 RUN version="$(pip freeze | grep icatcher)" && python preload_models.py $version
