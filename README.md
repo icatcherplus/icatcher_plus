@@ -1,5 +1,5 @@
-[![PyPI version](https://badge.fury.io/py/icatcher.svg)](https://badge.fury.io/py/icatcher) [![Test iCatcher+](https://github.com/icatcherplus/icatcher_plus/actions/workflows/test.yml/badge.svg)](https://github.com/icatcherplus/icatcher_plus/actions/workflows/test.yml) [![DOI](https://zenodo.org/badge/486841882.svg)](https://zenodo.org/badge/latestdoi/486841882) 
-
+[![PyPI version](https://badge.fury.io/py/icatcher.svg)](https://badge.fury.io/py/icatcher) [![Test iCatcher+](https://github.com/icatcherplus/icatcher_plus/actions/workflows/test.yml/badge.svg)](https://github.com/icatcherplus/icatcher_plus/actions/workflows/test.yml) [![DOI](https://zenodo.org/badge/486841882.svg)](https://zenodo.org/badge/latestdoi/486841882)
+[![Generic badge](https://img.shields.io/badge/Website-Online-Green.svg)](https://icatcherplus.github.io/)
 # iCatcher+
 
 # Introduction
