@@ -188,12 +188,18 @@ def load_models(opt, download_only=False):
     if not download_only:
         file_names = [Path(x).name for x in file_paths]
         if opt.fd_model == "retinaface":
-            face_detector_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
+            face_detector_model_file = file_paths[
+                file_names.index("Resnet50_Final.pth")
+            ]
             face_detector_model = RetinaFace(
-                gpu_id=opt.gpu_id, model_path=face_detector_model_file, network="resnet50"
+                gpu_id=opt.gpu_id,
+                model_path=face_detector_model_file,
+                network="resnet50",
             )
         elif opt.fd_model == "opencv_dnn":
-            face_detector_model_file = file_paths[file_names.index("face_model.caffemodel")]
+            face_detector_model_file = file_paths[
+                file_names.index("face_model.caffemodel")
+            ]
             config_file = file_paths[file_names.index("config.prototxt")]
             face_detector_model = cv2.dnn.readNetFromCaffe(
                 str(config_file), str(face_detector_model_file)
@@ -212,7 +218,9 @@ def load_models(opt, download_only=False):
             state_dict = torch.load(str(path_to_gaze_model))
         try:
             gaze_model.load_state_dict(state_dict)
-        except RuntimeError as e:  # hack to deal with models trained on distributed setup
+        except (
+            RuntimeError
+        ) as e:  # hack to deal with models trained on distributed setup
             from collections import OrderedDict
 
             new_state_dict = OrderedDict()
@@ -229,7 +237,9 @@ def load_models(opt, download_only=False):
             )
             face_classifier_model.eval()
             face_classifier_model.to(opt.device)
-            face_classifier_data_transforms = models.get_fc_data_transforms(fc_input_size)
+            face_classifier_data_transforms = models.get_fc_data_transforms(
+                fc_input_size
+            )
         else:
             face_classifier_model = None
             face_classifier_data_transforms = None
