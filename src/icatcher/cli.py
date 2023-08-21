@@ -152,7 +152,7 @@ def extract_crop(frame, bbox, opt):
     return crop, my_box
 
 
-def load_models(opt):
+def load_models(opt, download_only=False):
     """
     loads all relevant neural network models to perform predictions
     models will be automatically downloaded if not found in the cache,
@@ -163,6 +163,7 @@ def load_models(opt):
     environment variable, if defined.
     :Windows: "C:\\Users\\<user>\\AppData\\Local\\<AppAuthor>\\<AppName>\\Cache"
     :param opt: command line options
+    :param download_only: switched to true when creating docker file, and only download capabilities are needed
     :return all nn models
     """
     GOODBOY = pooch.create(
@@ -183,59 +184,61 @@ def load_models(opt):
     file_paths = GOODBOY.fetch(
         "icatcher+_models.zip", processor=pooch.Unzip(), progressbar=True
     )
-    file_names = [Path(x).name for x in file_paths]
-    if opt.fd_model == "retinaface":
-        face_detector_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
-        face_detector_model = RetinaFace(
-            gpu_id=opt.gpu_id, model_path=face_detector_model_file, network="resnet50"
-        )
-    elif opt.fd_model == "opencv_dnn":
-        face_detector_model_file = file_paths[file_names.index("face_model.caffemodel")]
-        config_file = file_paths[file_names.index("config.prototxt")]
-        face_detector_model = cv2.dnn.readNetFromCaffe(
-            str(config_file), str(face_detector_model_file)
-        )
-    else:
-        raise NotImplementedError
-    path_to_gaze_model = Path(file_paths[file_names.index(opt.model)])
-    is_regnet = "regnet" in str(path_to_gaze_model.stem)
-    path_to_fc_model = file_paths[file_names.index(opt.fc_model)]
-    gaze_model = models.GazeCodingModel(opt, is_regnet=is_regnet).to(opt.device)
-    if opt.device == "cpu":
-        state_dict = torch.load(
-            str(path_to_gaze_model), map_location=torch.device(opt.device)
-        )
-    else:
-        state_dict = torch.load(str(path_to_gaze_model))
-    try:
-        gaze_model.load_state_dict(state_dict)
-    except RuntimeError as e:  # hack to deal with models trained on distributed setup
-        from collections import OrderedDict
 
-        new_state_dict = OrderedDict()
-        for k, v in state_dict.items():
-            name = k[7:]  # remove `module.`
-            new_state_dict[name] = v
-        # load params
-        gaze_model.load_state_dict(new_state_dict)
-    gaze_model.eval()
+    if not download_only:
+        file_names = [Path(x).name for x in file_paths]
+        if opt.fd_model == "retinaface":
+            face_detector_model_file = file_paths[file_names.index("Resnet50_Final.pth")]
+            face_detector_model = RetinaFace(
+                gpu_id=opt.gpu_id, model_path=face_detector_model_file, network="resnet50"
+            )
+        elif opt.fd_model == "opencv_dnn":
+            face_detector_model_file = file_paths[file_names.index("face_model.caffemodel")]
+            config_file = file_paths[file_names.index("config.prototxt")]
+            face_detector_model = cv2.dnn.readNetFromCaffe(
+                str(config_file), str(face_detector_model_file)
+            )
+        else:
+            raise NotImplementedError
+        path_to_gaze_model = Path(file_paths[file_names.index(opt.model)])
+        is_regnet = "regnet" in str(path_to_gaze_model.stem)
+        path_to_fc_model = file_paths[file_names.index(opt.fc_model)]
+        gaze_model = models.GazeCodingModel(opt, is_regnet=is_regnet).to(opt.device)
+        if opt.device == "cpu":
+            state_dict = torch.load(
+                str(path_to_gaze_model), map_location=torch.device(opt.device)
+            )
+        else:
+            state_dict = torch.load(str(path_to_gaze_model))
+        try:
+            gaze_model.load_state_dict(state_dict)
+        except RuntimeError as e:  # hack to deal with models trained on distributed setup
+            from collections import OrderedDict
 
-    if opt.use_fc_model:
-        face_classifier_model, fc_input_size = models.init_face_classifier(
-            opt.device, num_classes=2, resume_from=path_to_fc_model
+            new_state_dict = OrderedDict()
+            for k, v in state_dict.items():
+                name = k[7:]  # remove `module.`
+                new_state_dict[name] = v
+            # load params
+            gaze_model.load_state_dict(new_state_dict)
+        gaze_model.eval()
+
+        if opt.use_fc_model:
+            face_classifier_model, fc_input_size = models.init_face_classifier(
+                opt.device, num_classes=2, resume_from=path_to_fc_model
+            )
+            face_classifier_model.eval()
+            face_classifier_model.to(opt.device)
+            face_classifier_data_transforms = models.get_fc_data_transforms(fc_input_size)
+        else:
+            face_classifier_model = None
+            face_classifier_data_transforms = None
+        return (
+            gaze_model,
+            face_detector_model,
+            face_classifier_model,
+            face_classifier_data_transforms,
         )
-        face_classifier_model.eval()
-        face_classifier_model.to(opt.device)
-        face_classifier_data_transforms = models.get_fc_data_transforms(fc_input_size)
-    else:
-        face_classifier_model = None
-        face_classifier_data_transforms = None
-    return (
-        gaze_model,
-        face_detector_model,
-        face_classifier_model,
-        face_classifier_data_transforms,
-    )
 
 
 def create_output_streams(video_path, framerate, resolution, opt):
