@@ -1,15 +1,21 @@
 FROM xychelsea/ffmpeg-nvidia:latest-jupyter
 
-# Change user to root so can mkdir
+# Switch to root user
 USER root
 
-# Set environment variables needed for Miniconda
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+# Import missing GPG key
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
 
-# Install Miniconda
-RUN apt-get update --fix-missing
+# Update package lists
+RUN apt-get update
+
+# Install required packages
 RUN apt-get install -y wget bzip2 ca-certificates
+
+# Clean up the package cache
 RUN apt-get clean
+
+# Download and install Miniconda
 RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
     /bin/bash ~/miniconda.sh -b -p /opt/conda && \
     rm ~/miniconda.sh
