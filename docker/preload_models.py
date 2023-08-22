@@ -1,4 +1,4 @@
-from src.icatcher.cli import load_models
+from icatcher.cli import load_models
 
 
 def main():
