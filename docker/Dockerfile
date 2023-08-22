@@ -1,5 +1,8 @@
 FROM xychelsea/ffmpeg-nvidia:latest-jupyter
 
+# Change user to root so can mkdir
+USER root
+
 # Set environment variables needed for Miniconda
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
@@ -22,9 +25,6 @@ RUN conda install -y anaconda-client python=3.9 pip scikit-learn tensorboard pyt
 
 # Install packages with pip
 RUN pip install icatcher
-
-# Change user to root so can mkdir
-USER root
 
 # Create a directory for models and set environment variable
 RUN mkdir /models
