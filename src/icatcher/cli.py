@@ -163,7 +163,7 @@ def load_models(opt, download_only=False):
     environment variable, if defined.
     :Windows: "C:\\Users\\<user>\\AppData\\Local\\<AppAuthor>\\<AppName>\\Cache"
     :param opt: command line options
-    :param download_only: switched to true when creating docker file, and only download capabilities are needed
+    :param download_only: if true will only download the models without loading them
     :return all nn models
     """
     GOODBOY = pooch.create(
