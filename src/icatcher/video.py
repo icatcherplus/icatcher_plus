@@ -163,5 +163,5 @@ def get_video_paths(opt):
             )
     else:
         # video_paths = [int(opt.source)]
-        raise NotImplementedError
+        raise NotImplementedError("sources other than video file or folder of videos are not currently supported.")
     return video_paths

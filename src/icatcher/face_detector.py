@@ -4,6 +4,7 @@ import numpy as np
 from pathos.pools import ProcessPool
 from icatcher import draw
 import logging
+from tqdm import tqdm
 
 
 def threshold_faces(all_faces: list, confidence_threshold: float):
@@ -60,12 +61,10 @@ def process_frames(cap, frames, h_start_at, h_end_at, w_start_at, w_end_at):
     :param h_end_at: optional crop coordinate
     :param w_start_at: optional crop coordinate
     :param w_end_at: optional crop coordinate
-    :param v
     :return: list of images corresponding to video frames
     """
     processed_frames = []
-    for frame in frames:
-        logging.debug("buffering frames {}/{}".format(frame, len(frames)))
+    for frame in tqdm(frames, desc="buffering frames"):
         cap.set(cv2.CAP_PROP_POS_FRAMES, frame)
         ret, image = cap.read()
         if ret:
