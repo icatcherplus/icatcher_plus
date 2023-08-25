@@ -21,7 +21,6 @@ from icatcher.face_detector import (
     parallelize_face_detection,
     detect_face_opencv_dnn,
 )
-from pathos.helpers import cpu_count
 from batch_face import RetinaFace
 
 
@@ -278,11 +277,12 @@ def create_output_streams(video_path, framerate, resolution, opt):
             prediction_output_file = Path(
                 opt.output_annotation, video_path.stem + opt.output_file_suffix
             )
-            if opt.output_format == "PrefLookTimestamp":
-                with open(prediction_output_file, "w", newline="") as f:  # Write header
-                    f.write(
-                        "Tracks: left, right, away, codingactive, outofframe\nTime,Duration,TrackName,comment\n\n"
-                    )
+            if prediction_output_file.exists():
+                if opt.overwrite:
+                    prediction_output_file.unlink()
+                else:
+                    raise FileExistsError("Annotation output file already exists. Use --overwrite flag to overwrite.")
+            
     return video_output_file, prediction_output_file, skip
 
 
@@ -367,11 +367,7 @@ def predict_from_video(opt):
         last_class_text = ""  # Initialize so that we see the first class assignment as an event to record
 
         # if going to use cpu parallelization, don't allow for live stream video
-        if use_cpu and opt.fd_model == "retinaface" and not opt.dont_buffer:
-            # figure out how many cpus can be used
-            num_cpus = cpu_count() - opt.num_cpus_saved
-            assert num_cpus > 0
-
+        if use_cpu and opt.fd_model == "retinaface" and opt.fd_parallel_processing:
             # send all frames in to be preprocessed and have faces detected prior to running gaze detection
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             vid_frames = range(
@@ -384,9 +380,9 @@ def predict_from_video(opt):
                 processed_frames[0].shape[0],
                 processed_frames[0].shape[1],
             )
-            logging.debug("face detection on buffered frames ...")
+            logging.info("performing face detection on buffered frames...")
             faces = parallelize_face_detection(
-                processed_frames, face_detector_model, num_cpus, opt
+                processed_frames, face_detector_model, opt.fd_num_cpus, opt
             )
             del processed_frames
 
@@ -413,7 +409,7 @@ def predict_from_video(opt):
             frames.append(frame)
 
             if (
-                use_cpu and opt.fd_model == "retinaface" and not opt.dont_buffer
+                use_cpu and opt.fd_model == "retinaface" and opt.fd_parallel_processing
             ):  # if using cpu, just pull from master
                 bboxes = master_bboxes[frame_count]
             elif opt.fd_model == "opencv_dnn":
@@ -528,6 +524,11 @@ def predict_from_video(opt):
                             corrected_transitions,
                         )
                 class_text = reverse_classes[answers[cursor]]
+                if opt.mirror_annotation:
+                    if class_text == "left":
+                        class_text = "right"
+                    elif class_text == "right":
+                        class_text = "left"                    
                 if opt.on_off:
                     class_text = "off" if class_text == "away" else "on"
                 if opt.output_video_path:
@@ -576,16 +577,6 @@ def predict_from_video(opt):
                                     confidences[cursor],
                                 )
                             )
-                    elif opt.output_format == "PrefLookTimestamp":
-                        if (
-                            class_text != last_class_text
-                        ):  # Record "event" for change of direction if code has changed
-                            frame_ms = int(
-                                (frame_count + cursor + 1) * (1000.0 / framerate)
-                            )
-                            with open(prediction_output_file, "a", newline="") as f:
-                                f.write("{},0,{}\n".format(frame_ms, class_text))
-                            last_class_text = class_text
                 logging.info(
                     "frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(
                         str(frame_count + cursor + 1),
@@ -624,12 +615,14 @@ def cleanup(
     if opt.output_video_path:
         video_output_file.release()
     if opt.output_annotation:  # write footer to file
-        if opt.output_format == "PrefLookTimestamp":
-            start_ms = int((1000.0 / framerate) * (opt.sliding_window_size // 2))
-            end_ms = int((1000.0 / framerate) * frame_count)
-            with open(prediction_output_file, "a", newline="") as f:
-                f.write("{},{},codingactive\n".format(start_ms, end_ms))
-        elif opt.output_format == "compressed":
+        if opt.output_format == "compressed":
+            answers = np.array(answers)
+            confidences = np.array(confidences)
+            if opt.mirror_annotation:
+                lefts = answers == classes["left"]
+                rights = answers == classes["right"]
+                answers[lefts] = classes["right"]
+                answers[rights] = classes["left"]
             np.savez(prediction_output_file, answers, confidences)
     cap.release()
 
