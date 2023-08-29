@@ -281,8 +281,10 @@ def create_output_streams(video_path, framerate, resolution, opt):
                 if opt.overwrite:
                     prediction_output_file.unlink()
                 else:
-                    raise FileExistsError("Annotation output file already exists. Use --overwrite flag to overwrite.")
-            
+                    raise FileExistsError(
+                        "Annotation output file already exists. Use --overwrite flag to overwrite."
+                    )
+
     return video_output_file, prediction_output_file, skip
 
 
@@ -528,7 +530,7 @@ def predict_from_video(opt):
                     if class_text == "left":
                         class_text = "right"
                     elif class_text == "right":
-                        class_text = "left"                    
+                        class_text = "left"
                 if opt.on_off:
                     class_text = "off" if class_text == "away" else "on"
                 if opt.output_video_path:

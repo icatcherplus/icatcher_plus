@@ -4,6 +4,7 @@ import icatcher
 from icatcher.cli import predict_from_video
 from pathlib import Path
 
+
 def test_parse_illegal_transitions():
     """
     tests handling the option "illegal transitions".
@@ -73,7 +74,9 @@ def test_predict_from_video(args_string):
     if not args.overwrite:
         try:
             predict_from_video(args)
-        except FileExistsError: # should be raised if overwrite is False and file exists, which is expected since this is the second test
+        except (
+            FileExistsError
+        ):  # should be raised if overwrite is False and file exists, which is expected since this is the second test
             return
     else:
         predict_from_video(args)
@@ -88,7 +91,9 @@ def test_predict_from_video(args_string):
             with open(output_file, "r") as f:
                 data = f.readlines()
             predicted_classes = [x.split(",")[1].strip() for x in data]
-            predicted_classes = np.array([icatcher.classes[x] for x in predicted_classes])
+            predicted_classes = np.array(
+                [icatcher.classes[x] for x in predicted_classes]
+            )
             confidences = np.array([float(x.split(",")[2].strip()) for x in data])
         assert len(predicted_classes) == len(confidences)
         # assert len(predicted_classes) == 194 # hard coded number of frames in test video
