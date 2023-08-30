@@ -379,7 +379,9 @@ def predict_from_video(opt):
 
             # get available system memory, estimate safe batch size based on available me and frame size
             available_memory = psutil.virtual_memory().available  # in bytes
-            processing_batch_size = int((opt.available_ram_percentage * available_memory) // frame_memory)  # default is 75% available RAM
+            processing_batch_size = int(
+                (opt.available_ram_percentage * available_memory) // frame_memory
+            )  # default is 75% available RAM
 
             # send all frames in to be preprocessed and have faces detected prior to running gaze detection
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -402,7 +404,9 @@ def predict_from_video(opt):
                     processed_frames[0].shape[0],
                     processed_frames[0].shape[1],
                 )
-                logging.info(f"performing face detection on buffered frames... batch {batch_counter} of {total_batches}")
+                logging.info(
+                    f"performing face detection on buffered frames... batch {batch_counter} of {total_batches}"
+                )
                 faces = parallelize_face_detection(
                     processed_frames, face_detector_model, opt.fd_num_cpus, opt
                 )
