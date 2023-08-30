@@ -5,6 +5,7 @@ import cv2
 from PIL import Image
 from pathlib import Path
 import pooch
+import psutil
 from icatcher import (
     version,
     classes,
@@ -359,6 +360,7 @@ def predict_from_video(opt):
             []
         )  # list of bounding boxes for each frame in the sliding window
         frames = []  # list of frames for each frame in the sliding window
+        master_bboxes = []  # list of bboxes of faces detected
         from_tracker = (
             []
         )  # list of booleans indicating whether the bounding box was obtained from the tracker
@@ -370,30 +372,49 @@ def predict_from_video(opt):
 
         # if going to use cpu parallelization, don't allow for live stream video
         if use_cpu and opt.fd_model == "retinaface" and opt.fd_parallel_processing:
+            # get the first frame to estimate its memory usage
+            ret, first_frame = cap.read()
+            frame_memory = first_frame.nbytes  # memory in bytes
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # reset the video to the beginning
+
+            # get available system memory, estimate safe batch size based on available me and frame size
+            available_memory = psutil.virtual_memory().available  # in bytes
+            processing_batch_size = int((opt.available_ram_percentage * available_memory) // frame_memory)  # default is 75% available RAM
+
             # send all frames in to be preprocessed and have faces detected prior to running gaze detection
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             vid_frames = range(
                 0, total_frames, 1 + opt.fd_skip_frames
             )  # adding step if frames are skipped
-            processed_frames = process_frames(
-                cap, vid_frames, h_start_at, h_end_at, w_start_at, w_end_at
-            )
-            frame_height, frame_width = (
-                processed_frames[0].shape[0],
-                processed_frames[0].shape[1],
-            )
-            logging.info("performing face detection on buffered frames...")
-            faces = parallelize_face_detection(
-                processed_frames, face_detector_model, opt.fd_num_cpus, opt
-            )
-            del processed_frames
 
-            # flatten the list and extract bounding boxes
-            faces = [item for sublist in faces for item in sublist]
-            master_bboxes = [
-                extract_bboxes(face_group, frame_height, frame_width)
-                for face_group in faces
-            ]
+            # process frames in batches to avoid holding all frames in memory
+            batch_counter = 0
+            total_batches = (len(vid_frames) // processing_batch_size) + 1
+            for start_frame in range(0, len(vid_frames), processing_batch_size):
+                end_frame = min(start_frame + processing_batch_size, len(vid_frames))
+                batch = vid_frames[start_frame:end_frame]
+
+                # process the batch
+                processed_frames = process_frames(
+                    cap, batch, h_start_at, h_end_at, w_start_at, w_end_at
+                )
+                frame_height, frame_width = (
+                    processed_frames[0].shape[0],
+                    processed_frames[0].shape[1],
+                )
+                logging.info(f"performing face detection on buffered frames... batch {batch_counter} of {total_batches}")
+                faces = parallelize_face_detection(
+                    processed_frames, face_detector_model, opt.fd_num_cpus, opt
+                )
+                del processed_frames
+
+                # flatten the list and extract bounding boxes
+                faces = [item for sublist in faces for item in sublist]
+                master_bboxes += [
+                    extract_bboxes(face_group, frame_height, frame_width)
+                    for face_group in faces
+                ]
+                batch_counter += 1
 
             # if frames were skipped, need to repeat binding boxes for that many skips
             if opt.fd_skip_frames > 0:

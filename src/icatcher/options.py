@@ -167,6 +167,12 @@ def parse_arguments(my_string=None):
         help="(cpu, retinaface only) face detection will be parallelized, by batching the frames (requires buffering them), increasing memory usage, but decreasing overall processing time. Disallows live stream of results.",
     )
     parser.add_argument(
+        "--available_ram_percentage",
+        type=float,
+        default=0.75,
+        help="The amount of available RAM utilized when creating batches of frames to be processed.",
+    )
+    parser.add_argument(
         "--fd_num_cpus",
         type=int,
         default=-1,
