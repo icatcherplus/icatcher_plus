@@ -3,6 +3,7 @@ from pathlib import Path
 from . import version
 from pathos.helpers import cpu_count
 
+
 def parse_arguments(my_string=None):
     """
     parse command line arguments
@@ -82,8 +83,9 @@ def parse_arguments(my_string=None):
         "--output_annotation", type=str, help="Folder to output annotations to."
     )
     parser.add_argument(
-        "--overwrite", action="store_true",
-        help="If an output annotation file exists, will overwrite it. Without this flag iCatcher+ will terminate upon encountering an existing annotation file." 
+        "--overwrite",
+        action="store_true",
+        help="If an output annotation file exists, will overwrite it. Without this flag iCatcher+ will terminate upon encountering an existing annotation file.",
     )
     parser.add_argument(
         "--on_off",
