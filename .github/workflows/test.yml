@@ -2,14 +2,17 @@ name: Test iCatcher+
 on: [push]
 jobs:
   build-project:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         
       - name: Setup ffmpeg
         uses: FedericoCarboni/setup-ffmpeg@v2
-        
+
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
@@ -21,4 +24,5 @@ jobs:
           python -m pip install ".[dev]"
 
       - name: Run tests
-        run:  python -m pytest tests
+        run: python -m pytest tests
+
