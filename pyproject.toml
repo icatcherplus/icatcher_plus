@@ -29,12 +29,15 @@ dependencies = [
     "pathos",
     "scipy",
     "tqdm",
-    "face-recognition"
+    "face-recognition",
+    "flask",
+    "flask_cors"
 ]
 requires-python = ">=3.9"
 
 [project.scripts]
 icatcher = "icatcher.cli:main"
+icatcher-app = "icatcher.icatcher_app.api:open_app"
 
 [project.optional-dependencies]
 build = ["build", "twine"]
