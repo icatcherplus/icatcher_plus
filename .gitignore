@@ -7,5 +7,4 @@ datasets/
 src/icatcher.egg-info/
 dist/
 build/
-interface/node_modules/
-interface/frontend/results_tool/node_modules/
+node_modules
