@@ -1,8 +1,9 @@
 name: Publish iCatcher+
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    branches: [ "main"]
+  pull_request:
+    branches: [ "main"]
 
 permissions:
   contents: read
@@ -13,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x]
+        node-version: [18.x, 20.x]
 
     steps:
     - name: Checkout
@@ -44,9 +45,3 @@ jobs:
     
     - name: Build package
       run: python -m build
-    
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
