@@ -1,0 +1,22 @@
+.invisible {
+  /* visibility: hidden !important; */
+  width: 80px;
+  color: white;
+  background-color: white;
+}
+
+.temp {
+  display: flex;
+  align-items: center;
+  /* padding: 8px; */
+}
+
+.text {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  width: 200px;
+  padding: 8px;
+
+}

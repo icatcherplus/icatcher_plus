@@ -1,0 +1,6 @@
+.videoCanvas {
+  /* background-color: #eee; */
+  height: 50px;
+  padding: 0px 10px;
+  box-sizing: border-box;
+}

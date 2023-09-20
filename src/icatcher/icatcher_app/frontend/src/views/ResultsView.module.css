@@ -1,0 +1,15 @@
+.mainpage {
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 100%;
+  min-height: 100%;
+  gap: 10px;
+}
+.content {
+  flex: 7;
+  position: relative;
+  padding: 1em;
+}
+

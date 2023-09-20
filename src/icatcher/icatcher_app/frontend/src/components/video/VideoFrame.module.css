@@ -1,0 +1,46 @@
+.videoFrame {
+    position: relative;
+    margin: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+}
+
+.videoCanvas {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 0;
+}
+
+.controlsBox {
+    /* opacity: 0; */
+    display: inline;
+    position: absolute;
+    bottom: 0;
+    transition: opacity 0.5s;
+}
+
+/* .videoFrame:hover > .controlsBox {
+    opacity: 100%;
+} */
+
+.controlsBackground {
+    padding: 0 10px;
+    margin: auto;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    justify-content: flex-end;
+    background-image: linear-gradient(to top, black, transparent);
+    opacity: 0.4;
+    transition: opacity .25s ease-in-out;
+    -moz-transition: opacity .25s ease-in-out;
+    -webkit-transition: opacity .25s ease-in-out;
+    height: 80px;
+}
+
+.controlsBackground:hover {
+    opacity: 0.9
+}
