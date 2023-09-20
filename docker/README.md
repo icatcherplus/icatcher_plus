@@ -27,7 +27,7 @@ which should now show the container you downloaded.
 Running the following command:
 
 ```bash
-docker docker run -it --rm=true questengineering/icatcher_plus:latest /bin/bash
+docker run -it --rm=true questengineering/icatcher_plus:latest /bin/bash
 ```
 
 will allow you to run a copy of the container. The container can be explored and iCatcher+ can be run easily this way. 
