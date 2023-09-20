@@ -296,10 +296,10 @@ def predict_from_video(opt):
     :return:
     """
     # initialize
-    loc = (
-        -5
-    )  # where in the sliding window to take the prediction (should be a function of opt.sliding_window_size)
-    cursor = -5  # points to the frame we will write to output relative to current frame
+    # loc determines where in the sliding window to take the prediction, fixed to be the middle frame
+    loc = -((opt.sliding_window_size // 2) + 1)
+    # cursor points to the frame we will write to output relative to current frame, it can change based on illegal transitions
+    cursor = -((opt.sliding_window_size // 2) + 1)
     logging.debug(
         "using the following values for per-channel mean: {}".format(
             opt.per_channel_mean
@@ -434,7 +434,7 @@ def predict_from_video(opt):
                 confidences.append(-1)
                 image = np.zeros((1, opt.image_size, opt.image_size, 3), np.float64)
                 my_box = np.array([0, 0, 0, 0, 0])
-                image_sequence.append((image, True))
+                image_sequence.append((image, False))
                 box_sequence.append(my_box)
                 bbox_sequence.append(None)
                 from_tracker.append(False)
@@ -455,39 +455,37 @@ def predict_from_video(opt):
                 )
                 crop, my_box = extract_crop(frame, selected_bbox, opt)
                 if selected_bbox is None:
-                    answers.append(
-                        classes["nobabyface"]
-                    )  # if selecting face fails, treat as away and mark invalid
+                    # if selecting face fails, treat as away and mark invalid
+                    answers.append(classes["nobabyface"])
                     confidences.append(-1)
                     image = np.zeros((1, opt.image_size, opt.image_size, 3), np.float64)
                     my_box = np.array([0, 0, 0, 0, 0])
-                    image_sequence.append((image, True))
+                    image_sequence.append((image, False))
                     box_sequence.append(my_box)
                     bbox_sequence.append(None)
                 else:
+                    # if face detector succeeds, treat as "none" (will be overwritten later) and mark valid
                     if crop.size == 0:
                         raise ValueError("crop size is 0, what just happend?")
-                    answers.append(
-                        classes["left"]
-                    )  # if face detector succeeds, treat as left and mark valid
+                    answers.append(classes["none"])
                     confidences.append(-1)
-                    image_sequence.append((crop, False))
+                    image_sequence.append((crop, True))
                     box_sequence.append(my_box)
                     bbox_sequence.append(selected_bbox)
                     if not from_tracker[-1]:
                         last_known_valid_bbox = selected_bbox.copy()
-            if (
-                len(image_sequence) == opt.sliding_window_size
-            ):  # we have enough frames for prediction, predict for middle frame
+            if frame_count + 1 >= np.abs(cursor):
+                # sets important variables to cursor location
                 cur_frame = frames[cursor]
                 cur_bbox = bbox_sequence[cursor]
                 is_from_tracker = from_tracker[cursor]
+            if len(image_sequence) == opt.sliding_window_size:
+                # we have enough frames for prediction, predict for middle frame
                 frames.pop(0)
                 bbox_sequence.pop(0)
                 from_tracker.pop(0)
-                if not image_sequence[opt.sliding_window_size // 2][
-                    1
-                ]:  # if middle image is valid
+                if image_sequence[opt.sliding_window_size // 2][1]:
+                    # if middle image is valid
                     to_predict = {
                         "imgs": torch.tensor(
                             np.array([x[0] for x in image_sequence[0::2]]),
@@ -509,10 +507,10 @@ def predict_from_video(opt):
                         confidence, _ = torch.max(probs, 1)
                         float32_conf = confidence.cpu().numpy()[0]
                         int32_pred = prediction.cpu().numpy()[0]
-                    answers[loc] = int32_pred  # update answers for the middle frame
-                    confidences[
-                        loc
-                    ] = float32_conf  # update confidences for the middle frame
+                    # update answers for the middle frame
+                    answers[loc] = int32_pred
+                    # update confidences for the middle frame
+                    confidences[loc] = float32_conf
                 image_sequence.pop(0)
                 box_sequence.pop(0)
 
@@ -525,6 +523,8 @@ def predict_from_video(opt):
                             illegal_transitions,
                             corrected_transitions,
                         )
+            # report results at cursor
+            if frame_count + 1 >= np.abs(cursor):
                 class_text = reverse_classes[answers[cursor]]
                 if opt.mirror_annotation:
                     if class_text == "left":
@@ -533,62 +533,49 @@ def predict_from_video(opt):
                         class_text = "left"
                 if opt.on_off:
                     class_text = "off" if class_text == "away" else "on"
-                if opt.output_video_path:
-                    if is_from_tracker and opt.track_face:
-                        rect_color = (0, 0, 255)
-                    else:
-                        rect_color = (0, 255, 0)
-                    draw.prepare_frame(
-                        cur_frame,
-                        cur_bbox,
-                        show_arrow=True,
-                        rect_color=rect_color,
-                        conf=confidences[cursor],
-                        class_text=class_text,
-                        frame_number=frame_count,
-                        pic_in_pic=opt.pic_in_pic,
-                    )
-                    video_output_file.write(cur_frame)
-                if opt.show_output:
-                    if is_from_tracker and opt.track_face:
-                        rect_color = (0, 0, 255)
-                    else:
-                        rect_color = (0, 255, 0)
-                    draw.prepare_frame(
-                        cur_frame,
-                        cur_bbox,
-                        show_arrow=True,
-                        rect_color=rect_color,
-                        conf=confidences[cursor],
-                        class_text=class_text,
-                        frame_number=frame_count,
-                        pic_in_pic=opt.pic_in_pic,
-                    )
-
-                    cv2.imshow("frame", cur_frame)
-                    if cv2.waitKey(1) & 0xFF == ord("q"):
-                        break
-                # handle writing output to file
-                if opt.output_annotation:
-                    if opt.output_format == "raw_output":
-                        with open(prediction_output_file, "a", newline="") as f:
-                            f.write(
-                                "{}, {}, {:.02f}\n".format(
-                                    str(frame_count + cursor + 1),
-                                    class_text,
-                                    confidences[cursor],
-                                )
-                            )
-                logging.info(
-                    "frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(
-                        str(frame_count + cursor + 1),
-                        class_text,
-                        confidences[cursor],
-                        cur_fps(),
-                    )
+                user_abort = handle_output(
+                    opt,
+                    is_from_tracker,
+                    cur_frame,
+                    cur_bbox,
+                    confidences[cursor],
+                    cursor,
+                    class_text,
+                    frame_count,
+                    video_output_file,
+                    prediction_output_file,
+                    cur_fps,
                 )
+                if user_abort:
+                    break
             ret_val, frame = cap.read()
             frame_count += 1
+        if not user_abort:
+            for i in range(
+                opt.sliding_window_size - np.abs(cursor), opt.sliding_window_size - 1
+            ):
+                # report for final left over frames
+                class_text = "none"
+                cur_frame = frames[i]
+                cur_bbox = bbox_sequence[i]
+                is_from_tracker = from_tracker[i]
+                user_abort = handle_output(
+                    opt,
+                    is_from_tracker,
+                    cur_frame,
+                    cur_bbox,
+                    -1,
+                    cursor,
+                    class_text,
+                    frame_count,
+                    video_output_file,
+                    prediction_output_file,
+                    cur_fps,
+                )
+                frame_count = frame_count + 1
+                if user_abort:
+                    break
+
         # finished processing a video file, cleanup
         cleanup(
             video_output_file,
@@ -602,6 +589,77 @@ def predict_from_video(opt):
         )
 
 
+def handle_output(
+    opt,
+    is_from_tracker,
+    cur_frame,
+    cur_bbox,
+    confidence,
+    cursor,
+    class_text,
+    frame_count,
+    video_output_file,
+    prediction_output_file,
+    cur_fps,
+):
+    # utility function to handle output (video, live stream, annotations, logging, etc.)
+    if opt.output_video_path:
+        if is_from_tracker and opt.track_face:
+            rect_color = (0, 0, 255)
+        else:
+            rect_color = (0, 255, 0)
+        draw.prepare_frame(
+            cur_frame,
+            cur_bbox,
+            show_arrow=True,
+            rect_color=rect_color,
+            conf=confidence,
+            class_text=class_text,
+            frame_number=frame_count + cursor + 1,
+            pic_in_pic=opt.pic_in_pic,
+        )
+        video_output_file.write(cur_frame)
+    if opt.show_output:
+        if is_from_tracker and opt.track_face:
+            rect_color = (0, 0, 255)
+        else:
+            rect_color = (0, 255, 0)
+        draw.prepare_frame(
+            cur_frame,
+            cur_bbox,
+            show_arrow=True,
+            rect_color=rect_color,
+            conf=confidence,
+            class_text=class_text,
+            frame_number=frame_count + cursor + 1,
+            pic_in_pic=opt.pic_in_pic,
+        )
+
+        cv2.imshow("frame", cur_frame)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            return True
+    # handle writing output to file
+    if opt.output_annotation:
+        if opt.output_format == "raw_output":
+            with open(prediction_output_file, "a", newline="") as f:
+                f.write(
+                    "{}, {}, {:.02f}\n".format(
+                        str(frame_count + cursor + 1),
+                        class_text,
+                        confidence,
+                    )
+                )
+    logging.info(
+        "frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(
+            str(frame_count + cursor + 1),
+            class_text,
+            confidence,
+            cur_fps(),
+        )
+    )
+    return False
+
+
 def cleanup(
     video_output_file,
     prediction_output_file,
@@ -612,6 +670,7 @@ def cleanup(
     cap,
     opt,
 ):
+    # saves and frees resources
     if opt.show_output:
         cv2.destroyAllWindows()
     if opt.output_video_path:

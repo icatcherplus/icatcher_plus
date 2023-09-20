@@ -7,13 +7,13 @@ from icatcher.options import parse_arguments
 @pytest.mark.parametrize(
     "args_string, model_class_name",
     [
-        ("tests/test_data/test.mp4", "RegNet"),
+        ("tests/test_data/test_short.mp4", "RegNet"),
         (
-            "tests/test_data/test.mp4 --model icatcher+_lookit_regnet.pth",
+            "tests/test_data/test_short.mp4 --model icatcher+_lookit_regnet.pth",
             "RegNet",
         ),
         (
-            "tests/test_data/test.mp4 --model icatcher+_lookit.pth",
+            "tests/test_data/test_short.mp4 --model icatcher+_lookit.pth",
             "ResNet",
         ),
     ],
@@ -38,8 +38,8 @@ def test_load_models(args_string, model_class_name):
 @pytest.mark.parametrize(
     "args_string",
     [
-        "tests/test_data/test.mp4 --model icatcher+_lookit_regnet.pth --gpu_id=0",
-        "tests/test_data/test.mp4 --model icatcher+_lookit.pth --gpu_id=0",
+        "tests/test_data/test_short.mp4 --model icatcher+_lookit_regnet.pth --gpu_id=0",
+        "tests/test_data/test_short.mp4 --model icatcher+_lookit.pth --gpu_id=0",
     ],
 )
 def test_predict_from_video(args_string):

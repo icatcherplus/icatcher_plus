@@ -242,6 +242,8 @@ def parse_arguments(my_string=None):
             raise ValueError(
                 "On off mode can only be used with raw output format. Pass raw_output with the --output_format flag."
             )
+    if args.sliding_window_size % 2 == 0:
+        raise ValueError("sliding_window_size must be odd.")
     if not args.per_channel_mean:
         args.per_channel_mean = [0.485, 0.456, 0.406]
     if not args.per_channel_std:
