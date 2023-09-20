@@ -1,0 +1,1 @@
+recursive-include src/icatcher/icatcher_app/frontend/build *
