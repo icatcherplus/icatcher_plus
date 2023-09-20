@@ -108,6 +108,10 @@ def parse_arguments(my_string=None):
         help="If present, annotated video will be saved to this folder.",
     )
     parser.add_argument(
+        "--ui_packaging_path",
+        help="If present, packages the output data into the UI format.",
+    )
+    parser.add_argument(
         "--pic_in_pic",
         action="store_true",
         help="If present, a mini picture with detections will be shown in the output video.",
