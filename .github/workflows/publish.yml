@@ -10,16 +10,34 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install JS dependencies
+      working-directory: ./src/icatcher/icatcher_app/frontend/
+      run: npm ci
+
+    - name: Build web app
+      working-directory: ./src/icatcher/icatcher_app/frontend/
+      run: npm run build
     
     - name: Setup Python
       uses: actions/setup-python@v3
       with:
         python-version: '3.9'
       
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
           python -m pip install --upgrade pip
           python -m pip install ".[build]"
