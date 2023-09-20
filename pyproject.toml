@@ -4,7 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "icatcher"
+<<<<<<< HEAD
 version = "0.0.6"
+=======
+version = "0.2.0"
+>>>>>>> yotam/master
 description = "iCatcher+: Robust and automated annotation of infant gaze from videos collected in laboratory, field, and online studies."
 readme = "README.md"
 authors = [{ name = "Yotam Erel", email = "erelyotam@gmail.com" }]
@@ -22,14 +26,10 @@ dependencies = [
     "scipy",
     "ffmpeg-python",
     "opencv-python",
-    "pooch",
-    "face-detection@git+https://github.com/elliottzheng/face-detection.git",
-    "pandas",
-    "gdown",
-    "pathos",
-    "scipy",
     "tqdm",
-    "face-recognition",
+    "pooch",
+    "batch-face",
+    "pathos",
     "flask",
     "flask_cors"
 ]
@@ -40,14 +40,14 @@ icatcher = "icatcher.cli:main"
 icatcher-app = "icatcher.icatcher_app.api:open_app"
 
 [project.optional-dependencies]
-build = ["build", "twine"]
-dev = ["bumpver", "pytest"]
+build = ["bumpver", "build", "twine"]
+dev = ["pytest"]
 
 [project.urls]
 Homepage = "https://github.com/yoterel/icatcher_plus"
 
 [tool.bumpver]
-current_version = "0.0.6"
+current_version = "0.2.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 commit = false
