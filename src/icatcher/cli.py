@@ -264,12 +264,14 @@ def create_output_streams(video_path, framerate, resolution, opt):
     prediction_output_file = None
     ui_output_components = None
     skip = False
-    
+
     fourcc = cv2.VideoWriter_fourcc(
         *"MP4V"
     )  # may need to be adjusted per available codecs & OS
     if opt.ui_packaging_path:
-        video_creator = lambda path: cv2.VideoWriter(str(path), fourcc, framerate, resolution, True)
+        video_creator = lambda path: cv2.VideoWriter(
+            str(path), fourcc, framerate, resolution, True
+        )
         ui_output_components = ui_packaging.prepare_ui_output_components(
             opt.ui_packaging_path,
             video_path,
@@ -353,9 +355,12 @@ def predict_from_video(opt):
             w_start_at,
             w_end_at,
         ) = video.process_video(video_path, opt)
-        video_output_file, prediction_output_file, ui_output_components, skip = create_output_streams(
-            video_path, framerate, resolution, opt
-        )
+        (
+            video_output_file,
+            prediction_output_file,
+            ui_output_components,
+            skip,
+        ) = create_output_streams(video_path, framerate, resolution, opt)
         if skip:
             continue
         # per video initialization
@@ -588,10 +593,11 @@ def predict_from_video(opt):
                 if user_abort:
                     break
 
-        
         if opt.ui_packaging_path:
             # Write UI packaging metadata into a JSON file
-            video_fps = video.get_video_stream_meta_data(video_path)["r_frame_rate"].split("/")
+            video_fps = video.get_video_stream_meta_data(video_path)[
+                "r_frame_rate"
+            ].split("/")
             video_fps = float(video_fps[0]) / float(video_fps[1])
             ui_packaging.save_ui_metadata(
                 fps=video_fps,

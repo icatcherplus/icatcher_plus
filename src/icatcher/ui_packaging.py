@@ -103,9 +103,7 @@ def prepare_frame_for_ui(
     )
 
 
-def save_ui_output(
-    frame_idx: int, ui_output_components: Dict, output_for_ui: Tuple
-):
+def save_ui_output(frame_idx: int, ui_output_components: Dict, output_for_ui: Tuple):
     """
     Given the UI components and inference output, saves the output for the current frame in the UI output directory
 
