@@ -14,6 +14,7 @@ from icatcher import (
     video,
     models,
     parsers,
+    ui_packaging,
 )
 from icatcher.face_detector import (
     extract_bboxes,
@@ -257,15 +258,26 @@ def create_output_streams(video_path, framerate, resolution, opt):
     :param framerate: video framerate
     :param resolution: video resolution
     :param opt: options
-    :return: video_output_file, prediction_output_file, skip = prediction file already exists
+    :return: video_output_file, prediction_output_file, ui_output_components, skip = prediction file already exists
     """
     video_output_file = None
     prediction_output_file = None
+    ui_output_components = None
     skip = False
+
+    fourcc = cv2.VideoWriter_fourcc(
+        *"MP4V"
+    )  # may need to be adjusted per available codecs & OS
+    if opt.ui_packaging_path:
+        video_creator = lambda path: cv2.VideoWriter(
+            str(path), fourcc, framerate, resolution, True
+        )
+        ui_output_components = ui_packaging.prepare_ui_output_components(
+            opt.ui_packaging_path,
+            video_path,
+            video_creator,
+        )
     if opt.output_video_path:
-        fourcc = cv2.VideoWriter_fourcc(
-            *"MP4V"
-        )  # may need to be adjusted per available codecs & OS
         my_video_path = Path(opt.output_video_path, video_path.stem + "_output.mp4")
         video_output_file = cv2.VideoWriter(
             str(my_video_path), fourcc, framerate, resolution, True
@@ -285,7 +297,7 @@ def create_output_streams(video_path, framerate, resolution, opt):
                         "Annotation output file already exists. Use --overwrite flag to overwrite."
                     )
 
-    return video_output_file, prediction_output_file, skip
+    return video_output_file, prediction_output_file, ui_output_components, skip
 
 
 def predict_from_video(opt):
@@ -343,9 +355,12 @@ def predict_from_video(opt):
             w_start_at,
             w_end_at,
         ) = video.process_video(video_path, opt)
-        video_output_file, prediction_output_file, skip = create_output_streams(
-            video_path, framerate, resolution, opt
-        )
+        (
+            video_output_file,
+            prediction_output_file,
+            ui_output_components,
+            skip,
+        ) = create_output_streams(video_path, framerate, resolution, opt)
         if skip:
             continue
         # per video initialization
@@ -544,6 +559,7 @@ def predict_from_video(opt):
                     frame_count,
                     video_output_file,
                     prediction_output_file,
+                    ui_output_components,
                     cur_fps,
                 )
                 if user_abort:
@@ -570,12 +586,25 @@ def predict_from_video(opt):
                     frame_count,
                     video_output_file,
                     prediction_output_file,
+                    ui_output_components,
                     cur_fps,
                 )
                 frame_count = frame_count + 1
                 if user_abort:
                     break
 
+        if opt.ui_packaging_path:
+            # Write UI packaging metadata into a JSON file
+            video_fps = video.get_video_stream_meta_data(video_path)[
+                "r_frame_rate"
+            ].split("/")
+            video_fps = float(video_fps[0]) / float(video_fps[1])
+            ui_packaging.save_ui_metadata(
+                fps=video_fps,
+                frame_count=frame_count,
+                sliding_window_size=opt.sliding_window_size,
+                metadata_file_path=ui_output_components["metadata_path"],
+            )
         # finished processing a video file, cleanup
         cleanup(
             video_output_file,
@@ -600,6 +629,7 @@ def handle_output(
     frame_count,
     video_output_file,
     prediction_output_file,
+    ui_output_components,
     cur_fps,
 ):
     # utility function to handle output (video, live stream, annotations, logging, etc.)
@@ -649,6 +679,25 @@ def handle_output(
                         confidence,
                     )
                 )
+    if opt.ui_packaging_path:
+        if is_from_tracker and opt.track_face:
+            rect_color = (0, 0, 255)
+        else:
+            rect_color = (0, 255, 0)
+        output_for_ui = ui_packaging.prepare_frame_for_ui(
+            cur_frame,
+            cur_bbox,
+            rect_color=rect_color,
+            conf=confidence,
+            class_text=class_text,
+            frame_number=frame_count + cursor + 1,
+            pic_in_pic=opt.pic_in_pic,
+        )
+        ui_packaging.save_ui_output(
+            frame_idx=frame_count + cursor + 1,
+            ui_output_components=ui_output_components,
+            output_for_ui=output_for_ui,
+        )
     logging.info(
         "frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(
             str(frame_count + cursor + 1),
