@@ -23,6 +23,7 @@ from icatcher.face_detector import (
     detect_face_opencv_dnn,
 )
 from batch_face import RetinaFace
+from icatcher.icatcher_app.api import run_icatcher_app
 
 
 def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
@@ -739,15 +740,20 @@ def cleanup(
 
 def main():
     args = options.parse_arguments()
-    if args.log:
-        args.log.parent.mkdir(parents=True, exist_ok=True)
-        logging.basicConfig(
-            filename=args.log, filemode="w", level=args.verbosity.upper()
-        )
+    if args.app == True:
+        run_icatcher_app()
+    elif args.source is None:
+        raise Exception('Must specify a video source if processing video')
     else:
-        logging.basicConfig(level=args.verbosity.upper())
-    predict_from_video(args)
-
+        if args.log:
+            args.log.parent.mkdir(parents=True, exist_ok=True)
+            logging.basicConfig(
+                filename=args.log, filemode="w", level=args.verbosity.upper()
+            )
+        else:
+            print(f'verbosity={args.verbosity.upper()}')
+            logging.basicConfig(level=args.verbosity.upper())
+        predict_from_video(args)
 
 if __name__ == "__main__":
     main()

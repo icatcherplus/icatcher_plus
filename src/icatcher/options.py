@@ -15,6 +15,13 @@ def parse_arguments(my_string=None):
         "source",
         type=str,
         help="The source to use (path to video file, folder or webcam id).",
+        nargs='?',
+        default=None
+    )
+    parser.add_argument(
+        "-a", "--app",
+        action="store_true",
+        help="Model file that will be used for gaze detection.",
     )
     parser.add_argument(
         "--model",
