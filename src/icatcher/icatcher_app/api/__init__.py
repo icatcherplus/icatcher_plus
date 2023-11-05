@@ -1,9 +1,11 @@
 import webbrowser
-from .api import run_app as run_icatcher_app
+from .api import run_app
+from .builder import build_app
 
-default_port = 5001
+DEFAULT_PORT = 5001
 
 
-def open_app():
+def run_icatcher_app():
+    build_app(force=False, debug=False, info=False)
     webbrowser.open(f"http://localhost:{default_port}")
-    run_icatcher_app(port=default_port)
+    run_app(port=DEFAULT_PORT, debug=False)
