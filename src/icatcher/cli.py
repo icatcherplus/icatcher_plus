@@ -751,7 +751,6 @@ def main():
                 filename=args.log, filemode="w", level=args.verbosity.upper()
             )
         else:
-            print(f'verbosity={args.verbosity.upper()}')
             logging.basicConfig(level=args.verbosity.upper())
         predict_from_video(args)
 
