@@ -24,7 +24,9 @@ dependencies = [
     "tqdm",
     "pooch",
     "batch-face",
-    "pathos"
+    "pathos",
+    "flask",
+    "flask_cors"
 ]
 requires-python = ">=3.9"
 
