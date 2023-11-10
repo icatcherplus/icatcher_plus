@@ -1,4 +1,11 @@
 .videoCanvas {
-    flex: 2;
-    background-color:#eee;
+/*  grid-template-rows: 3fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-areas:
+  "video frame_info_box"
+  "video filter_box"
+  "video filter_box"
+  "heat_maps filter_box";*/
+  flex: 2;
+  background-color:#eee;
 }

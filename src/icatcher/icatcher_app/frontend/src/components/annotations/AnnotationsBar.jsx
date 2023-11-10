@@ -4,13 +4,13 @@ import {
 import { useEffect, useState } from 'react';
 import { useVideoData } from '../../state/VideoDataProvider';
 import HeatmapCanvas from './HeatmapCanvas';
-import JumpButton from '../common/JumpButton';
+// import JumpButton from '../common/JumpButton';
 
 import styles from './AnnotationsBar.module.css'
 
 function AnnotationsBar(props) {
   
-  const { id, getColorArray, handleJump, children } = props;
+  const { id, getColorArray } = props;
   const videoData = useVideoData();
   const [ colorArray, setColorArray ] = useState([]);
 
@@ -32,11 +32,11 @@ function AnnotationsBar(props) {
         </Typography>
       </div>
       <HeatmapCanvas colorArray={colorArray}/>
-      <div className={styles.text}>
-        <JumpButton handleJump={handleJump} />
-        {children}
-      </div>
-      
+{/*       <div className={styles.text}> */}
+{/*         <JumpButton handleJump={handleJump} /> */}
+{/*         {children} */}
+{/*       </div> */}
+
     </div>
   );
 }

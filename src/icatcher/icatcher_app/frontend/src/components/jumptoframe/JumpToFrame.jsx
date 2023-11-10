@@ -2,9 +2,8 @@ import {
   Button,
   TextField
 } from '@mui/material';
-// import { createTheme } from '@mui/material/styles';
 import React, { useEffect, useRef, useState } from 'react';
-import styles from './VideoHeader.module.css';
+// import styles from './VideoHeader.module.css';
 import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState } from '../../state/PlaybackStateProvider';
@@ -27,13 +26,6 @@ const styleOverrides = {
 
   }
 }
-
-// const handleKeyPress = (event) => {
-//   if(event.key === 'Enter'){
-//     console.log('enter press here! ')
-//   }
-// }
-
   
 /* Expected props:
   currentFrameIndex: int
@@ -79,69 +71,38 @@ function VideoHeader(props, {children}) {
     }
   }
 
-//   console.log("DEBUG", videoData.annotations.machineLabel)
-
   return (
     <React.Fragment>
       <div >
-{/*         <div /> */}
-        { visible ?
-          <div
-            className={styles.videoHeader}
-            style={{width: playbackState.videoWidth}}
-          >
-            <div className={styles.vertical} > 
-              <div>Frame Number:</div> 
-              <div>{playbackState.currentFrame} </div>
-            </div>
-            <div className={styles.vertical} > 
-              <div>Label:</div> 
-              <div>{videoData.annotations.machineLabel[playbackState.currentFrame]} </div>
-            </div>
-            <div className={styles.vertical} > 
-              <div>Confidence:</div> 
-              <div>{videoData.annotations.confidence[playbackState.currentFrame]} </div>
-            </div>
-            <div className={styles.vertical} >
-              <TextField id="outlined-basic"
+        <TextField id="outlined-basic"
 //                 error={!!errors.number}
-                label="frame #"
-                variant="outlined"
-                margin='dense'
-                inputProps={{
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*',
+          label="frame #"
+          variant="outlined"
+          margin='dense'
+          inputProps={{
+            inputMode: 'numeric',
+            pattern: '[0-9]*',
 //                     height: '1px',
-                  style: {
+            style: {
 //                     &:invalid: {
 //                       color: '#cc3014'
 //                     },
-                    height: "1px",},
-                }}
+              height: "1px",},
+          }}
 //                   sx={styleOverrides.textField}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
-              />
-{/*               <input type='text' onChange={handleInputChange}></input> */}
-              <Button
-                onClick={()=> {handleJumpToFrame(currentInput.current)}}
-                variant="outlined"
-                sx={styleOverrides.button}
-                >
-                Jump to Frame
-              </Button>
-{/*               <Button variant="outlined" style={{maxHeight:'20px'}} onClick={()=> {handleJumpToFrame(currentInput.current)}}> Jump to Frame</Button> */}
-{/*               <button onClick={()=> {handleJumpToFrame(currentInput.current)}}> Jump to Frame</button> */}
-            </div>
-          </div>
-        :
-          <div 
-            className={styles.videoHeader} 
-            style={{width: playbackState.videoWidth}}
-          />
-        }
-{/*          <div /> */}
+          onChange={handleInputChange}
+          onKeyPress={handleKeyPress}
+        />
+
+        <Button
+          onClick={()=> {handleJumpToFrame(currentInput.current)}}
+          variant="outlined"
+          sx={styleOverrides.button}
+          >
+          Jump to Frame
+        </Button>
       </div>
+
     </React.Fragment>
   );
 }

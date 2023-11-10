@@ -1,10 +1,10 @@
-import {
-  TextField
-} from '@mui/material';
+// import {
+//   TextField
+// } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { addSnack, useSnacksDispatch } from '../../state/SnacksProvider';
+// import { addSnack, useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
-import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
+// import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
 import AnnotationBar from './AnnotationsBar';
 
 import styles from './ContinuousAnnotationBar.module.css'
@@ -37,11 +37,11 @@ function ContinuousAnnotationBar(props) {
   
   const { id } = props;
   const videoData = useVideoData();
-  const playbackState = usePlaybackState();
-  const dispatchPlaybackState = usePlaybackStateDispatch();
-  const dispatchSnack = useSnacksDispatch();
+//   const playbackState = usePlaybackState();
+//   const dispatchPlaybackState = usePlaybackStateDispatch();
+//   const dispatchSnack = useSnacksDispatch();
 
-  const [ threshold, setThreshold ] = useState(0.80);
+//   const [ threshold, setThreshold ] = useState(0.80);
   const [ range, setRange ] = useState({ min: 0, max: 1})
   const [ annotationArray, setAnnotationArray ] = useState(videoData.annotations[id].slice(videoData.metadata.frameOffset));
 
@@ -49,9 +49,9 @@ function ContinuousAnnotationBar(props) {
   useEffect (()=> {
     let [ newMin, newMax ] = getRange()
     setRange({min: newMin, max: newMax})
-    if(newMin > threshold || newMax < threshold) {
-      setThreshold((newMax-newMin)/2)
-    }
+//     if(newMin > threshold || newMax < threshold) {
+//       setThreshold((newMax-newMin)/2)
+//     }
     setAnnotationArray(videoData.annotations[id].slice(videoData.metadata.frameOffset))
   }, [id, videoData.annotations])  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -64,65 +64,66 @@ function ContinuousAnnotationBar(props) {
     })
     return [...tempColorArray]
   }
-
-  const jumpToNextInstance = (forward) => {
-    const condition = (e) => {
-      return e < threshold
-    } 
-    let next = -1
-     if(forward === true) {
-      let arraySlice = videoData.annotations[id].slice(playbackState.currentFrame + 1)
-      next = arraySlice.findIndex((e) => condition(e))
-      if (next !== -1) { next = next + playbackState.currentFrame + 1}
-      
-    } else {
-      let arraySlice = videoData.annotations[id].slice(0, playbackState.currentFrame)
-      next = arraySlice.findLastIndex((e) => condition(e))
-     }
-     if (next !== -1) {
-      dispatchPlaybackState({
-        type: 'setCurrentFrame',
-        currentFrame: next
-       })
-     } 
-  }
-
-  const handleThresholdChange = (e) => {
-    let targetValue = e.target.value
-    if(targetValue < range.min) {
-      addSnack(`Value is below minimum ${id}. Defaulting to minimum ${range.min}`, 'info')
-      targetValue = range.min
-    }
-    else if (targetValue > range.max) {
-      dispatchSnack(addSnack(`Value is above maximum ${id}. Defaulting to maximum ${range.max}`, 'info'))
-      targetValue = range.max
-    }
-    setThreshold(targetValue)
-  }
+//
+//   const jumpToNextInstance = (forward) => {
+//     const condition = (e) => {
+//       return e < threshold
+//     }
+//     let next = -1
+//      if(forward === true) {
+//       let arraySlice = videoData.annotations[id].slice(playbackState.currentFrame + 1)
+//       next = arraySlice.findIndex((e) => condition(e))
+//       if (next !== -1) { next = next + playbackState.currentFrame + 1}
+//
+//     } else {
+//       let arraySlice = videoData.annotations[id].slice(0, playbackState.currentFrame)
+//       next = arraySlice.findLastIndex((e) => condition(e))
+//      }
+//      if (next !== -1) {
+//       dispatchPlaybackState({
+//         type: 'setCurrentFrame',
+//         currentFrame: next
+//        })
+//      }
+//   }
+//
+//   const handleThresholdChange = (e) => {
+//     let targetValue = e.target.value
+//     if(targetValue < range.min) {
+//       addSnack(`Value is below minimum ${id}. Defaulting to minimum ${range.min}`, 'info')
+//       targetValue = range.min
+//     }
+//     else if (targetValue > range.max) {
+//       dispatchSnack(addSnack(`Value is above maximum ${id}. Defaulting to maximum ${range.max}`, 'info'))
+//       targetValue = range.max
+//     }
+//     setThreshold(targetValue)
+//   }
   
   return (
     <div className={styles.temp}>
       <AnnotationBar
         id={id}
         getColorArray={computeColorArray}
-        handleJump={jumpToNextInstance}
       >
-        <TextField
-          className={styles.threshold}
-          id={`${id}-threshold-jumper`}
-          label={"Threshold"}
-          name="Name"
-          type="number"
-          inputProps={{
-            min: range[0],
-            max: range[1],
-            step: 0.01
-          }}
-          margin="dense"
-          multiline={false}
-          value={threshold}
-          onChange={handleThresholdChange}
-        />
+{/*         handleJump={jumpToNextInstance} */}
+{/*       > */}
+{/*         <TextField */}
+{/*           className={styles.threshold} */}
+{/*           id={`${id}-threshold-jumper`} */}
+{/*           label={"Threshold"} */}
+{/*           name="Name" */}
+{/*           type="number" */}
+{/*           inputProps={{ */}
+{/*             min: range[0], */}
+{/*             max: range[1], */}
+{/*             step: 0.01 */}
+{/*           }} */}
+{/*           margin="dense" */}
+{/*           multiline={false} */}
+{/*           value={threshold} */}
+{/*           onChange={handleThresholdChange} */}
+{/*         /> */}
       </AnnotationBar>
     </div>
   );
