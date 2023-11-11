@@ -8,8 +8,47 @@
   gap: 10px;
 }
 .content {
-  flex: 7;
-  position: relative;
+  display: flex;
+/*  flex: 7; */
+/*  max-width: 1300px; */
+  flex-flow: row nowrap;
+/*  position: center; */
   padding: 1em;
+/*  background-color: yellow;*/
+  justify-content: center;
+  gap: 20px;
 }
+
+.left {
+  display: flex;
+  width: 15%;
+/*  flex: 1;*/
+  flex-flow: column nowrap;
+/*  background-color: lightyellow;*/
+}
+
+.center {
+  display: flex;
+/*  width: 50%;*/
+/*  flex: 3;*/
+  flex-flow: column nowrap;
+/*  background-color: lightblue;*/
+}
+
+.right {
+  display: flex;
+  width: 15%;
+/*  flex: 1;*/
+  flex-flow: column nowrap;
+/*  background-color: lightgreen;*/
+}
+/*
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr 1fr;
+  grid-template-areas:
+    "video frame_info_box"
+    "video filter_box"
+    "video filter_box"
+    "heat_maps filter_box";
+*/
 
