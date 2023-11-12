@@ -192,9 +192,6 @@ function VideoFrame() {
         className={styles.videoFrame}
         style={{width: playbackState.videoWidth}}
       >
-{/*         </VideoHeader */}
-{/*           handleJumpToFrame={(i) => showFrame( (i))} */}
-{/*         /> */}
         <VideoCanvas 
           className={styles.videoCanvas}
           frameToDraw={frameImages.current[playbackState.currentFrame]}

@@ -1,6 +1,7 @@
 .videoFrame {
     position: relative;
-    margin: auto;
+    margin-left: auto;
+    margin-right: 8px; /* = AnnotationsFrame.annotationsBar padding */
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
