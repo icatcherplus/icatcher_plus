@@ -7,7 +7,7 @@ import VideoFrame from '../components/video/VideoFrame';
 import AnnotationsFrame from '../components/annotations/AnnotationsFrame';
 import FrameInfoFrame from '../components/frameinfo/FrameInfoFrame';
 import FilterBoxFrame from '../components/filterbox/FilterBoxFrame';
-import JumpToFrame from '../components/jumptoframe/JumpToFrame';
+// import JumpToFrame from '../components/jumptoframe/JumpToFrame';
 
 import styles from './ResultsView.module.css';
 
@@ -23,7 +23,7 @@ function ResultsView() {
             <div className={styles.left} >
 {/*               <h1> left </h1> */}
               <FrameInfoFrame />
-              <JumpToFrame />
+{/*               <JumpToFrame /> */}
             </div>
 
             <div className={styles.center} >

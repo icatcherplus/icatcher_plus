@@ -207,7 +207,8 @@ function VideoFrame() {
           >
             <VideoScrubBar 
             />
-            <VideoControls 
+            <VideoControls
+              handleJumpToFrame={(i) => showFrame(Number(i))}
               togglePlay={togglePlay}
               toggleRev={toggleReverse}
               toggleSlowMotion={toggleSlowMotion} 

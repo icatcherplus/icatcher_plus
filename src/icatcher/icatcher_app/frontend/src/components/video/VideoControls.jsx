@@ -5,15 +5,18 @@ import {
   Tooltip
 } from '@mui/material';
 import {
+  ChevronRightRounded,
+  ChevronLeftRounded,
   FastForwardRounded,
   FastRewindRounded,
   PauseRounded,
   PlayArrowRounded,
-  SkipNextRounded,
-  SkipPreviousRounded,
+//   SkipNextRounded,
+//   SkipPreviousRounded,
   SlowMotionVideoRounded
 } from '@mui/icons-material';
 import { usePlaybackState } from '../../state/PlaybackStateProvider';
+import JumpToFrame from '../jumptoframe/JumpToFrame'
 
 import styles from './VideoControls.module.css';
 
@@ -66,7 +69,8 @@ const styleOverrides = {
   
 function VideoControls(props) {
   
-  const { 
+  const {
+    handleJumpToFrame,
     togglePlay,
     toggleRev,
     toggleSlowMotion,    
@@ -113,13 +117,14 @@ function VideoControls(props) {
             sx={styleOverrides.button.default}
             onClick={stepBack}
           >
-            <SkipPreviousRounded 
+            <ChevronLeftRounded
               fontSize={'large'}
               className={styles.icon}
             />
           </IconButton>
         </Tooltip>
-        <Tooltip 
+        <JumpToFrame handleJumpToFrame={handleJumpToFrame}/>
+        <Tooltip
           title={"Step Forward (>)"} 
           placement="top"
           disableInteractive
@@ -130,7 +135,7 @@ function VideoControls(props) {
             sx={styleOverrides.button.default}
             onClick={stepForward}
           >
-            <SkipNextRounded 
+            <ChevronRightRounded
               fontSize={'large'}
               className={styles.icon}
             />

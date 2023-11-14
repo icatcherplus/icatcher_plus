@@ -7,23 +7,26 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState } from '../../state/PlaybackStateProvider';
-
+import styles from './JumpToFrame.module.css'
 
 const styleOverrides = {
   /* style settings for jump to frame button */
   button: {
-    borderColor: '#6b6b6b',
-    color: '#6b6b6b',
-//     height: 20,
+    borderColor: '#e6e6e6',
+    color: '#e6e6e6',
+    fontSize: '12px',
+    minHeight: '25px',
     textTransform: 'none',
     padding: 0,
 //     size: "medium",
-    span: "none",
+//     span: "none",
 //     fullWidth: true,
   },
   textField: {
-    height: 90,
-
+    height: "1px",
+    borderColor: 'red',
+    color: 'white',
+    textAlign: 'center',
   }
 }
   
@@ -31,12 +34,14 @@ const styleOverrides = {
   currentFrameIndex: int
   handleJumpToFrame: callback
 */
-function VideoHeader(props, {children}) {
+function JumpToFrame(props, {children}) {
   console.log(props)
   const { handleJumpToFrame } = props;
   const videoData = useVideoData();
   const playbackState = usePlaybackState();
   const dispatchSnack = useSnacksDispatch();
+//   const dispatchPlaybackState = usePlaybackStateDispatch();
+//   const frameImages = useRef([]);
 
   const currentFramerate = useRef(0);
   const currentInput = useRef();
@@ -71,31 +76,61 @@ function VideoHeader(props, {children}) {
     }
   }
 
+//   const showFrame = (index) => {
+//     pause();
+//     if ((typeof (frameImages.current[index]) === 'undefined') || (frameImages.current[index].loaded === false)) {
+//       return;
+//     }
+//     dispatchPlaybackState({
+//       type: 'setCurrentFrame',
+//       currentFrame: index
+//     })
+//   }
+//   const handleJumpToFrame= (i) => showFrame(Number(i))
+//
+//   const pause = () => {
+//     dispatchPlaybackState({
+//       type: 'setPaused',
+//       paused: true
+//     })
+//   }
+
   return (
     <React.Fragment>
-      <div >
+      <div className={styles.item}>
         <TextField id="outlined-basic"
 //                 error={!!errors.number}
           label="frame #"
           variant="outlined"
           margin='dense'
+//           sx={{ input: { color: 'red' } }}
           inputProps={{
             inputMode: 'numeric',
-            pattern: '[0-9]*',
+//             pattern: '[0-9]*',
 //                     height: '1px',
             style: {
-//                     &:invalid: {
-//                       color: '#cc3014'
-//                     },
-              height: "1px",},
+              height: "1px",
+//               borderColor: 'red',
+              color: 'white',
+              textAlign: 'center',
+              },
+//                 &:invalid: {
+//                   color: '#cc3014'
+//                 },
           }}
-//                   sx={styleOverrides.textField}
+//           sx={styleOverrides.textField}
+          sx={{ "& .MuiInputLabel-root": {
+//               right: 0,
+              textAlign: "center",
+              color: "#e0e0e0",
+             }}} // change placeholder text color and alignment
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
         />
 
         <Button
           onClick={()=> {handleJumpToFrame(currentInput.current)}}
+//           onClick={()=> {showFrame(Number(currentInput.current))}}
           variant="outlined"
           sx={styleOverrides.button}
           >
@@ -107,4 +142,4 @@ function VideoHeader(props, {children}) {
   );
 }
   
-export default VideoHeader;
+export default JumpToFrame;
