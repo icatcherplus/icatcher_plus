@@ -72,5 +72,4 @@ export const addFrames = (frames) => dispatch => {
       numFrames: frames.length
     }
   })
-  console.log("here", frames.length)
 }

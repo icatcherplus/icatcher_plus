@@ -79,7 +79,6 @@ function CategoricalAnnotationBar(props) {
       next = arraySlice.findLastIndex((e) => condition(e))
      }
      if (next !== -1) {
-        console.log("currentFrame jump", next)
       dispatchPlaybackState({
         type: 'setCurrentFrame',
         currentFrame: next

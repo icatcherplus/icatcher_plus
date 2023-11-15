@@ -31,7 +31,6 @@ export function usePlaybackStateDispatch() {
 function playbackStateReducer(playbackState, action) {
   switch (action.type) {
     case 'setCurrentFrame': {
-      console.log("setting current frame", playbackState.currentFrame, action.currentFrame)
       return { ...playbackState,
         currentFrame: action.currentFrame
       };
