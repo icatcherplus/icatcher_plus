@@ -730,7 +730,7 @@ def main():
     if args.app == True:
         run_icatcher_app()
     elif args.source is None:
-        raise Warning('Must specify a video source if processing video')
+        raise Warning("Must specify a video source if processing video")
     else:
         if args.log:
             args.log.parent.mkdir(parents=True, exist_ok=True)
@@ -740,6 +740,7 @@ def main():
         else:
             logging.basicConfig(level=args.verbosity.upper())
         predict_from_video(args)
+
 
 if __name__ == "__main__":
     main()

@@ -70,7 +70,6 @@ def prepare_frame_for_ui(
         pic_in_pic=pic_in_pic,
     )
 
-
     label_txt = f"{class_text}, {float(conf):.02}"
     return (
         decorated_frame,
