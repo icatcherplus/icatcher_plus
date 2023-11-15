@@ -17,7 +17,6 @@ def build_app(force=False, debug=False, info=True):
 
     if os.path.isfile(f'{REACT_BUILD_FOLDER}/{REACT_APP_FILE}'):
         if not force:
-            print('hi')
             logger.info(f'App buid already exists at {os.path.abspath(REACT_BUILD_FOLDER)}')
             return
         else:
@@ -26,7 +25,7 @@ def build_app(force=False, debug=False, info=True):
     
     logger.info(f'Building iCatcher+ app at {os.path.abspath(REACT_BUILD_FOLDER)}')
     if shutil.which('npm') is None:
-        logger.error(
+        raise Exception(
             '''
                 Attempt to build app locally failed. Cannot build iCatcher app code locally without Node.js.\n
 
@@ -34,7 +33,6 @@ def build_app(force=False, debug=False, info=True):
                 To build locally, please install Node via https://nodejs.org/en and try again.
             '''
         )
-        return
     logger.info(f'Installing react app dependencies')
     subprocess.run(["npm ci"], cwd=f"{os.path.dirname(os.path.abspath(REACT_BUILD_FOLDER))}", shell=True)
     logger.info(f'Building react app')

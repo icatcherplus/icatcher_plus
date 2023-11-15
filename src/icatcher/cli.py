@@ -593,19 +593,6 @@ def predict_from_video(opt):
                 frame_count = frame_count + 1
                 if user_abort:
                     break
-
-        if opt.ui_packaging_path:
-            # Write UI packaging metadata into a JSON file
-            video_fps = video.get_video_stream_meta_data(video_path)[
-                "r_frame_rate"
-            ].split("/")
-            video_fps = float(video_fps[0]) / float(video_fps[1])
-            ui_packaging.save_ui_metadata(
-                fps=video_fps,
-                frame_count=frame_count,
-                sliding_window_size=opt.sliding_window_size,
-                metadata_file_path=ui_output_components["metadata_path"],
-            )
         # finished processing a video file, cleanup
         cleanup(
             video_output_file,
@@ -743,7 +730,7 @@ def main():
     if args.app == True:
         run_icatcher_app()
     elif args.source is None:
-        raise Exception('Must specify a video source if processing video')
+        raise Warning('Must specify a video source if processing video')
     else:
         if args.log:
             args.log.parent.mkdir(parents=True, exist_ok=True)
