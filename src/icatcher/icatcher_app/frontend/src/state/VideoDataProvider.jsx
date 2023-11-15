@@ -60,8 +60,17 @@ const initialVideoData = {
   annotations: []
 }
 
-export const METADATA_FIELD_MAPPING = {
-  framesPerSecond: "fps",
-  numFrames: "numFrames",
-  frameOffset: "frameOffset"
+export const addFrames = (frames) => dispatch => {
+  dispatch({
+    type: 'setFrames',
+    frames: frames
+  })
+  dispatch({
+    type: 'setMetadata',
+    metadata: {
+      fps: 30.0, //NOTE: We're building in an assumption that all videos are 30fps. This is not a good long term solution. We need to decide on an approach to get the fps
+      numFrames: frames.length
+    }
+  })
+  console.log("here", frames.length)
 }

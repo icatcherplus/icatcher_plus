@@ -45,7 +45,7 @@ function CategoricalAnnotationBar(props) {
   const [ labelOptions, setLabelOptions ] = useState([])
 
   useEffect (()=> {
-    let labels = [ ...new Set(videoData.annotations[id].slice(videoData.metadata.frameOffset))].map((l) => {return String(l)})
+    let labels = [ ...new Set(videoData.annotations[id])].map((l) => {return String(l)})
     setLabelOptions(labels)
     setSelectedLabel(labels[0])
     setColorPalette(id)
@@ -55,7 +55,7 @@ function CategoricalAnnotationBar(props) {
   const computeColorArray = () => {
     let tempColorArray = []
     const palette = colorPalettes[colorPalette || 'default']
-    const annotationArray = videoData.annotations[id].slice(videoData.metadata.frameOffset)
+    const annotationArray = videoData.annotations[id]
     annotationArray.forEach((a, i) => {
       tempColorArray[i] = palette[`${a}`]
     })
@@ -79,6 +79,7 @@ function CategoricalAnnotationBar(props) {
       next = arraySlice.findLastIndex((e) => condition(e))
      }
      if (next !== -1) {
+        console.log("currentFrame jump", next)
       dispatchPlaybackState({
         type: 'setCurrentFrame',
         currentFrame: next

@@ -54,7 +54,7 @@ function JumpButton(props) {
           <IconButton
               id="jumpBack"
               aria-label="jump to previous"
-              sx={playbackState.currentFrame === 8? styleOverrides.button.toggled : styleOverrides.button.default}
+              sx={playbackState.currentFrame === 0? styleOverrides.button.toggled : styleOverrides.button.default}
               onClick={() => handleJump(false)}
             >
               <ChevronLeftRounded />
