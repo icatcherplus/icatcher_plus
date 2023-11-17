@@ -1,0 +1,14 @@
+.controlsBar {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.icon {
+    filter: drop-shadow(0 0 0.02em black);
+}
+
+.buttonGroup {
+    align-items: center;
+}

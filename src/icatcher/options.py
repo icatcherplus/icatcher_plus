@@ -14,7 +14,15 @@ def parse_arguments(my_string=None):
     parser.add_argument(
         "source",
         type=str,
-        help="The source to use (path to video file, folder or webcam id).",
+        help="The source to use (path to video file, folder or webcam id). Required unless launching icatcher app (use `icatcher --app`).",
+        nargs="?",
+        default=None,
+    )
+    parser.add_argument(
+        "-a",
+        "--app",
+        action="store_true",
+        help="Launch iCatcher+ web app.",
     )
     parser.add_argument(
         "--model",
@@ -106,6 +114,10 @@ def parse_arguments(my_string=None):
     parser.add_argument(
         "--output_video_path",
         help="If present, annotated video will be saved to this folder.",
+    )
+    parser.add_argument(
+        "--ui_packaging_path",
+        help="If present, packages the output data into the UI format.",
     )
     parser.add_argument(
         "--pic_in_pic",
@@ -211,6 +223,17 @@ def parse_arguments(my_string=None):
         args = parser.parse_args(my_string.split())
     else:
         args = parser.parse_args()
+    if args.source is None and args.app == False:
+        raise ValueError(
+            """
+            \nMust either rup app (--app, -a) or specify a video to process.
+            \nTry `icatcher --help` for more information.
+            """
+        )
+    if args.source is not None and args.app == True:
+        raise ValueError(
+            "Cannot run app (--app, -a) and process video with one command. Please run separately."
+        )
     if (
         args.fd_confidence_threshold is None
     ):  # set defaults outside argparse to avoid complication

@@ -26,3 +26,26 @@ jobs:
       - name: Run tests
         run: python -m pytest tests
 
+  build-ui:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+
+    - name: Install JS dependencies
+      working-directory: ./src/icatcher/icatcher_app/frontend/
+      run: npm ci
+
+    - name: Build web app
+      working-directory: ./src/icatcher/icatcher_app/frontend/
+      run: npm run build
+

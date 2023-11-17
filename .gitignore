@@ -1,8 +1,10 @@
 .idea/
 .vscode/
+.DS_Store
 *.pyc
 models/
 datasets/
 src/icatcher.egg-info/
 dist/
 build/
+node_modules/
