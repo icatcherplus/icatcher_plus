@@ -8,20 +8,13 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-def build_app(force=False, debug=False, info=True):
-    if debug:
-        logger.setLevel(logging.DEBUG)
-    elif info:
-        logger.setLevel(logging.INFO)
-    else:
-        logger.setLevel(logging.WARNING)
-
+def build_app(force=False):
     if os.path.isfile(f"{REACT_BUILD_FOLDER}/{REACT_APP_FILE}"):
         if not force:
             logger.info(
                 f"App buid already exists at {os.path.abspath(REACT_BUILD_FOLDER)}"
             )
-            return
+            return True
         else:
             logger.info(
                 f"Removing existing app buid at {os.path.abspath(REACT_BUILD_FOLDER)}"
@@ -39,18 +32,23 @@ def build_app(force=False, debug=False, info=True):
             """
         )
     logger.info(f"Installing react app dependencies")
-    subprocess.run(
-        ["npm ci"],
+    p = subprocess.run(
+        ["npm", "ci"],
         cwd=f"{os.path.dirname(os.path.abspath(REACT_BUILD_FOLDER))}",
         shell=True,
     )
+    if p.returncode != 0:
+        return False
     logger.info(f"Building react app")
     subprocess.run(
-        ["npm run build"],
+        ["npm", "run", "build"],
         cwd=f"{os.path.dirname(os.path.abspath(REACT_BUILD_FOLDER))}",
         shell=True,
     )
+    if p.returncode != 0:
+        return False
+    return True
 
 
 if __name__ == "__main__":
-    build_app(force=False, debug=False, info=True)
+    build_app(force=False)

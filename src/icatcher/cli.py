@@ -727,18 +727,16 @@ def cleanup(
 
 def main():
     args = options.parse_arguments()
-    if args.app == True:
-        run_icatcher_app()
-    elif args.source is None:
-        raise Warning("Must specify a video source if processing video")
+    if args.log:
+        args.log.parent.mkdir(parents=True, exist_ok=True)
+        logging.basicConfig(
+            filename=args.log, filemode="w", level=args.verbosity.upper()
+        )
     else:
-        if args.log:
-            args.log.parent.mkdir(parents=True, exist_ok=True)
-            logging.basicConfig(
-                filename=args.log, filemode="w", level=args.verbosity.upper()
-            )
-        else:
-            logging.basicConfig(level=args.verbosity.upper())
+        logging.basicConfig(level=args.verbosity.upper())
+    if args.app:
+        run_icatcher_app()
+    else:
         predict_from_video(args)
 
 

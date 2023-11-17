@@ -1,8 +1,11 @@
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 import os
+from pathlib import Path
 
-REACT_BUILD_FOLDER = "../frontend/build"
+REACT_BUILD_FOLDER = str(
+    Path(Path(__file__).parent.parent, "frontend", "build").absolute()
+)
 REACT_APP_FILE = "index.html"
 
 app = Flask(__name__, static_folder=REACT_BUILD_FOLDER)
