@@ -24,6 +24,7 @@ dependencies = [
     "tqdm",
     "pooch",
     "batch-face",
+    "pathos",
     "flask",
     "flask_cors"
 ]
