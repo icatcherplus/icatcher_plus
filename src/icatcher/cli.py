@@ -23,6 +23,7 @@ from icatcher.face_detector import (
     detect_face_opencv_dnn,
 )
 from batch_face import RetinaFace
+from icatcher.icatcher_app.api import run_icatcher_app
 
 
 def select_face(bboxes, frame, fc_model, fc_data_transforms, hor, ver, device):
@@ -592,19 +593,6 @@ def predict_from_video(opt):
                 frame_count = frame_count + 1
                 if user_abort:
                     break
-
-        if opt.ui_packaging_path:
-            # Write UI packaging metadata into a JSON file
-            video_fps = video.get_video_stream_meta_data(video_path)[
-                "r_frame_rate"
-            ].split("/")
-            video_fps = float(video_fps[0]) / float(video_fps[1])
-            ui_packaging.save_ui_metadata(
-                fps=video_fps,
-                frame_count=frame_count,
-                sliding_window_size=opt.sliding_window_size,
-                metadata_file_path=ui_output_components["metadata_path"],
-            )
         # finished processing a video file, cleanup
         cleanup(
             video_output_file,
@@ -746,7 +734,10 @@ def main():
         )
     else:
         logging.basicConfig(level=args.verbosity.upper())
-    predict_from_video(args)
+    if args.app:
+        run_icatcher_app()
+    else:
+        predict_from_video(args)
 
 
 if __name__ == "__main__":

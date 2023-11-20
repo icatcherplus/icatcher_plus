@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { useState, useRef } from 'react';
 import { useSnacksDispatch, addSnack } from '../state/SnacksProvider';
-import { useVideoDataDispatch, METADATA_FIELD_MAPPING } from '../state/VideoDataProvider'
+import { useVideoDataDispatch, addFrames } from '../state/VideoDataProvider'
 import UploadButton from './UploadButton'
 
 /* Expected props:
@@ -21,7 +21,6 @@ function UploadModal() {
 
   const inputDirectory = useRef(undefined);
   const framesFiles = useRef(undefined);
-  const metadataFile = useRef(undefined);
   const annotationsFile = useRef(undefined);
 
   const handleDirectoryUpload = (e) => {
@@ -49,7 +48,6 @@ function UploadModal() {
       f.webkitRelativePath.toLowerCase().includes('decorated_frames') &&
       f.name.toLowerCase().match(/frame_\d+\./) !== null
     );
-    metadataFile.current = files.find(f =>  f.name.toLowerCase().includes('metadata.json'));
     annotationsFile.current = files.find(f =>  f.name.toLowerCase().includes('labels.txt'));
     
     let validInput = true;
@@ -57,53 +55,16 @@ function UploadModal() {
       dispatchSnack(addSnack(`Your input directory is missing frames`, "error"))
       validInput = false
     }
-    let INDEX_MAP = ['metadata', 'annotations'];
-    [metadataFile.current, annotationsFile.current].forEach((a, i) => {
-      if(a === undefined){
-        dispatchSnack(addSnack(`Your input directory is missing ${INDEX_MAP[i]}`, "error"))
-        validInput = false
-      }
-    });
+    if(annotationsFile.current === undefined){
+      dispatchSnack(addSnack(`Your input directory is missing annotations`, "error"))
+      validInput = false
+    }
     return validInput;
   }
 
   const processInputFiles = () => {
-    processMetadataFile();
     processAnnotationsFile();
     loadVideoFrames();
-  }
-
-  const processMetadataFile = () => {
-    
-    let parsedFile;
-    const reader = new FileReader();
-
-    reader.addEventListener('load', (event) => {
-      parsedFile = JSON.parse(event.target.result);
-      let validMetadata = true
-      let tempMetadata = {}
-      if (parsedFile === undefined) {
-        dispatchSnack(addSnack(`Metadata.json file is empty`, "error"))
-        validMetadata = false;
-      } else {
-        Object.keys(METADATA_FIELD_MAPPING).forEach((key) => {
-            if (parsedFile[METADATA_FIELD_MAPPING[key]] === undefined) {
-              validMetadata = false;
-              dispatchSnack(addSnack(
-                `Metadata.json missing required key "${METADATA_FIELD_MAPPING[key]}". Please fix to continue.`, 
-                "error"
-              ))
-            } else { tempMetadata[key] = parsedFile[METADATA_FIELD_MAPPING[key]] }
-        });
-      }
-      if (validMetadata) {
-        dispatchVideoData({
-          type: "setMetadata",
-          metadata: tempMetadata
-        });
-      }
-    });
-    reader.readAsText(metadataFile.current);
   }
 
   const processAnnotationsFile = () => {
@@ -132,7 +93,7 @@ function UploadModal() {
             }
             return;
           }
-          let index = Number(data[0]) + 4
+          let index = Number(data[0])
           tempAnnotations.machineLabel[index] = data[1].trim()
           tempAnnotations.confidence[index] = Number(data[2])
         })
@@ -154,18 +115,19 @@ function UploadModal() {
       return frame;
     });
     tempFrames = tempFrames.sort((a,b) => a.frameNumber - b.frameNumber);
-    dispatchVideoData({
-      type:"setFrames",
-      frames: tempFrames
-    });
+    dispatchVideoData(addFrames(tempFrames))
   }
 
   return (
-    <Dialog open={modalOpen}>
+    <Dialog open={modalOpen} >
       <DialogTitle>
         Choose Video Directory
-        <DialogContentText>
-          Directory should include video frames, metadata, and annotations
+        <DialogContentText component={'div'} style={{minWidth: '30vw'}} >
+          Directory should include:
+          <ul style={{margin: '0px'}}>
+            <li>annotations as label.txt</li>
+            <li>directory containing video frames</li>
+          </ul>
         </DialogContentText>
       </DialogTitle>
       
