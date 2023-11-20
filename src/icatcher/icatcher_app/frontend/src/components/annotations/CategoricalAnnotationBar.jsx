@@ -62,8 +62,8 @@ function CategoricalAnnotationBar(props) {
     return [...tempColorArray]
   }
 
-  const jumpToNextInstance = (forward) => {
-    const condition = (e) => {
+    const jumpToNextInstance = (forward) => {
+    const condition = (e) => { 
       return selectedLabel === 'undefined'
         ? e === undefined
         : e === selectedLabel
@@ -71,12 +71,53 @@ function CategoricalAnnotationBar(props) {
     let next = -1
      if(forward === true) {
       let arraySlice = videoData.annotations[id].slice(playbackState.currentFrame + 1)
-      next = arraySlice.findIndex((e) => condition(e))
+
+      const firstFrame = 7; //DO NOT KEEP AS 7. ONLY FOR THIS IMPLEMENTATION.
+      // console.log(playbackState.currentFrame)
+      if (playbackState.currentFrame > firstFrame) { 
+        if (!condition(videoData.annotations[id][playbackState.currentFrame-1]) && !condition(videoData.annotations[id][playbackState.currentFrame+1])) { 
+          console.log("single frame");
+          next = arraySlice.findIndex((e) => condition(e))
+        } else if (!condition(videoData.annotations[id][playbackState.currentFrame-1])) { //Indicates a start. Find the next frame that isn't the same, and then -1 to get the last one that is.
+          // console.log("start")
+          next = arraySlice.findIndex((e) => !condition(e)) - 1
+        } else {
+          // console.log("end")
+          next = arraySlice.findIndex((e) => condition(e))
+        }
+      } else {
+        // console.log("first frame");
+        if (condition(videoData.annotations[id][playbackState.currentFrame])) { //First frame fits condition. Find the end.
+          next = arraySlice.findIndex((e) => !condition(e)) - 1
+        } else {
+          next = arraySlice.findIndex((e) => condition(e))
+        }
+      }
       if (next !== -1) { next = next + playbackState.currentFrame + 1}
-      
+       
     } else {
       let arraySlice = videoData.annotations[id].slice(0, playbackState.currentFrame)
-      next = arraySlice.findLastIndex((e) => condition(e))
+
+      const lastFrame = videoData.annotations[id].length - 8; //Subtracting by 7 (the offset) and 1 (1-indexing instead of 0-indexing)
+      if (playbackState.currentFrame < lastFrame) {
+        if (!condition(videoData.annotations[id][playbackState.currentFrame-1]) && !condition(videoData.annotations[id][playbackState.currentFrame+1])) { 
+          // console.log("single frame");
+          next = arraySlice.findLastIndex((e) => condition(e))
+        } else if (!condition(videoData.annotations[id][playbackState.currentFrame+1])) { //Indicates a start. Find the next frame that isn't the same, and then -1 to get the last one that is.
+          // console.log("start")
+          next = arraySlice.findLastIndex((e) => !condition(e)) + 1
+        } else {
+          // console.log("end")
+          next = arraySlice.findLastIndex((e) => condition(e))
+        }
+      } else {
+        // console.log("last frame");
+        if (condition(videoData.annotations[id][playbackState.currentFrame])) { //Last frame fits condition. Find the end of the block.
+          next = arraySlice.findLastIndex((e) => !condition(e)) + 1
+        } else {
+          next = arraySlice.findLastIndex((e) => condition(e))
+        }
+      }
      }
      if (next !== -1) {
       dispatchPlaybackState({
