@@ -1,6 +1,6 @@
 .item {
   display: flex;
   flex-direction: column;
-  width: 100px;
+  width: 110px;
   padding-bottom: 6px;
 }

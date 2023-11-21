@@ -36,7 +36,6 @@ function FrameInfo(props, {children}) {
     }
   }, [playbackState.currentFrame])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  console.log("hello")
 
   return (
     <React.Fragment>

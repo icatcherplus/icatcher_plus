@@ -9,6 +9,7 @@ import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
 // import VideoHeader from './VideoHeader';
 
+const PLACEHOLDER = 13728;
 
 function VideoFrame() {
 
@@ -208,6 +209,7 @@ function VideoFrame() {
             <VideoScrubBar 
             />
             <VideoControls
+              totalFrames={PLACEHOLDER}
               handleJumpToFrame={(i) => showFrame(Number(i))}
               togglePlay={togglePlay}
               toggleRev={toggleReverse}
