@@ -70,7 +70,6 @@ const styleOverrides = {
 function VideoControls(props) {
   
   const {
-    totalFrames,
     handleJumpToFrame,
     togglePlay,
     toggleRev,
@@ -124,7 +123,7 @@ function VideoControls(props) {
             />
           </IconButton>
         </Tooltip>
-        <JumpToFrame totalFrames={totalFrames} handleJumpToFrame={handleJumpToFrame}/>
+        <JumpToFrame handleJumpToFrame={handleJumpToFrame}/>
         <Tooltip
           title={"Step Forward (>)"} 
           placement="top"

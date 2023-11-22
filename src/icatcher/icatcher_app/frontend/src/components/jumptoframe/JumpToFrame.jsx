@@ -39,7 +39,7 @@ import styles from './JumpToFrame.module.css'
 */
 function JumpToFrame(props, {children}) {
 //   console.log(props)
-  const { totalFrames, handleJumpToFrame } = props;
+  const { handleJumpToFrame } = props;
   const videoData = useVideoData();
   const playbackState = usePlaybackState();
   const dispatchSnack = useSnacksDispatch();
@@ -50,6 +50,7 @@ function JumpToFrame(props, {children}) {
   const currentInput = useRef();
   const [ visible, setVisible ] = useState(false);
   const [ validInput, setValidInput ] = useState(true);
+  const totalFrames =  videoData.metadata.numFrames;
 
   useEffect(() => {
     if(Object.keys(videoData.metadata).length !== 0) {
@@ -71,9 +72,7 @@ function JumpToFrame(props, {children}) {
 
   const handleInputChange = (e) => {
     currentInput.current = Number(e.target.value);
-    console.log("before", validInput)
     setValidInput(checkInputValidity(currentInput.current))
-    console.log(validInput)
   }
 
   const handleKeyPress = (event) => {
@@ -84,9 +83,7 @@ function JumpToFrame(props, {children}) {
   }
 
   const checkInputValidity = (framenum) => {
-  console.log("checking input", framenum)
-  console.log(totalFrames)
-    if (framenum <= totalFrames) {
+    if (framenum <= totalFrames && framenum >= 0) {
       return true
     } else {
       return false
