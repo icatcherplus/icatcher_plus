@@ -93,7 +93,7 @@ function AnnotationsScrubBar() {
         getAriaValueText={(v) => `frame ${v}`}
         size="small"
         value={sliderValue.current}
-        min={videoData.metadata.frameOffset || 0}
+        min={0}
         max={videoData.metadata.numFrames - 1 || 0}
         onChange={(e,v,a) => handleSliderChange(e,v,a,videoData,dispatchSnack,dispatchPlaybackState)}
         sx={{...sliderStyling, 

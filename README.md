@@ -3,7 +3,12 @@
 # iCatcher+
 
 # Introduction
-This repository contains the official code for [iCatcher+](https://doi.org/10.1177/25152459221147250), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab, field or online (remotely). It also contains code for reproducing the original paper results.
+This repository contains the official code for [iCatcher+](https://doi.org/10.1177/25152459221147250), a tool for performing automatic annotation of discrete infant gaze directions from videos collected in the lab, field or online (remotely). 
+
+The codebase comprises three parts: 
+1. A Python-based ML tool for generating gaze annotations
+2. A browser-based web app for reviewing the generated annotations
+3. Code for reproducing the original paper results
 
 Click below for a video including examples of representative good and poor performance, taken from videos of infants participating in online research (all families featured consented to sharing their video data publicly):
 
@@ -11,7 +16,8 @@ Click below for a video including examples of representative good and poor perfo
 
 # Installation
 ## Quick installation (Windows, Linux, Mac)
-This option will let you use iCatcher+ with minimum effort, but only for predictions (inference).
+This option will install the most up-to-date version of the iCatcher+ annotation tool and web app with minimum effort. However, it will not provide the code to reproduce the original paper results or train your own model. For instructions on how to reproduce, see [here](https://github.com/icatcherplus/icatcher_plus/tree/master/reproduce).
+
 We strongly recommend using a virtual environment such as [Miniconda](https://conda.io) or [virtualenv](https://pypi.org/project/virtualenv/) before running the command below.
 
 `pip install icatcher`
@@ -24,9 +30,12 @@ If you require speedy performance, prior to installing icatcher you should insta
 Note2:
 When using iCatcher+ for the first time, neural network model files will automatically be downloaded to a local cache folder. To control where they are downloaded to set the "ICATCHER_DATA_DIR" environment variable.
 
-## Reproduction of original research results / retraining on your own dataset
+## Reproduction of original research results / retraining on your own dataset {#reproduce}
 
 see [reproduce](https://github.com/icatcherplus/icatcher_plus/tree/master/reproduce) for a full set of instructions.
+
+## Developer Install
+If installed via `git clone`, extra steps need to be taken to set up the web app. See [src/icatcher/icatcher_app](src/icatcher/icatcher_app/README.md) for full instructions.
 
 # Running iCatcher+
 
@@ -34,12 +43,25 @@ You can run iCatcher+ with the command:
 
 `icatcher --help`
 
-which will list all available options. Description below will help you get more familiar with some common command line arguments.
+which will list all available options. The description below will help you get more familiar with some common command line arguments.
 
-To run iCatcher+ with a video file (if a folder is provided, all videos will be used for prediction):
+### Annotating a Video
+To produce annotations for a video file (if a folder is provided, all videos will be used for prediction):
 
 `icatcher /path/to/my/video.mp4`
 
+>**NOTE:** For any videos you wish to visualize with the web app, you must use the `--ui_packaging_path` flag:
+>
+>`icatcher /path/to/my/video.mp4 --ui_packaging_path /path/to/desired/output/directory/`
+
+### Using the iCatcher Web App
+To launch the iCatcher+ web app, use:
+
+`icatcher --app`
+
+The app should open automatically at [http://localhost:5001](http://localhost:5001). For more details, see [Web App](#web-app).
+
+### Common Annotation Flags
 A common option is to add:
 
 `icatcher /path/to/my/video.mp4 --use_fc_model`
@@ -66,10 +88,26 @@ You can also add parameters to crop the video a given percent before passing to 
 
 # Output format
 
-Currently we supports 2 output formats, though further formats can be added upon request.
+Currently we supports 3 output formats, though further formats can be added upon request.
 
-- raw_output: a file where each row will contain the frame number, the class prediction and the confidence of that prediction seperated by a comma
-- compressed: a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
+- **raw_output:** a file where each row will contain the frame number, the class prediction and the confidence of that prediction seperated by a comma
+- **compressed:** a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
+- **ui_output:** needed to open a video in the web app; produces a directory of the following structure
+
+        ├── decorated_frames     # dir containing annotated jpg files for each frame in the video
+        ├── video.mp4            # the original video
+        ├── labels.txt           # file containing annotations in the `raw_output` form described above
+
+# Web App
+The iCatcher+ app is a tool that allows users to interact with output from the iCatcher+ ML pipeline in the browser. The tool is designed to operate entirely locally and will not upload any input files to remote servers.
+
+### Using the UI
+
+When you open the iCatcher+ UI, you will be met with a pop-up inviting you to upload your video directory. Please note, this requires you to upload *the whole output directory* which should include a `labels.txt` file and a sub-directory containing all of the frame images from the video.
+
+Once you've submitted the video, you should see a pop-up asking if you want to upload the whole video. Rest assured, this will not upload those files through the internet or to any remote servers. This is only giving the local browser permission to access those files. The files will stay local to whatever computer is running the browser.
+
+At this point, you should see your video on the screen (you may need to give it a few second to load). Now you can start to review your annotations. Below the video you'll see heatmaps giving you a visual overview of the labels for each frame, as well as the confidence level for each frame.
 
 # Datasets access
 
@@ -94,6 +132,7 @@ We benchmarked iCatcher+ performance over 10 videos (res 640 x 480). Reported re
 ## Project Structure (subject to change):
 
     ├── src                     # code for package (inference only)
+        ├── icatcher_app        # code for web app
     ├── tests                   # tests for package
     ├── reproduce               # all code used for producing paper results, including training and visualizations.
     
