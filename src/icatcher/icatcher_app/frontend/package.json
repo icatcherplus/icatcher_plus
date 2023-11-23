@@ -9,7 +9,8 @@
     "@mui/material": "^5.13.1",
     "@mui/icons-material": "^5.11.16",
     "@emotion/react": "^11.11.0",
-    "@emotion/styled": "^11.11.0"
+    "@emotion/styled": "^11.11.0",
+    "@babel/plugin-proposal-private-property-in-object": "7.21.11"
   },
   "scripts": {
     "start": "react-scripts start",
