@@ -41,7 +41,7 @@ function ContinuousAnnotationBar(props) {
 //   const dispatchPlaybackState = usePlaybackStateDispatch();
 //   const dispatchSnack = useSnacksDispatch();
 
-//   const [ threshold, setThreshold ] = useState(0.80);
+  const [ threshold, setThreshold ] = useState(0.80);
   const [ range, setRange ] = useState({ min: 0, max: 1})
   const [ annotationArray, setAnnotationArray ] = useState(videoData.annotations[id]);
 

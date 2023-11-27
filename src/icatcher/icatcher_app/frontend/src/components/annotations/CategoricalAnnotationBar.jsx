@@ -41,8 +41,8 @@ function CategoricalAnnotationBar(props) {
 //   const dispatchSnack = useSnacksDispatch();
 
   const [ colorPalette, setColorPalette ] = useState(id);
-//   const [ selectedLabel, setSelectedLabel ] = useState('away');
-//   const [ labelOptions, setLabelOptions ] = useState([])
+  const [ selectedLabel, setSelectedLabel ] = useState('away');
+  const [ labelOptions, setLabelOptions ] = useState([])
 
   useEffect (()=> {
     let labels = [ ...new Set(videoData.annotations[id])].map((l) => {return String(l)})
