@@ -7,6 +7,7 @@ import VideoFrame from '../components/video/VideoFrame';
 import AnnotationsFrame from '../components/annotations/AnnotationsFrame';
 import FrameInfoFrame from '../components/frameinfo/FrameInfoFrame';
 import FilterBoxFrame from '../components/filterbox/FilterBoxFrame';
+import EditorBox from '../components/editor/EditorBox'
 // import JumpToFrame from '../components/jumptoframe/JumpToFrame';
 
 import styles from './ResultsView.module.css';
@@ -34,6 +35,7 @@ function ResultsView() {
 
             <div className={styles.right} >
 {/*               <h1> right </h1> */}
+              <EditorBox />
               <FilterBoxFrame />
             </div>
 

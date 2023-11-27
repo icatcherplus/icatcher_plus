@@ -108,6 +108,7 @@ function FilterGaze(props) {
           ? <div />
           : <Select
 //             className={styles.threshold}
+//             className={{ width: '124px'}}
             id={`${id}-threshold-jumper`}
             label={"Label"}
             margin="dense"

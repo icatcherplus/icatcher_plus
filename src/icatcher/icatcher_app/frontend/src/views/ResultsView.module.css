@@ -14,7 +14,7 @@
   flex-flow: row nowrap;
   position: center;
   padding: 1em;
-  background-color: yellow;
+/*  background-color: yellow; */
   justify-content: center;
   gap: 20px;
 }
@@ -24,7 +24,7 @@
   width: 15%;
 /*  flex: 1;*/
   flex-flow: column nowrap;
-  background-color: lightyellow;
+/*  background-color: lightyellow; */
   position: relative;
   left: 70px;
   z-index: 2;
@@ -35,7 +35,7 @@
 /*  width: 50%;*/
 /*  flex: 3;*/
   flex-flow: column nowrap;
-  background-color: lightblue;
+/*  background-color: lightblue; */
   position: relative;
   right: 70px;
   z-index: 1;
@@ -46,8 +46,9 @@
   width: 15%;
 /*  flex: 1;*/
   flex-flow: column nowrap;
-  background-color: lightgreen;
+/*  background-color: lightgreen; */
   position: relative;
   right: 70px;
   z-index: 1;
+  gap: 10px;
 }
