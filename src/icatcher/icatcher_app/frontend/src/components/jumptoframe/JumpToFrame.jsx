@@ -94,7 +94,7 @@ function JumpToFrame(props, {children}) {
     <React.Fragment>
       <div className={styles.item}>
         <Tooltip
-          title={validInput ? '' : `input must be an integer between 0 and ${totalFrames}`}
+          title={validInput ? '' : `input must be an integer between 0 and ${totalFrames-1}`}
           placement='top'
           disableInteractive
         >
