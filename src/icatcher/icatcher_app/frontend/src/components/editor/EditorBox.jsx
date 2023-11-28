@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './EditorBox.module.css';
-import { Button, Select, MenuItem, TextField } from '@mui/material';
+import { Button, Select, MenuItem, TextField, Skeleton } from '@mui/material';
+import { useVideoData } from '../../state/VideoDataProvider';
 
 const labelOptions = ['none', 'left', 'right', 'away', 'noface'];
 const includedOptions = ['yes', 'no'];
@@ -40,9 +41,12 @@ const styleOverrides = {
 }
 
 function EditorBox() {
+
+  const videoData = useVideoData();
+
   return (
   <React.Fragment>
-
+  { Object.keys(videoData.annotations).length !== 0 ?
     <div className={styles.box}>
 
       <div className={styles.frame}>
@@ -101,6 +105,13 @@ function EditorBox() {
 
     </div>
 
+    :
+    <Skeleton
+      variant="text"
+//       width={}
+      height={200}
+    />
+  }
   </React.Fragment>
   )
 }
