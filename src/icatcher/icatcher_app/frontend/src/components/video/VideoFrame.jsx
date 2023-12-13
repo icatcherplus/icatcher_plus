@@ -5,6 +5,7 @@ import { usePlaybackState, usePlaybackStateDispatch, getNextFrame, updateDimensi
 import VideoScrubBar from './VideoScrubBar'
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
+import { Skeleton } from '@mui/material';
 
 
 function VideoFrame() {
@@ -185,6 +186,8 @@ function VideoFrame() {
 
   return (
     <React.Fragment>
+    { Object.keys(videoData.annotations).length !== 0 ?
+
       <div
         className={styles.videoFrame}
         style={{width: playbackState.videoWidth}}
@@ -215,6 +218,14 @@ function VideoFrame() {
           </div>
         </div>  
       </div>
+      :
+      <Skeleton
+        variant="rectangular"
+        width={playbackState.videoWidth-125}
+        height={350}
+        className={styles.videoSkeleton}
+      />
+      }
     </React.Fragment>
   );
 }

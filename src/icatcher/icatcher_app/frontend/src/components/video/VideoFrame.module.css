@@ -7,6 +7,12 @@
     align-items: center;
 }
 
+.videoSkeleton {
+  position: relative;
+  margin-left: auto;
+  margin-top: 40px;
+}
+
 .videoCanvas {
     position: absolute;
     bottom: 0;
