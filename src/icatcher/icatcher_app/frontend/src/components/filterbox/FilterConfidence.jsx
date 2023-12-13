@@ -10,26 +10,6 @@ import SingleFilter from './SingleFilter';
 /* Expected props:
   id:string --> key for annotation array in videoData.annotations
 */
-
-// const colorPalettes = {
-//   confidence: {
-//     '0%': '#FFFFFF',
-//     '100%': '#000000'
-//   },
-//   monochromeRed: {
-//     '0%': '#EEBAB4',
-//     '100%': '#F05039'
-//   },
-//   monochromeBlue: {
-//     '0%': '#7CA1CC',
-//     '100%': '#1F449C'
-//   },
-//   default: {
-//     '0%': '#FFFFFF',
-//     '100%': '#000000'
-//   }
-// }
-
 function FilterConfidence(props) {
   
   const { id } = props;
@@ -40,8 +20,6 @@ function FilterConfidence(props) {
 
   const [ threshold, setThreshold ] = useState(0.80);
   const [ range, setRange ] = useState({ min: 0, max: 1})
-//   const [ annotationArray, setAnnotationArray ] = useState(videoData.annotations[id].slice(videoData.metadata.frameOffset));
-
 
   useEffect (()=> {
     let [ newMin, newMax ] = getRange()
@@ -49,18 +27,7 @@ function FilterConfidence(props) {
     if(newMin > threshold || newMax < threshold) {
       setThreshold((newMax-newMin)/2)
     }
-//     setAnnotationArray(videoData.annotations[id].slice(videoData.metadata.frameOffset))
   }, [id, videoData.annotations])  // eslint-disable-line react-hooks/exhaustive-deps
-
-//   const computeColorArray = () => {
-//     let tempColorArray = []
-//     const palette = colorPalettes[id || 'default']
-//     annotationArray.forEach((a, i) => {
-//       let rgb = blendColors(hexToRgb(palette['0%']), hexToRgb(palette['100%']), normalizeValue(a, range))
-//       tempColorArray[i] = 'rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')';
-//     })
-//     return [...tempColorArray]
-//   }
 
   const jumpToNextInstance = (forward) => {
     const condition = (e) => {
@@ -100,12 +67,9 @@ function FilterConfidence(props) {
   return (
     <div>
       <SingleFilter
-//         id={id}
-//         getColorArray={computeColorArray}
         handleJump={jumpToNextInstance}
       >
         <TextField
-//           className={styles.threshold}
           id={`${id}-threshold-jumper`}
           label={"Threshold"}
           name="Name"

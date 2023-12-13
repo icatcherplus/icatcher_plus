@@ -1,8 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { usePlaybackState } from '../../state/PlaybackStateProvider';
 import styles from './VideoCanvas.module.css';
-
-
   
 /* Expected props:
 frameToDraw: frame image to display

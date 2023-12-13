@@ -4,18 +4,13 @@ import {
   Skeleton
 } from '@mui/material';
 import { useVideoData } from '../../state/VideoDataProvider';
-// import { usePlaybackState } from '../../state/PlaybackStateProvider';
-
-// import ContinuousAnnotationBar from './ContinuousAnnotationBar';
 import FilterGaze from './FilterGaze';
 import FilterConfidence from './FilterConfidence';
 
-// import styles from './AnnotationsFrame.module.css';
 
 function FilterBoxFrame() {
 
   const videoData = useVideoData();
-//   const playbackState = usePlaybackState();
 
   return (
     <div >

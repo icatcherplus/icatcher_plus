@@ -39,32 +39,24 @@ function FrameInfo(props, {children}) {
 
   return (
     <React.Fragment>
-{/*       <div> */}
-{/*       <div /> */}
-{/*       { visible ? */}
-          <div className={styles.box}>
+      <div className={styles.box}>
 
-            <div className={styles.vertical} >
-              <div className={styles.boldDescriptor}>Frame Number</div>
-              <div>{playbackState.currentFrame} </div>
-            </div>
+        <div className={styles.vertical} >
+          <div className={styles.boldDescriptor}>Frame Number</div>
+          <div>{playbackState.currentFrame} </div>
+        </div>
 
-            <div className={styles.vertical} >
-              <div className={styles.boldDescriptor}>Label</div>
-              <div>{videoData.annotations.machineLabel[playbackState.currentFrame]} </div>
-            </div>
+        <div className={styles.vertical} >
+          <div className={styles.boldDescriptor}>Label</div>
+          <div>{videoData.annotations.machineLabel[playbackState.currentFrame]} </div>
+        </div>
 
-            <div className={styles.vertical} >
-              <div className={styles.boldDescriptor}>Confidence</div>
-              <div>{videoData.annotations.confidence[playbackState.currentFrame]} </div>
-            </div>
+        <div className={styles.vertical} >
+          <div className={styles.boldDescriptor}>Confidence</div>
+          <div>{videoData.annotations.confidence[playbackState.currentFrame]} </div>
+        </div>
 
-          </div>
-
-{/*           : <div /> */}
-{/*         } */}
-{/*       <div /> */}
-{/*        </div>  */}
+      </div>
     </React.Fragment>
   );
 }

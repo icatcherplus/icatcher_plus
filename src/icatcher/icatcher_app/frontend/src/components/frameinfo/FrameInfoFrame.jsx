@@ -2,12 +2,8 @@ import React, { useRef } from 'react';
 import {
   Skeleton
 } from '@mui/material';
-// import styles from './FrameInfoFrame.module.css';
-
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
-
-// import VideoControls from './VideoControls';
 import FrameInfo from './FrameInfo';
 
 
@@ -40,7 +36,6 @@ function FrameInfoFrame() {
     {
       Object.keys(videoData.annotations).length !== 0 ?
       <div>
-      {/* <h1>Frame Info</h1> */}
         <FrameInfo
           handleJumpToFrame={(i) => showFrame( (i))}
         />
@@ -48,7 +43,6 @@ function FrameInfoFrame() {
       :
       <Skeleton
             variant="text"
-//             width={playbackState.videoWidth}
             height={200}
           />
     }

@@ -1,13 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import styles from './VideoFrame.module.css';
-
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState, usePlaybackStateDispatch, getNextFrame, updateDimensions } from '../../state/PlaybackStateProvider';
-
 import VideoScrubBar from './VideoScrubBar'
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
-// import VideoHeader from './VideoHeader';
+
 
 function VideoFrame() {
 

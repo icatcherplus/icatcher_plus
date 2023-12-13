@@ -1,5 +1,4 @@
 import {
-//   Button,
   TextField,
   InputAdornment,
   IconButton,
@@ -11,40 +10,16 @@ import { useSnacksDispatch, addSnack } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState } from '../../state/PlaybackStateProvider';
 import styles from './JumpToFrame.module.css'
-
-// const styleOverrides = {
-//   /* style settings for jump to frame button */
-//   button: {
-//     borderColor: '#e6e6e6',
-//     color: '#e6e6e6',
-//     fontSize: '12px',
-//     minHeight: '25px',
-//     textTransform: 'none',
-//     padding: 0,
-// //     size: "medium",
-// //     span: "none",
-// //     fullWidth: true,
-//   },
-//   textField: {
-//     height: "1px",
-//     borderColor: 'red',
-//     color: 'white',
-//     textAlign: 'center',
-//   }
-// }
   
 /* Expected props:
   currentFrameIndex: int
   handleJumpToFrame: callback
 */
 function JumpToFrame(props, {children}) {
-//   console.log(props)
   const { handleJumpToFrame } = props;
   const videoData = useVideoData();
   const playbackState = usePlaybackState();
   const dispatchSnack = useSnacksDispatch();
-//   const dispatchPlaybackState = usePlaybackStateDispatch();
-//   const frameImages = useRef([]);
 
   const currentFramerate = useRef(0);
   const currentInput = useRef();
@@ -77,7 +52,6 @@ function JumpToFrame(props, {children}) {
 
   const handleKeyPress = (event) => {
     if(event.key === 'Enter'){
-//       console.log('enter press here! ')
       handleJumpToFrame(currentInput.current)
     }
   }
@@ -103,7 +77,6 @@ function JumpToFrame(props, {children}) {
             id='outlined-basic'
             label='frame #'
             variant='outlined'
-  //           InputLabelProps={{ shrink: true, }} // removes placeholder
             margin='dense'
             inputProps={{
               inputMode: 'numeric',
@@ -113,7 +86,6 @@ function JumpToFrame(props, {children}) {
                 textAlign: 'left',
                 },
             }}
-  //           sx={styleOverrides.textField}
             sx={{ '& .MuiInputLabel-root': {
                   // change input text color
                   color: '#e0e0e0',

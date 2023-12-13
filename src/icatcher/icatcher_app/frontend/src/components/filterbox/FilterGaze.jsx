@@ -8,31 +8,6 @@ import { useEffect, useState } from 'react';
 import { addSnack, useSnacksDispatch } from '../../state/SnacksProvider';
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState, usePlaybackStateDispatch } from '../../state/PlaybackStateProvider';
-// import AnnotationBar from './AnnotationsBar';
-// import styles from '../annotations/ContinuousAnnotationBar.module.css'
-
-// const colorPalettes = {
-//   machineLabel: {
-//     'undefined': '#C5C5C5',
-//     'left': '#F05039',
-//     'right': '#1F449C',
-//     'away': '#EEBAB4',
-//     'noface': '#7CA1CC',
-//     'nobabyface': '#000000'
-//   },
-//   edited: {
-//     'edited': '#F05039',
-//     'unedited':'#FFFFFF'
-//   },
-//   default: {
-//     '0': '#C5C5C5',
-//     '1': '#F05039',
-//     '2': '#1F449C',
-//     '3': '#EEBAB4',
-//     '4': '#7CA1CC',
-//     '5': '#000000'
-//   }
-// }
 
 function FilterGaze(props) {
 
@@ -42,7 +17,6 @@ function FilterGaze(props) {
   const dispatchPlaybackState = usePlaybackStateDispatch();
   const dispatchSnack = useSnacksDispatch();
 
-//   const [ colorPalette, setColorPalette ] = useState(id);
   const [ selectedLabel, setSelectedLabel ] = useState('away');
   const [ labelOptions, setLabelOptions ] = useState([])
 
@@ -50,19 +24,8 @@ function FilterGaze(props) {
     let labels = [ ...new Set(videoData.annotations[id].slice(videoData.metadata.frameOffset))].map((l) => {return String(l)})
     setLabelOptions(labels)
     setSelectedLabel(labels[0])
-//     setColorPalette(id)
 
   }, [id, videoData.annotations])  // eslint-disable-line react-hooks/exhaustive-deps
-
-//   const computeColorArray = () => {
-//     let tempColorArray = []
-//     const palette = colorPalettes[colorPalette || 'default']
-//     const annotationArray = videoData.annotations[id].slice(videoData.metadata.frameOffset)
-//     annotationArray.forEach((a, i) => {
-//       tempColorArray[i] = palette[`${a}`]
-//     })
-//     return [...tempColorArray]
-//   }
 
   const jumpToNextInstance = (forward) => {
     const condition = (e) => {
@@ -107,8 +70,6 @@ function FilterGaze(props) {
         { labelOptions.length === 0
           ? <div />
           : <Select
-//             className={styles.threshold}
-//             className={{ width: '124px'}}
             id={`${id}-threshold-jumper`}
             label={"Label"}
             margin="dense"

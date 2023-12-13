@@ -11,8 +11,6 @@ import {
   FastRewindRounded,
   PauseRounded,
   PlayArrowRounded,
-//   SkipNextRounded,
-//   SkipPreviousRounded,
   SlowMotionVideoRounded
 } from '@mui/icons-material';
 import { usePlaybackState } from '../../state/PlaybackStateProvider';
