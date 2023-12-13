@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './EditorBox.module.css';
 import { Button, Select, MenuItem, TextField, Skeleton } from '@mui/material';
 import { useVideoData } from '../../state/VideoDataProvider';
@@ -48,6 +48,15 @@ const styleOverrides = {
 function EditorBox() {
 
   const videoData = useVideoData();
+  const [selectedLabel, setSelectedLabel] = useState('');
+  const [selectedInclude, setSelectedInclude] = useState('');
+
+  const handleSelectLabelChange = (event) => {
+    setSelectedLabel(event.target.value);
+  };
+  const handleSelectIncludeChange = (event) => {
+    setSelectedInclude(event.target.value);
+  };
 
   return (
   <React.Fragment>
@@ -80,8 +89,14 @@ function EditorBox() {
         <Select
           className={styles.select}
           id='editor-select-label'
+          value={''}
+          onChange={handleSelectLabelChange}
           >
-            {labelOptions.map((option) => (<MenuItem value={option}>{option}</MenuItem>))}
+          {labelOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
         </Select>
       </div>
 
@@ -89,8 +104,15 @@ function EditorBox() {
         Included:
         <Select
           className={styles.select}
-          id='editor-select-included'>
-            {includedOptions.map((option) => (<MenuItem value={option}>{option}</MenuItem>))}
+          id='editor-select-included'
+          value={''}
+          onChange={handleSelectIncludeChange}
+          >
+          {includedOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
         </Select>
       </div>
 
