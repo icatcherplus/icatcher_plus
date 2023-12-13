@@ -38,6 +38,11 @@ const styleOverrides = {
       textAlign: 'center',
     },
   },
+  submitButton: {
+    backgroundColor: "lightblue",
+    color: "gray",
+    borderColor: "lightblue",
+  },
 }
 
 function EditorBox() {
@@ -101,7 +106,13 @@ function EditorBox() {
           maxRows={4} />
       </div>
 
-      <Button variant='outlined' size='small'>Submit</Button>
+      <Button
+        variant='outlined'
+        size='medium'
+        sx={styleOverrides.submitButton}
+      >
+        Submit
+      </Button>
 
     </div>
 
