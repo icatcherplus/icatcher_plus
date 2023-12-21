@@ -43,7 +43,7 @@ function ContinuousAnnotationBar(props) {
 
   const [ threshold, setThreshold ] = useState(0.80);
   const [ range, setRange ] = useState({ min: 0, max: 1})
-  const [ annotationArray, setAnnotationArray ] = useState(videoData.annotations[id].slice(videoData.metadata.frameOffset));
+  const [ annotationArray, setAnnotationArray ] = useState(videoData.annotations[id]);
 
 
   useEffect (()=> {
@@ -52,7 +52,7 @@ function ContinuousAnnotationBar(props) {
     if(newMin > threshold || newMax < threshold) {
       setThreshold((newMax-newMin)/2)
     }
-    setAnnotationArray(videoData.annotations[id].slice(videoData.metadata.frameOffset))
+    setAnnotationArray(videoData.annotations[id])
   }, [id, videoData.annotations])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const computeColorArray = () => {

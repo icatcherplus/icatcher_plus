@@ -33,7 +33,7 @@ function VideoFrame() {
   const loadFrames = () => {
     videoData.frames.forEach((f, index) => {
       let img = new Image();
-      img.frameNumber = f.frameNumber + videoData.metadata.frameOffset - 1;
+      img.frameNumber = f.frameNumber;
       img.loaded = false;
       if (index === 0) {
         firstFrameIndex.current = img.frameNumber
@@ -90,8 +90,8 @@ function VideoFrame() {
       playTimer.current = setInterval(
         showNextFrame, 
         playbackState.slowMotion 
-          ? (1/videoData.metadata.framesPerSecond)*6000 
-          : (1/videoData.metadata.framesPerSecond)*1000
+          ? (1/videoData.metadata.fps)*10000 
+          : (1/videoData.metadata.fps)*1000
       )
       dispatchPlaybackState({
         type: 'setPaused',
@@ -115,8 +115,8 @@ function VideoFrame() {
       playTimer.current = playTimer.current = setInterval(
         showNextFrame, 
         playbackState.slowMotion
-          ? (1/videoData.metadata.framesPerSecond)*3000
-          : (1/videoData.metadata.framesPerSecond)*1000
+          ? (1/videoData.metadata.fps)*6000
+          : (1/videoData.metadata.fps)*1000
       )
     }
   }
@@ -127,8 +127,8 @@ function VideoFrame() {
       playTimer.current = playTimer.current = setInterval(
         showNextFrame, 
         !playbackState.slowMotion
-          ? (1/videoData.metadata.framesPerSecond)*3000 
-          : (1/videoData.metadata.framesPerSecond)*1000
+          ? (1/videoData.metadata.fps)*6000 
+          : (1/videoData.metadata.fps)*1000
       )
     }
     dispatchPlaybackState({
