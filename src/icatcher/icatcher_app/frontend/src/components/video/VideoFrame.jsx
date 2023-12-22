@@ -1,13 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import styles from './VideoFrame.module.css';
-
 import { useVideoData } from '../../state/VideoDataProvider';
 import { usePlaybackState, usePlaybackStateDispatch, getNextFrame, updateDimensions } from '../../state/PlaybackStateProvider';
-
 import VideoScrubBar from './VideoScrubBar'
 import VideoCanvas from './VideoCanvas';
 import VideoControls from './VideoControls';
-import VideoHeader from './VideoHeader';
+import { Skeleton } from '@mui/material';
 
 
 function VideoFrame() {
@@ -188,13 +186,12 @@ function VideoFrame() {
 
   return (
     <React.Fragment>
+    { Object.keys(videoData.annotations).length !== 0 ?
+
       <div
         className={styles.videoFrame}
         style={{width: playbackState.videoWidth}}
       >
-        <VideoHeader
-          handleJumpToFrame={(i) => showFrame(Number(i))}
-        />
         <VideoCanvas 
           className={styles.videoCanvas}
           frameToDraw={frameImages.current[playbackState.currentFrame]}
@@ -210,7 +207,8 @@ function VideoFrame() {
           >
             <VideoScrubBar 
             />
-            <VideoControls 
+            <VideoControls
+              handleJumpToFrame={(i) => showFrame(Number(i))}
               togglePlay={togglePlay}
               toggleRev={toggleReverse}
               toggleSlowMotion={toggleSlowMotion} 
@@ -220,6 +218,14 @@ function VideoFrame() {
           </div>
         </div>  
       </div>
+      :
+      <Skeleton
+        variant="rectangular"
+        width={playbackState.videoWidth-125}
+        height={350}
+        className={styles.videoSkeleton}
+      />
+      }
     </React.Fragment>
   );
 }

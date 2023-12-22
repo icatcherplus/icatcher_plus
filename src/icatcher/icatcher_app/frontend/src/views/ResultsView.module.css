@@ -8,8 +8,37 @@
   gap: 10px;
 }
 .content {
-  flex: 7;
-  position: relative;
+  display: flex;
+  flex-flow: row nowrap;
+  position: center;
   padding: 1em;
+  justify-content: center;
+  gap: 20px;
 }
 
+.left {
+  display: flex;
+  width: 15%;
+  flex-flow: column nowrap;
+  position: relative;
+  left: 70px;
+  z-index: 2;
+}
+
+.center {
+  display: flex;
+  flex-flow: column nowrap;
+  position: relative;
+  right: 70px;
+  z-index: 1;
+}
+
+.right {
+  display: flex;
+  width: 15%;
+  flex-flow: column nowrap;
+  position: relative;
+  right: 70px;
+  z-index: 1;
+  gap: 15px;
+}
