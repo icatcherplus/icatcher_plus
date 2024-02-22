@@ -18,19 +18,21 @@ Click below for a video including examples of representative good and poor perfo
 ## Quick installation (Windows, Linux, Mac)
 This option will install the most up-to-date version of the iCatcher+ annotation tool and web app with minimum effort. However, it will not provide the code to reproduce the original paper results or train your own model. For instructions on how to reproduce, see [here](https://github.com/icatcherplus/icatcher_plus/tree/master/reproduce).
 
-We strongly recommend using a virtual environment such as [Miniconda](https://conda.io) or [virtualenv](https://pypi.org/project/virtualenv/) before running the command below.
-
 `pip install icatcher`
+
+We strongly recommend using a virtual environment such as [Miniconda](https://conda.io) or [virtualenv](https://pypi.org/project/virtualenv/) before running the command above.
 
 You will also need [ffmpeg](https://www.ffmpeg.org/) installed in your system and available (if you used conda, you can quickly install it with `conda install -c conda-forge ffmpeg`).
 
-Note1:
+Note 1:
+
 If you require speedy performance, prior to installing icatcher you should install [PyTorch](https://pytorch.org/) with GPU support (see [here](https://pytorch.org/get-started/locally/) for instructions). This assumes you have a supported GPU on your machine.
 
-Note2:
+Note 2:
+
 When using iCatcher+ for the first time, neural network model files will automatically be downloaded to a local cache folder. To control where they are downloaded to set the "ICATCHER_DATA_DIR" environment variable.
 
-## Reproduction of original research results / retraining on your own dataset {#reproduce}
+## Reproduction of original research results / retraining on your own dataset
 
 see [reproduce](https://github.com/icatcherplus/icatcher_plus/tree/master/reproduce) for a full set of instructions.
 
