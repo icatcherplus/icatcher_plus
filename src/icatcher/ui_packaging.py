@@ -1,35 +1,33 @@
-import json
 import cv2
 import numpy as np
 from pathlib import Path
 from icatcher import draw
-
-from typing import Callable, Dict, Union, Tuple
+from typing import Dict, Tuple
 
 
 def prepare_ui_output_components(
-    ui_packaging_path: str, video_path: str, video_creator: Callable
-) -> Dict[str, Union[cv2.VideoWriter, str]]:
+    ui_packaging_path: str, video_path: str, overwrite: bool
+) -> Dict[str, str]:
     """
     Given a path to a directory, prepares a dictionary of paths and videos necessary for the UI.
 
     :param ui_packaging_path: path to folder in which the output will be saved
     :param video_path: the original video path
-    :param video_creator: a function to create video files given a path
+    :param overwrite: if true and label file already exists, overwrites it. else will throw an error.
     :return: a dictionary mapping each UI component to its path or video writer
     """
 
-    decorated_video_path = Path(
-        ui_packaging_path, video_path.stem, "decorated_video.mp4"
-    )
-    decorated_frames_path = Path(ui_packaging_path, video_path.stem, "decorated_frames")
-
-    decorated_frames_path.mkdir(parents=True, exist_ok=True)
-
     labels_path = Path(ui_packaging_path, video_path.stem, "labels.txt")
-
+    if labels_path.exists():
+        if overwrite:
+            labels_path.unlink()
+        else:
+            raise FileExistsError(
+                "Annotation output file already exists. Use --overwrite flag to overwrite."
+            )
+    decorated_frames_path = Path(ui_packaging_path, video_path.stem, "decorated_frames")
+    decorated_frames_path.mkdir(parents=True, exist_ok=True)
     ui_output_components = {
-        "decorated_video": video_creator(decorated_video_path),
         "decorated_frames_path": decorated_frames_path,
         "labels_path": labels_path,
     }
@@ -89,12 +87,10 @@ def save_ui_output(frame_idx: int, ui_output_components: Dict, output_for_ui: Tu
     decorated_frame, label_text = output_for_ui
 
     # Save decorated frame
-    ui_output_components["decorated_video"].write(decorated_frame)
     decorated_frame_path = Path(
         ui_output_components["decorated_frames_path"], f"frame_{frame_idx:05d}.jpg"
     )
     cv2.imwrite(str(decorated_frame_path), decorated_frame)
-
-    # Wrtie new annotation to labels file
+    # Write new annotation to labels file
     with open(ui_output_components["labels_path"], "a", newline="") as f:
         f.write(f"{frame_idx}, {label_text}\n")

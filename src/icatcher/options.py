@@ -109,15 +109,12 @@ def parse_arguments(my_string=None):
         "--output_format",
         type=str,
         default="raw_output",
-        choices=["raw_output", "compressed"],
+        choices=["raw_output", "compressed", "ui"],
+        help="Selects output format.",
     )
     parser.add_argument(
         "--output_video_path",
         help="If present, annotated video will be saved to this folder.",
-    )
-    parser.add_argument(
-        "--ui_packaging_path",
-        help="If present, packages the output data into the UI format.",
     )
     parser.add_argument(
         "--pic_in_pic",

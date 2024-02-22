@@ -87,6 +87,10 @@ def test_mask():
             "tests/test_data/test_short.mp4 --model icatcher+_lookit.pth --fd_model opencv_dnn --output_annotation tests/test_data --mirror_annotation --output_format compressed --overwrite",
             "tests/test_data/test_short_result.txt",
         ),
+        (
+            "tests/test_data/test_short.mp4 --model icatcher+_lookit.pth --fd_model opencv_dnn --output_annotation tests/test_data --output_format ui --overwrite",
+            "tests/test_data/test_short_result.txt",
+        ),
     ],
 )
 def test_predict_from_video(args_string, result_file):
@@ -116,8 +120,19 @@ def test_predict_from_video(args_string, result_file):
             data = np.load(output_file)
             predicted_classes = data["arr_0"]
             confidences = data["arr_1"]
-        else:
+        elif args.output_format == "raw_output":
             output_file = Path("tests/test_data/{}.txt".format(Path(args.source).stem))
+            with open(output_file, "r") as f:
+                data = f.readlines()
+            predicted_classes = [x.split(",")[1].strip() for x in data]
+            predicted_classes = np.array(
+                [icatcher.classes[x] for x in predicted_classes]
+            )
+            confidences = np.array([float(x.split(",")[2].strip()) for x in data])
+        elif args.output_format == "ui":
+            output_file = Path(
+                "tests/test_data/{}/labels.txt".format(Path(args.source).stem)
+            )
             with open(output_file, "r") as f:
                 data = f.readlines()
             predicted_classes = [x.split(",")[1].strip() for x in data]
