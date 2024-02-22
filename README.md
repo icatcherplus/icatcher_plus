@@ -94,7 +94,7 @@ Currently we supports 3 output formats, though further formats can be added upon
 
 - **raw_output:** a file where each row will contain the frame number, the class prediction and the confidence of that prediction seperated by a comma
 - **compressed:** a npz file containing two numpy arrays, one encoding the predicted class (n x 1 int32) and another the confidence (n x 1 float32) where n is the number of frames. This file can be loaded into memory using the numpy.load function. For the map between class number and name see test.py ("predict_from_video" function).
-- **ui:** needed to open a video in the web app; produces a directory of the following structure
+- **ui:** needed for viewing results in the web app; produces a directory of the following structure
 
         ├── decorated_frames     # dir containing annotated jpg files for each frame in the video
         ├── video.mp4            # the original video
