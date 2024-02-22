@@ -45,7 +45,7 @@ You can run iCatcher+ with the command:
 
 `icatcher --help`
 
-which will list all available options. The description below will help you get more familiar with some common command line arguments.
+Which will list all available options. Below we list some common options to help you get more familiar with iCatcher+. The pipeline is highly configurable, please see [the website](https://icatcherplus.github.io/) for more explanation about the flags.
 
 ### Annotating a Video
 To produce annotations for a video file (if a folder is provided, all videos will be used for prediction):
@@ -58,31 +58,31 @@ To produce annotations for a video file (if a folder is provided, all videos wil
 
 ### Common Flags
 
-You can save a labeled video by adding:
+- You can save a labeled video by adding:
 
 `--output_video_path /path/to/output_folder`
 
-If you want to output annotations to a file, use:
+- If you want to output annotations to a file, use:
 
 `--output_annotation /path/to/output_annotation_folder`
 
 See [Output format](#output-format) below for more information on how the files are formatted.
 
-To show the predictions online in a seperate window, add the option:
+- To show the predictions online in a seperate window, add the option:
 
 `--show_output`
 
-To launch the iCatcher+ web app (after annotating), use:
+- To launch the iCatcher+ [Web App](#web-app) (after annotating), use:
 
 `icatcher --app`
 
 The app should open automatically at [http://localhost:5001](http://localhost:5001). For more details, see [Web App](#web-app).
 
-Originally a face classifier was used to distinguish between adult and infant faces (however this can result in too much loss of data). It can be turned on by using:
+- Originally a face classifier was used to distinguish between adult and infant faces (however this can result in too much loss of data). It can be turned on by using:
 
 `icatcher /path/to/my/video.mp4 --use_fc_model`
 
-You can also add parameters to crop the video a given percent before passing to iCatcher: 
+- You can also add parameters to crop the video a given percent before passing to iCatcher: 
 
 `--crop_mode m` where `m` is any of [top, left, right], specifying which side of the video to crop from (if not provided, default is none; if crop_percent is provided but not crop_mode, default is top)
 
@@ -97,7 +97,6 @@ Currently we supports 3 output formats, though further formats can be added upon
 - **ui:** needed for viewing results in the web app; produces a directory of the following structure
 
         ├── decorated_frames     # dir containing annotated jpg files for each frame in the video
-        ├── video.mp4            # the original video
         ├── labels.txt           # file containing annotations in the `raw_output` format described above
 
 # Web App
