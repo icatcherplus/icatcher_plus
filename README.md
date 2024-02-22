@@ -52,9 +52,9 @@ To produce annotations for a video file (if a folder is provided, all videos wil
 
 `icatcher /path/to/my/video.mp4`
 
->**NOTE:** For any videos you wish to visualize with the [Web App](#web-app), you must use the `--output_annotation` and the `--output_format ui` flags:
->
->`icatcher /path/to/my/video.mp4 --output_annotation /path/to/desired/output/directory/ --output_format ui`
+**NOTE:** For any videos you wish to visualize with the [Web App](#web-app), you must use the `--output_annotation` and the `--output_format ui` flags:
+
+`icatcher /path/to/my/video.mp4 --output_annotation /path/to/desired/output/directory/ --output_format ui`
 
 ### Common Flags
 
