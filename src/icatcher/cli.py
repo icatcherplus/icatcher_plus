@@ -269,15 +269,6 @@ def create_output_streams(video_path, framerate, resolution, opt):
     fourcc = cv2.VideoWriter_fourcc(
         *"MP4V"
     )  # may need to be adjusted per available codecs & OS
-    if opt.ui_packaging_path:
-        video_creator = lambda path: cv2.VideoWriter(
-            str(path), fourcc, framerate, resolution, True
-        )
-        ui_output_components = ui_packaging.prepare_ui_output_components(
-            opt.ui_packaging_path,
-            video_path,
-            video_creator,
-        )
     if opt.output_video_path:
         my_video_path = Path(opt.output_video_path, video_path.stem + "_output.mp4")
         video_output_file = cv2.VideoWriter(
@@ -286,7 +277,15 @@ def create_output_streams(video_path, framerate, resolution, opt):
     if opt.output_annotation:
         if opt.output_format == "compressed":
             prediction_output_file = Path(opt.output_annotation, video_path.stem)
-        else:
+            npz_extension = Path(str(prediction_output_file) + ".npz")
+            if npz_extension.exists():
+                if opt.overwrite:
+                    npz_extension.unlink()
+                else:
+                    raise FileExistsError(
+                        "Annotation output file already exists. Use --overwrite flag to overwrite."
+                    )
+        elif opt.output_format == "raw_output":
             prediction_output_file = Path(
                 opt.output_annotation, video_path.stem + opt.output_file_suffix
             )
@@ -297,6 +296,16 @@ def create_output_streams(video_path, framerate, resolution, opt):
                     raise FileExistsError(
                         "Annotation output file already exists. Use --overwrite flag to overwrite."
                     )
+        elif opt.output_format == "ui":
+            ui_output_components = ui_packaging.prepare_ui_output_components(
+                opt.output_annotation,
+                video_path,
+                opt.overwrite,
+            )
+        else:
+            raise NotImplementedError(
+                "output format {} not implemented".format(opt.output_annotation)
+            )
 
     return video_output_file, prediction_output_file, ui_output_components, skip
 
@@ -667,25 +676,25 @@ def handle_output(
                         confidence,
                     )
                 )
-    if opt.ui_packaging_path:
-        if is_from_tracker and opt.track_face:
-            rect_color = (0, 0, 255)
-        else:
-            rect_color = (0, 255, 0)
-        output_for_ui = ui_packaging.prepare_frame_for_ui(
-            cur_frame,
-            cur_bbox,
-            rect_color=rect_color,
-            conf=confidence,
-            class_text=class_text,
-            frame_number=frame_count + cursor + 1,
-            pic_in_pic=opt.pic_in_pic,
-        )
-        ui_packaging.save_ui_output(
-            frame_idx=frame_count + cursor + 1,
-            ui_output_components=ui_output_components,
-            output_for_ui=output_for_ui,
-        )
+        elif opt.output_format == "ui":
+            if is_from_tracker and opt.track_face:
+                rect_color = (0, 0, 255)
+            else:
+                rect_color = (0, 255, 0)
+            output_for_ui = ui_packaging.prepare_frame_for_ui(
+                cur_frame,
+                cur_bbox,
+                rect_color=rect_color,
+                conf=confidence,
+                class_text=class_text,
+                frame_number=frame_count + cursor + 1,
+                pic_in_pic=opt.pic_in_pic,
+            )
+            ui_packaging.save_ui_output(
+                frame_idx=frame_count + cursor + 1,
+                ui_output_components=ui_output_components,
+                output_for_ui=output_for_ui,
+            )
     logging.info(
         "frame: {}, class: {}, confidence: {:.02f}, cur_fps: {:.02f}".format(
             str(frame_count + cursor + 1),

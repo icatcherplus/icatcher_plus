@@ -8,3 +8,6 @@ src/icatcher.egg-info/
 dist/
 build/
 node_modules/
+tests/test_data/test_short/
+tests/test_data/test_short.npz
+tests/test_data/test_short.txt
