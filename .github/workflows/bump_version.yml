@@ -32,11 +32,10 @@ jobs:
       run: |
           bumpver update --no-fetch --${{ github.event.inputs.vt }}
           echo "ICATCHER_VER=$(bumpver show -n | awk 'END{print $NF}')" >> $GITHUB_ENV
-          
-    - name: Tag version
-      run: |
-        git tag
-        git tag ${{ env.ICATCHER_VER }} master
-        git tag
-    - name: Build package
-      run: python -m build
+    - name: Commit changes
+      uses: EndBug/add-and-commit@v4
+      with:
+          author_name: ${{ github.actor }}
+          author_email: ${{ github.actor }}@users.noreply.github.com
+          message: "Version Bump to ${{ env.ICATCHER_VER }}"
+          add: "."
