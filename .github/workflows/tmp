@@ -1,0 +1,32 @@
+name: temp tester
+on:
+  workflow_dispatch:
+
+jobs:
+  testing:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+      
+    - name: Install Python dependencies
+      run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[build]"
+    - name: Bump version
+      run: |
+          bumpver update --no-fetch --patch
+          echo "ICATCHER_VER=$(icatcher --version | awk '{print $2}')" >> $GITHUB_ENV
+          
+    - name: Tag version
+      git tag
+      git tag ${{ env.ICATCHER_VER }} master
+      git tag
+    - name: Build package
+      run: python -m build
