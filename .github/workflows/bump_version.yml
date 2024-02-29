@@ -1,4 +1,4 @@
-name: temp tester
+name: Bump Version
 on:
   workflow_dispatch:
     inputs:
