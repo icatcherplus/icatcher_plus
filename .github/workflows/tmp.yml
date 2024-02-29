@@ -25,8 +25,9 @@ jobs:
           echo "ICATCHER_VER=$(icatcher --version | awk '{print $2}')" >> $GITHUB_ENV
           
     - name: Tag version
-      git tag
-      git tag ${{ env.ICATCHER_VER }} master
-      git tag
+      run: |
+        git tag
+        git tag ${{ env.ICATCHER_VER }} master
+        git tag
     - name: Build package
       run: python -m build
