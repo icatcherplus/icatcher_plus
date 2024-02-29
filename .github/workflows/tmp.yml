@@ -2,7 +2,7 @@ name: temp tester
 on:
   workflow_dispatch:
     inputs:
-      Version Type:
+      vt:
         type: choice
         description: 'What is the version type (patch, minor major)'     
         required: true
@@ -30,7 +30,7 @@ jobs:
           python -m pip install ".[build]"
     - name: Bump version
       run: |
-          bumpver update --no-fetch --${{ github.event.inputs.name }}
+          bumpver update --no-fetch --${{ github.event.inputs.vt }}
           echo "ICATCHER_VER=$(bumpver show -n | awk 'END{print $NF}')" >> $GITHUB_ENV
           
     - name: Tag version
