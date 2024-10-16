@@ -192,11 +192,19 @@ def load_models(opt, download_only=False):
             face_detector_model_file = file_paths[
                 file_names.index("Resnet50_Final.pth")
             ]
-            face_detector_model = RetinaFace(
+            if opt.device.startswith("mps"):
+                face_detector_model = RetinaFace(
+                    gpu_id=opt.gpu_id,
+                    model_path=face_detector_model_file,
+                    network="resnet50",
+                    device="mps",
+                )
+            else:
+                face_detector_model = RetinaFace(
                 gpu_id=opt.gpu_id,
                 model_path=face_detector_model_file,
                 network="resnet50",
-            )
+                )
         elif opt.fd_model == "opencv_dnn":
             face_detector_model_file = file_paths[
                 file_names.index("face_model.caffemodel")
@@ -214,6 +222,10 @@ def load_models(opt, download_only=False):
         if opt.device == "cpu":
             state_dict = torch.load(
                 str(path_to_gaze_model), map_location=torch.device(opt.device)
+            )
+        elif opt.device.startswith("mps"):
+            state_dict = torch.load(
+                str(path_to_gaze_model), map_location=torch.device("mps")
             )
         else:
             state_dict = torch.load(str(path_to_gaze_model))
