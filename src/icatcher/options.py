@@ -272,13 +272,17 @@ def parse_arguments(my_string=None):
         args.device = "cpu"
     else:
         import os
-
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
-        args.device = "cuda:{}".format(0)
         import torch
 
-        if not torch.cuda.is_available():
-            raise ValueError("GPU is not available. Was torch compiled with CUDA?")
+        if torch.cuda.is_available():
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+            args.device = f"cuda:{args.gpu_id}"
+        else:
+            if torch.backends.mps.is_available():
+                args.device = f"mps:{args.gpu_id}"
+            else:
+                raise ValueError("GPU is not available. Was torch compiled with CUDA or MPS?")
+
     # figure out how many cpus can be used
     use_cpu = True if args.gpu_id == -1 else False
     if use_cpu:
