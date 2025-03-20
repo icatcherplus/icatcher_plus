@@ -48,3 +48,21 @@ def test_predict_from_video(args_string):
     """
     args = parse_arguments(args_string)
     predict_from_video(args)
+
+@pytest.mark.skipif(
+    not torch.backends.mps.is_available() or torch.cuda.is_available(),
+    reason="Requires MPS for running, without a CUDA GPU, to test the functionality of the MPS pipeline."
+)
+@pytest.mark.parametrize(
+    "args_string",
+    [
+        "tests/test_data/test_short.mp4 --model icatcher+_lookit_regnet.pth --gpu_id=0",
+        "tests/test_data/test_short.mp4 --model icatcher+_lookit.pth --gpu_id=0",
+    ],
+)
+def test_predict_from_video_with_mps(args_string):
+    """
+    Ensures that the entire prediction pipeline is run to completion with both gaze models using MPS.
+    """
+    args = parse_arguments(args_string)
+    predict_from_video(args)
